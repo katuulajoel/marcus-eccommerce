@@ -1,5 +1,5 @@
 from django.db import models
-from server.apps.customers.models import Customer
+from apps.customers.models import Customer
 
 class Order(models.Model):
     id = models.AutoField(primary_key=True)

@@ -1,17 +1,21 @@
 from rest_framework import serializers
 from .models import Product, Part, PartOption
 
-class ProductSerializer(serializers.ModelSerializer):
+class PartOptionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
+        model = PartOption
         fields = '__all__'
 
 class PartSerializer(serializers.ModelSerializer):
+    options = PartOptionSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Part
         fields = '__all__'
 
-class PartOptionSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
+    parts = PartSerializer(many=True, read_only=True)
+    
     class Meta:
-        model = PartOption
+        model = Product
         fields = '__all__'

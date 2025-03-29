@@ -25,10 +25,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'server.apps.products',
-    'server.apps.orders',
-    'server.apps.customers',
-    'server.apps.configurator',
+    'apps.products',
+    'apps.orders',
+    'apps.customers',
+    'apps.configurator',
 ]
 
 # Middleware

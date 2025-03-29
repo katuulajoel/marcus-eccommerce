@@ -1,7 +1,7 @@
 # Configurator models based on provided schema
 
 from django.db import models
-from server.apps.products.models import PartOption
+from apps.products.models import PartOption
 
 class PriceAdjustmentRule(models.Model):
     id = models.AutoField(primary_key=True)

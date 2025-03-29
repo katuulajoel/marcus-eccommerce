@@ -20,21 +20,31 @@ The easiest way to get started is using Docker, which will set up all required s
 
 2. Build and start the containers:
    ```
-   docker-compose up -d
+   docker compose up --build -d
    ```
 
 3. Run migrations:
    ```
-   docker-compose exec web python manage.py migrate
+   docker compose exec web python manage.py migrate
    ```
 
 4. Create a superuser (optional):
    ```
-   docker-compose exec web python manage.py createsuperuser
+   docker compose exec web python manage.py createsuperuser
    ```
 
 5. Access the API at http://localhost:8000/api/
    Access the admin interface at http://localhost:8000/admin/
+
+6. To stop the containers:
+   ```
+   docker compose stop
+   ```
+
+7. To stop and remove containers, networks, and volumes:
+   ```
+   docker compose down
+   ```
 
 ## Setup and Running (Without Docker)
 

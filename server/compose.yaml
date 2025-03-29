@@ -1,3 +1,4 @@
+name: marcus-eccommerce-backend
 version: '3.8'
 
 services:
