@@ -3,28 +3,45 @@ from django.db import models
 class Product(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return self.name
+    
+    class Meta:
+        db_table = 'product'
 
 class Part(models.Model):
     id = models.AutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='parts', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    
+    product = models.ForeignKey(Product, related_name='parts', on_delete=models.CASCADE, db_column='product_id')
+
     def __str__(self):
-        return f"{self.product.name} - {self.name}"
+        return self.name
+    
+    class Meta:
+        db_table = 'part'
 
 class PartOption(models.Model):
     id = models.AutoField(primary_key=True)
-    part = models.ForeignKey(Part, related_name='options', on_delete=models.CASCADE)
+    part = models.ForeignKey(Part, related_name='options', on_delete=models.CASCADE, db_column='part_id')
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    price_adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
+    default_price = models.DecimalField(max_digits=10, decimal_places=2)
+
     def __str__(self):
-        return f"{self.part.name} - {self.name}"
+        return self.name
+    
+    class Meta:
+        db_table = 'partoption'
+
+class Stock(models.Model):
+    id = models.AutoField(primary_key=True)
+    part_option = models.ForeignKey(PartOption, related_name='stock', on_delete=models.CASCADE, db_column='part_option_id')
+    quantity = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.part_option.name}: {self.quantity}"
+    
+    class Meta:
+        db_table = 'stock'
