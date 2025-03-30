@@ -3,13 +3,19 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import PreConfiguredProduct, PreConfiguredProductParts
 from .serializers import PreConfiguredProductSerializer, PreConfiguredProductPartsSerializer
+from .permissions import AllowGetAnonymously
 
 class PreConfiguredProductViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing pre-configured products
+    
+    **Authentication required**: 
+    - GET: No (anyone can view pre-configured products)
+    - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = PreConfiguredProduct.objects.all()
     serializer_class = PreConfiguredProductSerializer
+    permission_classes = [AllowGetAnonymously]
     
     @action(detail=True, methods=['get'])
     def parts(self, request, pk=None):
@@ -22,9 +28,14 @@ class PreConfiguredProductViewSet(ModelViewSet):
 class PreConfiguredProductPartsViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing pre-configured product parts
+    
+    **Authentication required**: 
+    - GET: No (anyone can view pre-configured product parts)
+    - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = PreConfiguredProductParts.objects.all()
     serializer_class = PreConfiguredProductPartsSerializer
+    permission_classes = [AllowGetAnonymously]
     
     def get_queryset(self):
         """Filter parts by preconfigured product if provided"""

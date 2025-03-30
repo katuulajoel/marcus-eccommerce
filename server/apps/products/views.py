@@ -3,20 +3,31 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Product, Part, PartOption, Stock
 from .serializers import ProductSerializer, PartSerializer, PartOptionSerializer, StockSerializer
+from .permissions import AllowGetAnonymously
 
 class ProductViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing products
+    
+    **Authentication required**: 
+    - GET: No (anyone can view products)
+    - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [AllowGetAnonymously]
 
 class PartViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing parts
+    
+    **Authentication required**: 
+    - GET: No (anyone can view parts)
+    - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = Part.objects.all()
     serializer_class = PartSerializer
+    permission_classes = [AllowGetAnonymously]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -36,9 +47,14 @@ class PartViewSet(ModelViewSet):
 class PartOptionViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing part options
+    
+    **Authentication required**: 
+    - GET: No (anyone can view part options)
+    - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = PartOption.objects.all()
     serializer_class = PartOptionSerializer
+    permission_classes = [AllowGetAnonymously]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -50,9 +66,14 @@ class PartOptionViewSet(ModelViewSet):
 class StockViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing stock levels
+    
+    **Authentication required**: 
+    - GET: No (anyone can view stock levels)
+    - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
+    permission_classes = [AllowGetAnonymously]
     
     def get_queryset(self):
         queryset = super().get_queryset()

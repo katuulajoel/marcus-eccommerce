@@ -1,21 +1,22 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
 from .models import Customer
 from .serializers import CustomerSerializer
+from .permissions import AllowPostAnonymously
 
 class CustomerViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing customers.
     
-    **Authentication required**: Yes
+    **Authentication required**: 
+    - POST: No (anyone can create a customer profile)
+    - GET, PUT, PATCH, DELETE: Yes (only authenticated users)
     
-    Only authenticated users can access this endpoint.
     Regular users can only see their own customer profile.
     Staff users can see all customer profiles.
     """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowPostAnonymously]
     
     def get_queryset(self):
         """

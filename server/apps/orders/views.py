@@ -2,20 +2,22 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from .models import Orders, OrderProduct, OrderItem
 from .serializers import OrdersSerializer, OrderProductSerializer, OrderItemSerializer
+from .permissions import AllowPostAnonymously
 
 class OrdersViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing orders.
     
-    **Authentication required**: Yes
+    **Authentication required**: 
+    - POST: No (anyone can create orders)
+    - GET, PUT, PATCH, DELETE: Yes (only authenticated users)
     
-    Only authenticated users can access this endpoint.
     Regular users can only see their own orders.
     Staff users can see all orders.
     """
     queryset = Orders.objects.all()
     serializer_class = OrdersSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowPostAnonymously]
     
     def get_queryset(self):
         """
