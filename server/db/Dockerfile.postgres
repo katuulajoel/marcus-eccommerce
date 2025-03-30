@@ -1,0 +1,19 @@
+FROM postgres:14
+
+# Install the required packages to build pg_cron
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       postgresql-server-dev-14 \
+       postgresql-14-cron \
+       make \
+       gcc \
+       git \
+       ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add pg_cron to shared_preload_libraries
+RUN echo "shared_preload_libraries = 'pg_cron'" >> /usr/share/postgresql/postgresql.conf.sample
+RUN echo "cron.database_name = 'ecommerce_db'" >> /usr/share/postgresql/postgresql.conf.sample
+
+# Set the default command
+CMD ["postgres"]

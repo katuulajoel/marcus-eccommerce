@@ -16,6 +16,7 @@ CREATE SEQUENCE IF NOT EXISTS incompatibilityrule_id_seq;
 
 CREATE TABLE IF NOT EXISTS public.customer (
     id integer NOT NULL DEFAULT nextval('customer_id_seq'::regclass),
+    name character varying(255) NOT NULL,
     email character varying(255),
     phone character varying(20),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -193,5 +194,61 @@ ALTER TABLE IF EXISTS public.incompatibilityrule
     REFERENCES public.partoption (id) MATCH SIMPLE
     ON UPDATE NO ACTION ON DELETE NO ACTION
     NOT VALID;
+
+-- Create indexes for performance optimization
+-- Customer indexes
+CREATE INDEX IF NOT EXISTS idx_customer_name ON customer(name);
+
+-- Orders indexes
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+
+-- Part indexes
+CREATE INDEX IF NOT EXISTS idx_part_product_id ON part(product_id);
+
+-- PartOption indexes
+CREATE INDEX IF NOT EXISTS idx_partoption_part_id ON partoption(part_id);
+
+-- OrderProduct indexes
+CREATE INDEX IF NOT EXISTS idx_orderproduct_order_id ON orderproduct(order_id);
+
+-- PriceAdjustmentRule indexes
+CREATE INDEX IF NOT EXISTS idx_price_adjustment_combo ON priceadjustmentrule(affected_option_id, condition_option_id);
+
+-- IncompatibilityRule indexes
+CREATE INDEX IF NOT EXISTS idx_incompatibility_rule ON incompatibilityrule(part_option_id, incompatible_with_option_id);
+
+-- Create materialized views for analytics
+-- 1. Top Preconfigured Products per Product
+-- Shows top-selling preconfigured variations per base product
+CREATE MATERIALIZED VIEW TopPreconfiguredProductsPerProduct AS
+SELECT 
+    pp.product_id,
+    pp.id AS preconfigured_product_id,
+    pp.name AS preconfigured_name,
+    COUNT(op.id) AS times_ordered
+FROM PreconfiguredProduct pp
+JOIN OrderProduct op ON op.preconfigured_product_id = pp.id
+GROUP BY pp.product_id, pp.id, pp.name
+ORDER BY pp.product_id, times_ordered DESC;
+
+-- To refresh this view periodically, run:
+-- REFRESH MATERIALIZED VIEW TopPreconfiguredProductsPerProduct;
+
+-- 2. Best-Selling Preconfigured Product (Top 1 Only)
+-- Shows the single best-selling preconfigured product overall
+CREATE MATERIALIZED VIEW BestSellingPreconfiguredProduct AS
+SELECT 
+    pp.id AS preconfigured_product_id,
+    pp.name,
+    COUNT(op.id) AS times_ordered
+FROM PreconfiguredProduct pp
+JOIN OrderProduct op ON op.preconfigured_product_id = pp.id
+GROUP BY pp.id, pp.name
+ORDER BY times_ordered DESC
+LIMIT 1;
+
+-- To refresh this view periodically, run:
+-- REFRESH MATERIALIZED VIEW BestSellingPreconfiguredProduct;
 
 END;
