@@ -2,18 +2,22 @@
   "name": "marcus_ecommerce",
   "private": true,
   "version": "1.0.0",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
-    "dev:client": "vite --config web/client/vite.config.js",
-    "dev:admin": "vite --config web/admin/vite.config.js",
-    "build:client": "vite build --config web/client/vite.config.js",
-    "build:admin": "vite build --config web/admin/vite.config.js",
+    "dev:client": "vite --config client/vite.config.js",
+    "dev:admin": "vite --config admin/vite.config.js",
+    "build:client": "vite build --config client/vite.config.js",
+    "build:admin": "vite build --config admin/vite.config.js",
     "build": "npm run build:client && npm run build:admin",
-    "preview:client": "vite preview --config web/client/vite.config.js",
-    "preview:admin": "vite preview --config web/admin/vite.config.js"
+    "preview:client": "vite preview --config client/vite.config.js",
+    "preview:admin": "vite preview --config admin/vite.config.js"
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.10.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",

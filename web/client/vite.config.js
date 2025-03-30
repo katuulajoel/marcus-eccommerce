@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  root: path.resolve(__dirname),
   resolve: {
     alias: {
-      '@shared': path.resolve(__dirname, '../../web/shared'),
+      '@shared': path.resolve(__dirname, '../shared'),
       '@client': path.resolve(__dirname, './'),
     },
   },
@@ -14,6 +14,6 @@ export default defineConfig({
     port: 3000,
   },
   build: {
-    outDir: '../../dist/client',
+    outDir: path.resolve(__dirname, '../../dist/client'),
   },
 });
