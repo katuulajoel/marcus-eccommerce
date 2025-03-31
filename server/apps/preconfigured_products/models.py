@@ -1,57 +1,57 @@
 from django.db import models
-from apps.products.models import Category, PartOption
+from apps.products.models import PartOption, Category
 
 class PreConfiguredProduct(models.Model):
-    id = models.AutoField(primary_key=True)
-    category = models.ForeignKey(Category, related_name='preconfigured_products', on_delete=models.CASCADE, db_column='category_id')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
-
+    
+    class Meta:
+        db_table = 'preconfiguredproduct'
+        
     def __str__(self):
         return self.name
-    
-    class Meta:
-        managed = False
 
 class PreConfiguredProductParts(models.Model):
-    id = models.AutoField(primary_key=True)
-    preconfigured_product = models.ForeignKey(PreConfiguredProduct, related_name='parts', 
-                                             on_delete=models.CASCADE, db_column='preconfigured_product_id')
-    part_option = models.ForeignKey(PartOption, related_name='preconfigured_products', 
-                                   on_delete=models.CASCADE, db_column='part_option_id')
-
-    def __str__(self):
-        return f"{self.preconfigured_product.name} - {self.part_option.name}"
+    preconfigured_product = models.ForeignKey(
+        PreConfiguredProduct, 
+        on_delete=models.CASCADE,
+        related_name='parts'
+    )
+    part_option = models.ForeignKey(PartOption, on_delete=models.CASCADE)
     
     class Meta:
-        managed = False
         db_table = 'preconfiguredproductparts'
+        
+    def __str__(self):
+        return f"{self.preconfigured_product.name} - {self.part_option.name}"
 
+# Materialized view models
 class BestSellingPreconfiguredProduct(models.Model):
-    """
-    Model representing the BestSellingPreconfiguredProduct materialized view
-    """
     preconfigured_product_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=255)
     times_ordered = models.IntegerField()
-
-    class Meta:
-        managed = False
-        db_table = 'bestsellingpreconfiguredproduct'
-
-class TopPreconfiguredProductsPerCategory(models.Model):
-    """
-    Model representing the TopPreconfiguredProductsPerCategory materialized view
-    """
-    id = models.AutoField(primary_key=True)
-    category_id = models.IntegerField()
-    product_name = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    image_url = models.URLField(null=True, blank=True)
-    times_ordered = models.IntegerField(default=0)
-    preconfigured_product_id = models.IntegerField()
     
     class Meta:
+        db_table = 'bestsellingpreconfiguredproduct'
         managed = False
+        
+    def __str__(self):
+        return f"{self.name} (ordered {self.times_ordered} times)"
+
+class TopPreconfiguredProductsPerCategory(models.Model):
+    id = models.IntegerField(primary_key=True)
+    category_id = models.IntegerField()
+    product_name = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    times_ordered = models.IntegerField()
+    preconfigured_product_id = models.IntegerField()
+    description = models.TextField(null=True, blank=True)
+    image_url = models.URLField(max_length=500, null=True, blank=True)
+    
+    class Meta:
         db_table = 'toppreconfiguredproductspercategory'
+        managed = False
+        
+    def __str__(self):
+        return f"{self.product_name} (Category {self.category_id})"
