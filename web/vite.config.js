@@ -11,4 +11,5 @@ export default defineConfig({
       '@admin': path.resolve(__dirname, './admin'),
     },
   },
+  publicDir: 'public',
 });

@@ -1,26 +1,23 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Button from '@shared/components/Button';
+import { Routes, Route } from "react-router-dom";
+import { Toaster } from "@client/components/ui/toaster";
+import Home from "@client/pages/Home";
+import CartPage from "@client/pages/CartPage";
+import CustomizePage from "@client/pages/CustomizePage";
+import CategoryPage from "@client/pages/CategoryPage";
 
-function Home() {
+function App() {
   return (
-    <div>
-      <h1>Marcus eCommerce Store</h1>
-      <p>Welcome to our online store!</p>
-      <Button>Shop Now</Button>
-    </div>
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/customize" element={<CustomizePage />} />
+        <Route path="/category/:category" element={<CategoryPage />} />
+      </Routes>
+      <Toaster />
+    </>
   );
 }
 
-function NotFound() {
-  return <h1>404 - Page Not Found</h1>;
-}
-
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-}
+export default App;
