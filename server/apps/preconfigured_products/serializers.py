@@ -27,7 +27,8 @@ class BestSellingPreconfiguredProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TopPreconfiguredProductsPerCategorySerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='preconfigured_name')
+    
     class Meta:
         model = TopPreconfiguredProductsPerCategory
-        fields = ['id', 'category_id', 'product_name', 'description', 'price', 
-                  'image_url', 'times_ordered', 'preconfigured_product_id']
+        fields = ['category_id', 'product_name', 'times_ordered', 'preconfigured_product_id']
