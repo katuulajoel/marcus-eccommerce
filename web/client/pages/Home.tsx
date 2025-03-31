@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { ArrowRight, ChevronRight } from "lucide-react"
 import ProductCarousel from "@client/components/product-carousel"
-import { Button } from "@client/components/ui/button"
+import { Button } from "@shared/components/ui/button"
 import SiteHeader from "@client/components/site-header"
 import { featuredBike, mountainBikes, roadBikes, hybridBikes } from "@client/data/bikes"
 import Footer from "@client/components/footer"

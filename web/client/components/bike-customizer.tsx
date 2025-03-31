@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { AlertCircle, ChevronRight, Check, ShoppingCart } from "lucide-react"
-import { Button } from "@client/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@client/components/ui/radio-group"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@client/components/ui/tabs"
-import { Card, CardContent } from "@client/components/ui/card"
-import { Badge } from "@client/components/ui/badge"
-import { cn } from "@client/lib/utils"
-import { useToast } from "@client/components/ui/use-toast"
+import { Button } from "@shared/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@shared/components/ui/radio-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs"
+import { Card, CardContent } from "@shared/components/ui/card"
+import { Badge } from "@shared/components/ui/badge"
+import { cn } from "@shared/lib/utils"
+import { useToast } from "@shared/components/ui/use-toast"
 import { useCart } from "@client/context/cart-context"
 
 // Define the bike configuration options and prices with added images

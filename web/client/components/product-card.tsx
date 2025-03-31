@@ -1,11 +1,11 @@
 "use client"
 
 import { ShoppingCart } from "lucide-react"
-import { Button } from "@client/components/ui/button"
-import { Card, CardContent } from "@client/components/ui/card"
-import { Badge } from "@client/components/ui/badge"
+import { Button } from "@shared/components/ui/button"
+import { Card, CardContent } from "@shared/components/ui/card"
+import { Badge } from "@shared/components/ui/badge"
 import { useCart } from "@client/context/cart-context"
-import { useToast } from "@client/components/ui/use-toast"
+import { useToast } from "@shared/components/ui/use-toast"
 
 interface ProductCardProps {
   product: {

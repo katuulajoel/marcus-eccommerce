@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 
-import type { ToastActionElement, ToastProps } from "@client/components/ui/toast"
+import type { ToastActionElement, ToastProps } from "@shared/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000

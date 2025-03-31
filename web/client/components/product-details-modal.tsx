@@ -1,10 +1,10 @@
 "use client"
 
 import { X, ShoppingCart } from "lucide-react"
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
-import { useCart } from "../context/cart-context"
-import { useToast } from "./ui/use-toast"
+import { Button } from "@shared/components/ui/button"
+import { Badge } from "@shared/components/ui/badge"
+import { useCart } from "@client/context/cart-context"
+import { useToast } from "@shared/components/ui/use-toast"
 import { Link } from "react-router-dom"
 
 interface ProductSpecification {

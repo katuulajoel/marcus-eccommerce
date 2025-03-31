@@ -1,6 +1,6 @@
 import { ShoppingCart } from "lucide-react"
 import { useCart } from "@client/context/cart-context"
-import { Badge } from "@client/components/ui/badge"
+import { Badge } from "@shared/components/ui/badge"
 import { Link } from "react-router-dom"
 
 export default function CartIcon() {

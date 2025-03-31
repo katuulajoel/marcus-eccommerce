@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag } from "lucide-react"
-import { Button } from "@client/components/ui/button"
+import { Button } from "@shared/components/ui/button"
 import { useCart } from "@client/context/cart-context"
 import SiteHeader from "@client/components/site-header"
-import { Separator } from "@client/components/ui/separator"
-import { Input } from "@client/components/ui/input"
+import { Separator } from "@shared/components/ui/separator"
+import { Input } from "@shared/components/ui/input"
 import Footer from "@client/components/footer"
 
 export default function CartPage() {

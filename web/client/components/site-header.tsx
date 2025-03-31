@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom" // Replace next/link with react-router-dom
-import { Button } from "@client/components/ui/button"
+import { Button } from "@shared/components/ui/button"
 import CartIcon from "@client/components/cart-icon"
 
 export default function SiteHeader() {

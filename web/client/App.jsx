@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
-import { Toaster } from "@client/components/ui/toaster";
+import { Toaster } from "@shared/components/ui/toaster";
 import Home from "@client/pages/Home";
 import CartPage from "@client/pages/CartPage";
 import CustomizePage from "@client/pages/CustomizePage";

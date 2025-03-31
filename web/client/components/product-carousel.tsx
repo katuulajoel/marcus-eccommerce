@@ -4,8 +4,8 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@client/components/ui/button"
-import { cn } from "@client/lib/utils"
+import { Button } from "@shared/components/ui/button"
+import { cn } from "@shared/lib/utils"
 import ProductDetailsModal from "@client/components/product-details-modal"
 import ProductCard from "@client/components/product-card"
 

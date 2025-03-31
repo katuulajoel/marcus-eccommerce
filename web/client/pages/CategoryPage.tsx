@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@client/components/ui/button"
+import { Button } from "@shared/components/ui/button"
 
 import { useState } from "react"
 import { useParams, Link } from "react-router-dom"
