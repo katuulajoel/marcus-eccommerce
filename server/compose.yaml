@@ -39,6 +39,7 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./db/setup_cron_refresh.sql:/docker-entrypoint-initdb.d/02-setup_cron_refresh.sql
       - ./db/mock_data.sql:/docker-entrypoint-initdb.d/03-mock_data.sql
+      - ./db/refresh_materialized_views.sql:/docker-entrypoint-initdb.d/04-refresh_materialized_views.sql
     environment:
       POSTGRES_USER: ecommerce_user
       POSTGRES_PASSWORD: ecommerce_password

@@ -5,8 +5,16 @@ import { Button } from "@shared/components/ui/button"
 import SiteHeader from "@client/components/site-header"
 import { featuredBike, mountainBikes, roadBikes, hybridBikes } from "@client/data/bikes"
 import Footer from "@client/components/footer"
+import { useQuery } from "@tanstack/react-query"
+import { fetchAllProducts } from "@client/services/api"
 
 export default function Home() {
+  // Use react-query's useQuery with object-based syntax
+  const { data: products, error, isLoading } = useQuery({
+    queryKey: ["products"], // Use queryKey as an object property
+    queryFn: fetchAllProducts, // Use queryFn as an object property
+  })
+
   return (
     <div className="min-h-screen bg-white">
       <SiteHeader />

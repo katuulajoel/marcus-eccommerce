@@ -10,6 +10,5 @@ export default defineConfig({
       '@client': path.resolve(__dirname, './client'),
       '@admin': path.resolve(__dirname, './admin'),
     },
-  },
-  publicDir: 'public',
+  }
 });

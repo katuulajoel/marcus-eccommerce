@@ -1,9 +1,9 @@
 from django.db import models
-from apps.products.models import Product, PartOption
+from apps.products.models import Category, PartOption
 
 class PreConfiguredProduct(models.Model):
     id = models.AutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='preconfigured_products', on_delete=models.CASCADE, db_column='product_id')
+    category = models.ForeignKey(Category, related_name='preconfigured_products', on_delete=models.CASCADE, db_column='category_id')
     name = models.CharField(max_length=255)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -11,7 +11,7 @@ class PreConfiguredProduct(models.Model):
         return self.name
     
     class Meta:
-        db_table = 'preconfiguredproduct'
+        managed = False
 
 class PreConfiguredProductParts(models.Model):
     id = models.AutoField(primary_key=True)
@@ -24,4 +24,34 @@ class PreConfiguredProductParts(models.Model):
         return f"{self.preconfigured_product.name} - {self.part_option.name}"
     
     class Meta:
+        managed = False
         db_table = 'preconfiguredproductparts'
+
+class BestSellingPreconfiguredProduct(models.Model):
+    """
+    Model representing the BestSellingPreconfiguredProduct materialized view
+    """
+    preconfigured_product_id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=255)
+    times_ordered = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'bestsellingpreconfiguredproduct'
+
+class TopPreconfiguredProductsPerCategory(models.Model):
+    """
+    Model representing the TopPreconfiguredProductsPerCategory materialized view
+    """
+    id = models.AutoField(primary_key=True)
+    category_id = models.IntegerField()
+    product_name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    image_url = models.URLField(null=True, blank=True)
+    times_ordered = models.IntegerField(default=0)
+    preconfigured_product_id = models.IntegerField()
+    
+    class Meta:
+        managed = False
+        db_table = 'toppreconfiguredproductspercategory'

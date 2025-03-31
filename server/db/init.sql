@@ -7,7 +7,7 @@ CREATE SEQUENCE IF NOT EXISTS partoption_id_seq;
 CREATE SEQUENCE IF NOT EXISTS preconfiguredproduct_id_seq;
 CREATE SEQUENCE IF NOT EXISTS preconfiguredproductparts_id_seq;
 CREATE SEQUENCE IF NOT EXISTS priceadjustmentrule_id_seq;
-CREATE SEQUENCE IF NOT EXISTS product_id_seq;
+CREATE SEQUENCE IF NOT EXISTS category_id_seq;
 CREATE SEQUENCE IF NOT EXISTS stock_id_seq;
 CREATE SEQUENCE IF NOT EXISTS orderproduct_id_seq;
 CREATE SEQUENCE IF NOT EXISTS orderitem_id_seq;
@@ -31,17 +31,17 @@ CREATE TABLE IF NOT EXISTS public.orders (
     CONSTRAINT orders_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.product (
-    id integer NOT NULL DEFAULT nextval('product_id_seq'::regclass),
+CREATE TABLE IF NOT EXISTS public.category (
+    id integer NOT NULL DEFAULT nextval('category_id_seq'::regclass),
     name character varying(255) NOT NULL,
     description text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT product_pkey PRIMARY KEY (id)
+    CONSTRAINT category_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.part (
     name character varying(255) NOT NULL,
-    product_id integer NOT NULL,
+    category_id integer NOT NULL,
     id integer NOT NULL DEFAULT nextval('part_id_seq'::regclass),
     CONSTRAINT part_pkey PRIMARY KEY (id)
 );
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS public.partoption (
 );
 
 CREATE TABLE IF NOT EXISTS public.preconfiguredproduct (
-    product_id integer,
+    category_id integer,
     id integer NOT NULL DEFAULT nextval('preconfiguredproduct_id_seq'::regclass),
     name character varying(255) NOT NULL,
     base_price numeric(10, 2) NOT NULL,
@@ -124,8 +124,8 @@ ALTER TABLE IF EXISTS public.partoption
     NOT VALID;
 
 ALTER TABLE IF EXISTS public.preconfiguredproduct
-    ADD CONSTRAINT product_id FOREIGN KEY (product_id)
-    REFERENCES public.product (id) MATCH SIMPLE
+    ADD CONSTRAINT category_id FOREIGN KEY (category_id)
+    REFERENCES public.category (id) MATCH SIMPLE
     ON UPDATE NO ACTION ON DELETE NO ACTION
     NOT VALID;
 
@@ -178,8 +178,8 @@ ALTER TABLE IF EXISTS public.orderitem
     NOT VALID;
 
 ALTER TABLE IF EXISTS public.part
-    ADD CONSTRAINT product_id FOREIGN KEY (product_id)
-    REFERENCES public.product (id) MATCH SIMPLE
+    ADD CONSTRAINT category_id FOREIGN KEY (category_id)
+    REFERENCES public.category (id) MATCH SIMPLE
     ON UPDATE NO ACTION ON DELETE NO ACTION
     NOT VALID;
 
@@ -204,7 +204,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 
 -- Part indexes
-CREATE INDEX IF NOT EXISTS idx_part_product_id ON part(product_id);
+CREATE INDEX IF NOT EXISTS idx_part_category_id ON part(category_id);
 
 -- PartOption indexes
 CREATE INDEX IF NOT EXISTS idx_partoption_part_id ON partoption(part_id);
@@ -219,21 +219,21 @@ CREATE INDEX IF NOT EXISTS idx_price_adjustment_combo ON priceadjustmentrule(aff
 CREATE INDEX IF NOT EXISTS idx_incompatibility_rule ON incompatibilityrule(part_option_id, incompatible_with_option_id);
 
 -- Create materialized views for analytics
--- 1. Top Preconfigured Products per Product
--- Shows top-selling preconfigured variations per base product
-CREATE MATERIALIZED VIEW TopPreconfiguredProductsPerProduct AS
+-- 1. Top Preconfigured Products per Category
+-- Shows top-selling preconfigured variations per base category
+CREATE MATERIALIZED VIEW TopPreconfiguredProductsPerCategory AS
 SELECT 
-    pp.product_id,
+    pp.category_id,
     pp.id AS preconfigured_product_id,
     pp.name AS preconfigured_name,
     COUNT(op.id) AS times_ordered
 FROM PreconfiguredProduct pp
 JOIN OrderProduct op ON op.preconfigured_product_id = pp.id
-GROUP BY pp.product_id, pp.id, pp.name
-ORDER BY pp.product_id, times_ordered DESC;
+GROUP BY pp.category_id, pp.id, pp.name
+ORDER BY pp.category_id, times_ordered DESC;
 
 -- To refresh this view periodically, run:
--- REFRESH MATERIALIZED VIEW TopPreconfiguredProductsPerProduct;
+-- REFRESH MATERIALIZED VIEW TopPreconfiguredProductsPerCategory;
 
 -- 2. Best-Selling Preconfigured Product (Top 1 Only)
 -- Shows the single best-selling preconfigured product overall

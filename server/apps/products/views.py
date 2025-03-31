@@ -1,20 +1,20 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Product, Part, PartOption, Stock
-from .serializers import ProductSerializer, PartSerializer, PartOptionSerializer, StockSerializer
+from .models import Category, Part, PartOption, Stock
+from .serializers import CategorySerializer, PartSerializer, PartOptionSerializer, StockSerializer
 from .permissions import AllowGetAnonymously
 
-class ProductViewSet(ModelViewSet):
+class CategoryViewSet(ModelViewSet):
     """
-    API endpoint for viewing and editing products
+    API endpoint for viewing and editing categories
     
     **Authentication required**: 
-    - GET: No (anyone can view products)
+    - GET: No (anyone can view categories)
     - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     permission_classes = [AllowGetAnonymously]
 
 class PartViewSet(ModelViewSet):
@@ -31,9 +31,9 @@ class PartViewSet(ModelViewSet):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        product_id = self.request.query_params.get('product_id', None)
-        if product_id:
-            queryset = queryset.filter(product_id=product_id)
+        category_id = self.request.query_params.get('category_id', None)  # Changed from product_id
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)  # Changed from product_id
         return queryset
     
     @action(detail=True, methods=['get'])

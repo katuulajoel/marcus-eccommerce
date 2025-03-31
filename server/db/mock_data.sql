@@ -10,15 +10,15 @@ INSERT INTO customer (id, name, email, phone) VALUES
 -- Reset the customer sequence to continue from the last inserted ID
 SELECT setval('customer_id_seq', (SELECT MAX(id) FROM customer));
 
--- Products
-INSERT INTO product (id, name, description) VALUES
-(1, 'Bicycle', 'Customizable bicycles');
+-- Categories (renamed from Products)
+INSERT INTO category (id, name, description) VALUES
+(1, 'Bicycles', 'Customizable bicycles');
 
--- Reset the product sequence
-SELECT setval('product_id_seq', (SELECT MAX(id) FROM product));
+-- Reset the category sequence
+SELECT setval('category_id_seq', (SELECT MAX(id) FROM category));
 
 -- Parts
-INSERT INTO part (id, name, product_id) VALUES
+INSERT INTO part (id, name, category_id) VALUES
 (1, 'Frame', 1),
 (2, 'Finish', 1),
 (3, 'Wheels', 1),
@@ -45,7 +45,7 @@ INSERT INTO partoption (id, part_id, name, default_price) VALUES
 SELECT setval('partoption_id_seq', (SELECT MAX(id) FROM partoption));
 
 -- Preconfigured Products
-INSERT INTO preconfiguredproduct (id, product_id, name, base_price) VALUES
+INSERT INTO preconfiguredproduct (id, category_id, name, base_price) VALUES
 (1, 1, 'Mountain Bike', 450.00),
 (2, 1, 'City Bike', 300.00);
 

@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import PreConfiguredProduct, PreConfiguredProductParts
+from .models import (
+    PreConfiguredProduct, 
+    PreConfiguredProductParts,
+    BestSellingPreconfiguredProduct,
+    TopPreconfiguredProductsPerCategory
+)
 from apps.products.serializers import PartOptionSerializer
 
 class PreConfiguredProductPartsSerializer(serializers.ModelSerializer):
@@ -15,3 +20,14 @@ class PreConfiguredProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = PreConfiguredProduct
         fields = '__all__'
+
+class BestSellingPreconfiguredProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BestSellingPreconfiguredProduct
+        fields = '__all__'
+
+class TopPreconfiguredProductsPerCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TopPreconfiguredProductsPerCategory
+        fields = ['id', 'category_id', 'product_name', 'description', 'price', 
+                  'image_url', 'times_ordered', 'preconfigured_product_id']

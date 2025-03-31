@@ -11,17 +11,17 @@ BEGIN
         GRANT USAGE ON SCHEMA cron TO ecommerce_user;
         
         -- Step 3: Create unique indexes for both materialized views
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique 
-        ON TopPreconfiguredProductsPerProduct (product_id, preconfigured_product_id);
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique 
+        ON TopPreconfiguredProductsPerCategory (category_id, preconfigured_product_id);
         
         CREATE UNIQUE INDEX IF NOT EXISTS idx_best_selling_unique
         ON BestSellingPreconfiguredProduct (preconfigured_product_id);
         
         -- Step 4: Schedule automatic refreshes using different dollar quote delimiters
-        PERFORM cron.schedule(
+                PERFORM cron.schedule(
           'refresh_top_preconfigured_products',
           '0 */6 * * *',
-          'REFRESH MATERIALIZED VIEW CONCURRENTLY TopPreconfiguredProductsPerProduct'
+          'REFRESH MATERIALIZED VIEW CONCURRENTLY TopPreconfiguredProductsPerCategory'
         );
         
         PERFORM cron.schedule(
@@ -40,7 +40,7 @@ $$;
 
 -- Create the indexes anyway, even if pg_cron isn't available
 CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique 
-ON TopPreconfiguredProductsPerProduct (product_id, preconfigured_product_id);
+ON TopPreconfiguredProductsPerCategory (category_id, preconfigured_product_id);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_best_selling_unique
 ON BestSellingPreconfiguredProduct (preconfigured_product_id);

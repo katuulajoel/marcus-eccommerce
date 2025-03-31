@@ -1,6 +1,6 @@
 from django.db import models
 
-class Product(models.Model):
+class Category(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
@@ -10,12 +10,12 @@ class Product(models.Model):
         return self.name
     
     class Meta:
-        db_table = 'product'
+        db_table = 'category'
 
 class Part(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    product = models.ForeignKey(Product, related_name='parts', on_delete=models.CASCADE, db_column='product_id')
+    category = models.ForeignKey(Category, related_name='parts', on_delete=models.CASCADE, db_column='category_id')
 
     def __str__(self):
         return self.name
