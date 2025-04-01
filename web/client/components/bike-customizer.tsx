@@ -229,21 +229,12 @@ export default function BikeCustomizer({
     }));
   };
 
-  // Function to move to the next part
+  // Updated function to move to the next part without auto-selection
   const goToNextPart = () => {
     const currentIndex = parts.findIndex((part) => part.name === activeTab)
     if (currentIndex < parts.length - 1) {
       const nextPart = parts[currentIndex + 1]
       setActiveTab(nextPart.name)
-
-      // If the next part doesn't have a selection yet and has options,
-      // automatically select the first option
-      if (!configuration[nextPart.name] && nextPart.options && nextPart.options.length > 0) {
-        setConfiguration((prev) => ({
-          ...prev,
-          [nextPart.name]: nextPart.options[0].id.toString(),
-        }))
-      }
     }
   }
 
@@ -475,7 +466,11 @@ export default function BikeCustomizer({
                 <div className="mb-4 flex justify-between items-center">
                   <div>
                     <h3 className="text-xl font-semibold mb-1">{part.name}</h3>
-                    <p className="text-gray-500">Select your preferred option</p>
+                    <p className="text-gray-500">
+                      {configuration[part.name] 
+                        ? "Select your preferred option" 
+                        : "Please select an option to continue"}
+                    </p>
                   </div>
                   {part.step !== parts[parts.length - 1].step && (
                     <Button
