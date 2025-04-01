@@ -39,9 +39,10 @@ export default function Home() {
             id: product.id,
             name: product.name,
             price: parseFloat(product.base_price),
-            image: `/bikes/${product.id}.jpg`,
-            description: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
+            image: product.image_url,
+            description: product.description,
             parts: product.parts,
+            category: categoryName,
         });
       
         return acc;
@@ -71,9 +72,9 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="order-2 md:order-1">
                   <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">{bestSeller.name}</h1>
-                  <p className="text-xl md:text-2xl text-gray-500 mb-4">Premium Quality Custom Bike</p>
+                  <p className="text-xl md:text-2xl text-gray-500 mb-4">Best selling product</p>
                   <p className="text-gray-600 mb-8 max-w-md">
-                    A custom-built bike with premium components designed for optimal performance and comfort.
+                    {bestSeller.description || "A custom-built bike with premium components designed for optimal performance and comfort."}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
@@ -108,7 +109,7 @@ export default function Home() {
                 <div className="order-1 md:order-2 relative">
                   <div className="relative h-[300px] md:h-[500px] w-full">
                     <img
-                      src={`/bikes/${bestSeller.id}.jpg`}
+                      src={bestSeller.image_url}
                       alt={bestSeller.name}
                       className="object-contain w-full h-full"
                       onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
@@ -136,7 +137,7 @@ export default function Home() {
               <div className="container mx-auto px-4">
                 <div className="flex justify-between items-end mb-8">
                   <div>
-                    <h2 className="text-3xl font-bold mb-2">{category} Bikes</h2>
+                    <h2 className="text-3xl font-bold mb-2">{category}</h2>
                     <p className="text-gray-600 max-w-2xl">
                       {category === "Mountain" && "Designed for off-road cycling with features like rugged tires and durable frames."}
                       {category === "Road" && "Optimized for riding on paved roads with speed and efficiency."}

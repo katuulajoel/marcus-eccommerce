@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS public.partoption (
     name character varying(255) NOT NULL,
     default_price numeric(10, 2) NOT NULL,
     image_url character varying(255),
+    description text,
     CONSTRAINT partoption_pkey PRIMARY KEY (id)
 );
 
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS public.preconfiguredproduct (
     name character varying(255) NOT NULL,
     base_price numeric(10, 2) NOT NULL,
     image_url character varying(255),
+    description text,
     CONSTRAINT preconfiguredproduct_pkey PRIMARY KEY (id)
 );
 

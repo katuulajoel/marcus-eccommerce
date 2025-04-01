@@ -12,7 +12,7 @@ SELECT setval('customer_id_seq', (SELECT MAX(id) FROM customer));
 
 -- Categories (renamed from Products)
 INSERT INTO category (id, name, description) VALUES
-(1, 'Bicycles', 'Customizable bicycles');
+(1, 'Bicycles', 'A wide range of customizable bicycles designed for various terrains and purposes. Includes options for mountain biking, city commuting, and road cycling.');
 
 -- Reset the category sequence
 SELECT setval('category_id_seq', (SELECT MAX(id) FROM category));
@@ -29,25 +29,25 @@ INSERT INTO part (id, name, category_id) VALUES
 SELECT setval('part_id_seq', (SELECT MAX(id) FROM part));
 
 -- Part Options
-INSERT INTO partoption (id, part_id, name, default_price, image_url) VALUES
-(1, 1, 'Full-Suspension Frame', 130.00, '/media/partoption/frame_full_suspension.jpg'),
-(2, 1, 'Diamond Frame', 100.00, '/media/partoption/frame_diamond.jpg'),
-(3, 2, 'Matte Finish', 50.00, '/media/partoption/finish_matte.jpg'),
-(4, 2, 'Shiny Finish', 30.00, '/media/partoption/finish_shiny.jpg'),
-(5, 3, 'Mountain Wheels', 90.00, '/media/partoption/wheels_mountain.jpg'),
-(6, 3, 'Road Wheels', 80.00, '/media/partoption/wheels_road.jpg'),
-(7, 4, 'red', 20.00, '/media/partoption/red_rims.jpg'),
-(8, 4, 'white', 20.00, '/media/partoption/white_rims.jpg'),
-(9, 5, '8-Speed Chain', 45.00, '/media/partoption/chain_8_speed.jpg'),
-(10, 5, 'Single-Speed Chain', 40.00, '/media/partoption/chain_single_speed.jpg');
+INSERT INTO partoption (id, part_id, name, default_price, image_url, description) VALUES
+(1, 1, 'Full-Suspension Frame', 130.00, 'http://localhost:8000/media/images/partoption/frame_full_suspension.jpg', 'A durable and lightweight frame designed for rugged mountain trails. Provides excellent shock absorption and stability.'),
+(2, 1, 'Diamond Frame', 100.00, 'http://localhost:8000/media/images/partoption/frame_diamond.jpg', 'A classic frame design known for its strength and simplicity. Ideal for city and road biking.'),
+(3, 2, 'Matte Finish', 50.00, 'http://localhost:8000/media/images/partoption/finish_matte.jpg', 'A sleek and modern matte finish that resists scratches and fingerprints. Perfect for a stylish look.'),
+(4, 2, 'Shiny Finish', 30.00, 'http://localhost:8000/media/images/partoption/finish_shiny.jpg', 'A glossy finish that enhances the bike’s appearance with a reflective shine. Easy to clean and maintain.'),
+(5, 3, 'Mountain Wheels', 90.00, 'http://localhost:8000/media/images/partoption/wheels_mountain.jpg', 'Sturdy wheels designed for off-road biking. Provides excellent grip and durability on uneven terrain.'),
+(6, 3, 'Road Wheels', 80.00, 'http://localhost:8000/media/images/partoption/wheels_road.jpg', 'Lightweight wheels optimized for speed and efficiency on paved roads. Ideal for long-distance rides.'),
+(7, 4, 'red', 20.00, 'http://localhost:8000/media/images/partoption/red_rims.jpg', 'Vibrant red rims that add a bold and sporty look to your bike. Made from high-quality materials for durability.'),
+(8, 4, 'white', 20.00, 'http://localhost:8000/media/images/partoption/white_rims.jpg', 'Elegant white rims that complement any bike design. Provides a clean and modern aesthetic.'),
+(9, 5, '8-Speed Chain', 45.00, 'http://localhost:8000/media/images/partoption/chain_8_speed.jpg', 'A high-performance chain designed for smooth and reliable shifting across 8-speed gears.'),
+(10, 5, 'Single-Speed Chain', 40.00, 'http://localhost:8000/media/images/partoption/chain_single_speed.jpg', 'A durable chain built for single-speed bikes. Offers low maintenance and long-lasting performance.');
 
 -- Reset the partoption sequence
 SELECT setval('partoption_id_seq', (SELECT MAX(id) FROM partoption));
 
 -- Preconfigured Products
-INSERT INTO preconfiguredproduct (id, category_id, name, base_price, image_url) VALUES
-(1, 1, 'Mountain Bike', 450.00, '/media/preconfigured/mountain_bike.jpg'),
-(2, 1, 'City Bike', 300.00, '/media/preconfigured/city_bike.jpg');
+INSERT INTO preconfiguredproduct (id, category_id, name, base_price, image_url, description) VALUES
+(1, 1, 'Mountain Bike', 450.00, 'http://localhost:8000/media/images/preconfigured/mountain_bike.jpg', 'A rugged mountain bike equipped with top-quality components for off-road adventures. Designed for durability and performance on challenging trails.'),
+(2, 1, 'City Bike', 300.00, 'http://localhost:8000/media/images/preconfigured/city_bike.jpg', 'A versatile city bike perfect for commuting and leisure rides. Combines comfort, style, and practicality for urban environments.');
 
 -- Reset the preconfiguredproduct sequence
 SELECT setval('preconfiguredproduct_id_seq', (SELECT MAX(id) FROM preconfiguredproduct));

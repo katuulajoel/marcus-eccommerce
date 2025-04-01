@@ -5,7 +5,9 @@ class PreConfiguredProduct(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    
+    image_url = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+
     class Meta:
         db_table = 'preconfiguredproduct'
         

@@ -56,9 +56,6 @@ export default function ProductCard({ product, onViewDetails }: ProductCardProps
         />
       </div>
       <CardContent className="p-6">
-        <Badge variant="outline" className="mb-2 bg-gray-100">
-          {product.category}
-        </Badge>
         <h3 className="text-xl font-bold mb-1">{product.name}</h3>
         <p className="text-sm text-gray-500 mb-2">{product.tagline}</p>
         <p className="text-lg font-bold mb-4">${product.price}</p>

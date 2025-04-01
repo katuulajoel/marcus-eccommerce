@@ -81,7 +81,20 @@ class BestSellingProductView(APIView):
                 # Include the analytics data
                 data = serializer.data
                 data['times_ordered'] = best_selling.times_ordered
-                data['image_url'] = product.image_url  # Include image_url in the response
+                data['image_url'] = product.image_url
+                data['description'] = product.description  # Include product description
+                
+                # Include part options with descriptions
+                parts = PreConfiguredProductParts.objects.filter(preconfigured_product=product)
+                parts_data = []
+                for part in parts:
+                    part_data = PreConfiguredProductPartsSerializer(part).data
+                    part_option = part.part_option
+                    if part_option:
+                        part_data['part_option_details']['description'] = part_option.description  # Include part option description
+                    parts_data.append(part_data)
+                data['parts'] = parts_data
+                
                 return Response(data)
             return Response({"message": "No best-selling product found"}, status=404)
         except Exception as e:
@@ -149,6 +162,7 @@ class TopProductsPerCategoryViewSet(ViewSet):
                 product_data = PreConfiguredProductSerializer(product).data
                 product_data['times_ordered'] = category_data[product.id]['times_ordered']
                 product_data['image_url'] = product.image_url
+                product_data['description'] = product.description  # Include product description
                 
                 # Add category details
                 cat_id = category_data[product.id]['category_id']
@@ -159,6 +173,17 @@ class TopProductsPerCategoryViewSet(ViewSet):
                     'description': categories[cat_id].description if hasattr(categories[cat_id], 'description') else None,
                     'slug': categories[cat_id].slug if hasattr(categories[cat_id], 'slug') else None
                 }
+                
+                # Include part options with descriptions
+                parts = PreConfiguredProductParts.objects.filter(preconfigured_product=product)
+                parts_data = []
+                for part in parts:
+                    part_data = PreConfiguredProductPartsSerializer(part).data
+                    part_option = part.part_option
+                    if part_option:
+                        part_data['part_option_details']['description'] = part_option.description  # Include part option description
+                    parts_data.append(part_data)
+                product_data['parts'] = parts_data
                 
                 results.append(product_data)
         
