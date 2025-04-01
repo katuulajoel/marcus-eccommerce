@@ -29,3 +29,9 @@ export const fetchTopProducts = async () => {
   const response = await apiClient.get("/api/preconfigured-products/top-products/");
   return response.data;
 };
+
+// Fetch all categories
+export const fetchCategories = async () => {
+  const response = await apiClient.get("/api/categories/");
+  return response.data;
+};

@@ -185,13 +185,15 @@ interface BikeCustomizerProps {
   productName?: string
   productImage?: string
   productId?: string
+  category?: string
 }
 
 export default function BikeCustomizer({
   initialConfiguration = null,
-  productName = "Custom Bike",
+  productName = "Custom Product",
   productImage = "/placeholder.svg?height=300&width=400",
-  productId = "custom-bike",
+  productId = "custom-product",
+  category = "mountain",
 }: BikeCustomizerProps) {
   const [configuration, setConfiguration] = useState(
     initialConfiguration || {
@@ -208,6 +210,14 @@ export default function BikeCustomizer({
   const [activeTab, setActiveTab] = useState("frameType")
   const { toast } = useToast()
   const { addItem } = useCart()
+
+  // Here you could fetch category-specific parts from an API
+  useEffect(() => {
+    // In a real implementation, we would fetch data based on the category
+    console.log(`Fetching parts for category: ${category}`)
+    // API call would go here
+    // For now, we'll use the hardcoded bikeOptions
+  }, [category])
 
   // Check if an option is compatible with the current configuration
   const isCompatible = (category, optionId) => {
@@ -347,7 +357,7 @@ export default function BikeCustomizer({
 
   return (
     <div className="space-y-8">
-      {/* Header with product info if customizing a pre-configured bike */}
+      {/* Header with product info if customizing a pre-configured product */}
       {productName && (
         <div className="bg-white rounded-lg border shadow-sm p-6 flex flex-col md:flex-row gap-6 items-center">
           {productImage && (
@@ -360,10 +370,10 @@ export default function BikeCustomizer({
             </div>
           )}
           <div className="md:w-2/3">
-            <h2 className="text-2xl font-bold mb-2">Build Your Dream Bike</h2>
+            <h2 className="text-2xl font-bold mb-2">Build Your Dream Product</h2>
             <p className="text-gray-600 mb-4">
               You're customizing the <span className="font-semibold">{productName}</span>. Feel free to modify any
-              options to create your perfect ride.
+              options to create your perfect product.
             </p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(configuration).map(([category, value]) => {
@@ -381,12 +391,12 @@ export default function BikeCustomizer({
         </div>
       )}
 
-      {/* If not customizing a pre-configured bike */}
+      {/* If not customizing a pre-configured product */}
       {!productName && (
         <div className="bg-white rounded-lg border shadow-sm p-6">
-          <h2 className="text-2xl font-bold mb-2">Build Your Dream Bike</h2>
+          <h2 className="text-2xl font-bold mb-2">Build Your Dream Product</h2>
           <p className="text-gray-600">
-            Customize every aspect of your bicycle to create the perfect ride for your style and needs. Select from
+            Customize every aspect of your product to create the perfect item for your style and needs. Select from
             premium components and watch your creation come to life.
           </p>
         </div>
