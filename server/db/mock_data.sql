@@ -18,12 +18,12 @@ INSERT INTO category (id, name, description) VALUES
 SELECT setval('category_id_seq', (SELECT MAX(id) FROM category));
 
 -- Parts
-INSERT INTO part (id, name, category_id) VALUES
-(1, 'Frame', 1),
-(2, 'Finish', 1),
-(3, 'Wheels', 1),
-(4, 'Rims', 1),
-(5, 'Chain', 1);
+INSERT INTO part (id, name, category_id, step) VALUES
+(1, 'Frame', 1, 1),
+(2, 'Finish', 1, 2),
+(3, 'Wheels', 1, 3),
+(4, 'Rims', 1, 4),
+(5, 'Chain', 1, 5);
 
 -- Reset the part sequence
 SELECT setval('part_id_seq', (SELECT MAX(id) FROM part));

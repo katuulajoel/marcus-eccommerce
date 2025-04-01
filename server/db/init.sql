@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS public.part (
     name character varying(255) NOT NULL,
     category_id integer NOT NULL,
     id integer NOT NULL DEFAULT nextval('part_id_seq'::regclass),
+    step integer DEFAULT 0,
     CONSTRAINT part_pkey PRIMARY KEY (id)
 );
 

@@ -14,6 +14,7 @@ class Category(models.Model):
 class Part(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    step = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'part'
