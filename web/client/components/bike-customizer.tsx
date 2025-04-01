@@ -367,54 +367,25 @@ export default function BikeCustomizer({
     return basePrice
   }
 
-  // Update formatted price display to show adjustment effect
+  // Simplified price display for an option - just show final price
   const getFormattedPriceDisplay = (option: any) => {
     const optionIdNum = option.id
     const basePrice = parseFloat(option.default_price)
     const adjustment = adjustedPrices[optionIdNum]
-    const hasAdjustment = adjustment !== undefined
-    const finalPrice = hasAdjustment ? basePrice + adjustment : basePrice
+    const finalPrice = adjustment !== undefined ? basePrice + adjustment : basePrice
     
-    // If there's an adjustment that changes the price, show both
-    if (hasAdjustment && adjustment !== 0) {
-      const adjustmentText = adjustment > 0 ? `+$${adjustment}` : `-$${Math.abs(adjustment)}`
-      
-      return (
-        <>
-          <span className="line-through text-gray-400 text-sm mr-2">${basePrice}</span>
-          <span className="text-teal-600 font-semibold">${finalPrice} <span className="text-xs">({adjustmentText})</span></span>
-        </>
-      )
-    }
-    
-    // Otherwise just show the price
+    // Simply return the final price with no visual indicators of adjustments
     return finalPrice > 0 ? `+$${finalPrice}` : "Included"
   }
   
-  // Update the Configuration Summary display with the same logic
+  // Update the Configuration Summary display with the same simplified logic
   const getPriceDisplay = (option: any) => {
     const optionIdNum = parseInt(option.id, 10)
     const basePrice = parseFloat(option.default_price)
     const adjustment = adjustedPrices[optionIdNum]
-    const hasAdjustment = adjustment !== undefined
-    const finalPrice = hasAdjustment ? basePrice + adjustment : basePrice
+    const finalPrice = adjustment !== undefined ? basePrice + adjustment : basePrice
 
-    // If there's an adjustment that changes the price, show both
-    if (hasAdjustment && adjustment !== 0) {
-      const adjustmentText = adjustment > 0 ? `+$${adjustment}` : `-$${Math.abs(adjustment)}`
-      
-      return (
-        <div className="flex flex-col items-end">
-          <div className="flex items-center">
-            <span className="line-through text-gray-400 text-xs mr-1">${basePrice}</span>
-            <span className="text-teal-600 font-semibold">${finalPrice}</span>
-          </div>
-          <span className="text-xs text-amber-600">{adjustmentText}</span>
-        </div>
-      )
-    }
-
-    // Otherwise just show the final price
+    // Simply return the final price with no visual indicators of adjustments
     return (
       <span className="text-teal-600 font-semibold">
         {finalPrice > 0 ? `$${finalPrice}` : "Included"}
