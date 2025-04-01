@@ -19,6 +19,7 @@ from .serializers import (
     TopPreconfiguredProductsPerCategorySerializer
 )
 from .permissions import AllowGetAnonymously
+from apps.products.models import Category
 
 class PreConfiguredProductViewSet(ModelViewSet):
     """
@@ -119,10 +120,12 @@ class TopProductsPerCategoryViewSet(ViewSet):
         result = []
         preconfigured_ids = []
         category_data = {}
+        category_ids = set()
         
         for category_id, group in groupby(queryset, key=attrgetter('category_id')):
             # Convert group to list and limit the number of products per category
             products = list(group)[:limit]
+            category_ids.add(category_id)
             
             # Store analytics data for each product
             for product in products:
@@ -135,13 +138,26 @@ class TopProductsPerCategoryViewSet(ViewSet):
         # Get the full product details
         products = PreConfiguredProduct.objects.filter(id__in=preconfigured_ids)
         
-        # Serialize and enrich with analytics data
+        # Get category details
+        categories = {category.id: category for category in Category.objects.filter(id__in=category_ids)}
+        
+        # Serialize and enrich with analytics data and category details
         results = []
         for product in products:
             if product.id in category_data:
                 product_data = PreConfiguredProductSerializer(product).data
                 product_data['times_ordered'] = category_data[product.id]['times_ordered']
-                product_data['category_id'] = category_data[product.id]['category_id']
+                
+                # Add category details
+                cat_id = category_data[product.id]['category_id']
+                product_data['category_id'] = cat_id
+                product_data['category_details'] = {
+                    'id': cat_id,
+                    'name': categories[cat_id].name,
+                    'description': categories[cat_id].description if hasattr(categories[cat_id], 'description') else None,
+                    'slug': categories[cat_id].slug if hasattr(categories[cat_id], 'slug') else None
+                }
+                
                 results.append(product_data)
         
         return Response(results)

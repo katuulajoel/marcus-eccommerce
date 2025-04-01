@@ -3,160 +3,165 @@ import { ArrowRight, ChevronRight } from "lucide-react"
 import ProductCarousel from "@client/components/product-carousel"
 import { Button } from "@shared/components/ui/button"
 import SiteHeader from "@client/components/site-header"
-import { featuredBike, mountainBikes, roadBikes, hybridBikes } from "@client/data/bikes"
 import Footer from "@client/components/footer"
 import { useQuery } from "@tanstack/react-query"
-import { fetchAllProducts } from "@client/services/api"
+import { fetchBestSellingProduct, fetchTopProducts } from "@client/services/api"
 
 export default function Home() {
-  // Use react-query's useQuery with object-based syntax
-  const { data: products, error, isLoading } = useQuery({
-    queryKey: ["products"], // Use queryKey as an object property
-    queryFn: fetchAllProducts, // Use queryFn as an object property
+  // Fetch the best-selling product for the hero section
+  const { 
+    data: bestSeller, 
+    isLoading: isLoadingBestSeller 
+  } = useQuery({
+    queryKey: ["bestSellingProduct"],
+    queryFn: fetchBestSellingProduct,
   })
 
+  // Fetch top products for category sections
+  const { 
+    data: topProducts, 
+    isLoading: isLoadingTopProducts 
+  } = useQuery({
+    queryKey: ["topProducts"],
+    queryFn: fetchTopProducts,
+  })
+
+  // Group products by category using category_details.name from API
+  const productsByCategory = topProducts ? 
+    topProducts.reduce((acc, product) => {
+        const categoryName = product.category_details.name;
+        
+        if (!acc[categoryName]) {
+            acc[categoryName] = [];
+        }
+        // Format product to match the expected shape for ProductCarousel
+        acc[categoryName].push({
+            id: product.id,
+            name: product.name,
+            price: parseFloat(product.base_price),
+            image: `/bikes/${product.id}.jpg`,
+            description: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
+            parts: product.parts,
+        });
+      
+        return acc;
+    }, {}) : {};
+
+  // Helper function to get features from parts
+  const getFeatures = (parts) => {
+    if (!parts) return [];
+    return parts.map(part => part.part_option_details.name);
+  };
+  
   return (
     <div className="min-h-screen bg-white">
       <SiteHeader />
 
       <main>
         {/* Hero Section */}
-        <section className="relative bg-gray-50 overflow-hidden">
-          <div className="container mx-auto px-4 py-20 md:py-32">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="order-2 md:order-1">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">{featuredBike.name}</h1>
-                <p className="text-xl md:text-2xl text-gray-500 mb-4">{featuredBike.tagline}</p>
-                <p className="text-gray-600 mb-8 max-w-md">{featuredBike.description}</p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
-                    <Link to={`/customize?config=${featuredBike.id}`}>Customize This Bike</Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link to={`/product/${featuredBike.id}`}>View Details</Link>
-                  </Button>
+        {isLoadingBestSeller ? (
+          <section className="relative bg-gray-50 overflow-hidden">
+            <div className="container mx-auto px-4 py-20 md:py-32 text-center">
+              <p>Loading best seller...</p>
+            </div>
+          </section>
+        ) : bestSeller && (
+          <section className="relative bg-gray-50 overflow-hidden">
+            <div className="container mx-auto px-4 py-20 md:py-32">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="order-2 md:order-1">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">{bestSeller.name}</h1>
+                  <p className="text-xl md:text-2xl text-gray-500 mb-4">Premium Quality Custom Bike</p>
+                  <p className="text-gray-600 mb-8 max-w-md">
+                    A custom-built bike with premium components designed for optimal performance and comfort.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
+                      <Link to={`/customize?config=${bestSeller.id}`}>Customize This Bike</Link>
+                    </Button>
+                  </div>
+                  <div className="mt-8">
+                    <p className="text-2xl font-bold mb-2">From ${parseFloat(bestSeller.base_price).toFixed(2)}</p>
+                    <ul className="space-y-2">
+                      {getFeatures(bestSeller.parts).slice(0, 4).map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-teal-600"
+                          >
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="mt-8">
-                  <p className="text-2xl font-bold mb-2">From ${featuredBike.price}</p>
-                  <ul className="space-y-2">
-                    {featuredBike.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-teal-600"
-                        >
-                          <path d="M20 6 9 17l-5-5" />
-                        </svg>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <div className="order-1 md:order-2 relative">
-                <div className="relative h-[300px] md:h-[500px] w-full">
-                  <img
-                    src={featuredBike.image || "/placeholder.svg"}
-                    alt={featuredBike.name}
-                    className="object-contain w-full h-full"
-                  />
+                <div className="order-1 md:order-2 relative">
+                  <div className="relative h-[300px] md:h-[500px] w-full">
+                    <img
+                      src={`/bikes/${bestSeller.id}.jpg`}
+                      alt={bestSeller.name}
+                      className="object-contain w-full h-full"
+                      onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+        
+        {/* Dynamic Category Sections */}
+        {isLoadingTopProducts ? (
+          <section className="py-16 md:py-24">
+            <div className="container mx-auto px-4 text-center">
+              <p>Loading categories...</p>
+            </div>
+          </section>
+        ) : (
+          Object.entries(productsByCategory).map(([category, products], index) => (
+            <section 
+              key={category} 
+              className={`py-16 md:py-24 ${index % 2 === 1 ? 'bg-gray-50' : ''}`}
+            >
+              <div className="container mx-auto px-4">
+                <div className="flex justify-between items-end mb-8">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">{category} Bikes</h2>
+                    <p className="text-gray-600 max-w-2xl">
+                      {category === "Mountain" && "Designed for off-road cycling with features like rugged tires and durable frames."}
+                      {category === "Road" && "Optimized for riding on paved roads with speed and efficiency."}
+                      {category === "Hybrid" && "Versatile bikes that combine features of both road and mountain bikes."}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/category/${category.toLowerCase()}`}
+                    className="hidden md:flex items-center text-teal-600 hover:text-teal-700 font-medium"
+                  >
+                    View all <ChevronRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </div>
 
-        {/* Mountain Bikes Section */}
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">Mountain Bikes</h2>
-                <p className="text-gray-600 max-w-2xl">
-                  Designed for off-road cycling with features like rugged tires and durable frames.
-                </p>
+                <ProductCarousel products={products} />
+
+                <div className="mt-6 md:hidden">
+                  <Link to={`/category/${category.toLowerCase()}`} className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
+                    View all {category.toLowerCase()} bikes <ChevronRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </div>
               </div>
-              <Link
-                to="/category/mountain"
-                className="hidden md:flex items-center text-teal-600 hover:text-teal-700 font-medium"
-              >
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-
-            <ProductCarousel products={mountainBikes} />
-
-            <div className="mt-6 md:hidden">
-              <Link to="/category/mountain" className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
-                View all mountain bikes <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Road Bikes Section */}
-        <section className="py-16 md:py-24 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">Road Bikes</h2>
-                <p className="text-gray-600 max-w-2xl">
-                  Optimized for riding on paved roads with speed and efficiency.
-                </p>
-              </div>
-              <Link
-                to="/category/road"
-                className="hidden md:flex items-center text-teal-600 hover:text-teal-700 font-medium"
-              >
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-
-            <ProductCarousel products={roadBikes} />
-
-            <div className="mt-6 md:hidden">
-              <Link to="/category/road" className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
-                View all road bikes <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Hybrid Bikes Section */}
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">Hybrid Bikes</h2>
-                <p className="text-gray-600 max-w-2xl">
-                  Versatile bikes that combine features of both road and mountain bikes.
-                </p>
-              </div>
-              <Link
-                to="/category/hybrid"
-                className="hidden md:flex items-center text-teal-600 hover:text-teal-700 font-medium"
-              >
-                View all <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-
-            <ProductCarousel products={hybridBikes} />
-
-            <div className="mt-6 md:hidden">
-              <Link to="/category/hybrid" className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
-                View all hybrid bikes <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </div>
-        </section>
+            </section>
+          ))
+        )}
 
         {/* Custom Build CTA Section */}
         <section className="py-16 md:py-24 bg-gray-900 text-white">

@@ -8,7 +8,7 @@ const apiClient = axios.create({
 
 // Fetch the best-selling product
 export const fetchBestSellingProduct = async () => {
-  const response = await apiClient.get("/api/products/best-selling");
+  const response = await apiClient.get("/api/preconfigured-products/best-selling/");
   return response.data;
 };
 
@@ -22,6 +22,12 @@ export const fetchProductsByCategory = async (category: string, limit: number = 
 
 // Fetch all products
 export const fetchAllProducts = async () => {
-    const response = await apiClient.get("/api/products/");
-      return response.data;
+  const response = await apiClient.get("/api/products/");
+  return response.data;
+};
+
+// Fetch top products
+export const fetchTopProducts = async () => {
+  const response = await apiClient.get("/api/preconfigured-products/top-products/");
+  return response.data;
 };

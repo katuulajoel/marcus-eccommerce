@@ -6,6 +6,7 @@ import { Badge } from "@shared/components/ui/badge"
 import { useCart } from "@client/context/cart-context"
 import { useToast } from "@shared/components/ui/use-toast"
 import { Link } from "react-router-dom"
+import React from "react";
 
 interface ProductSpecification {
   name: string
@@ -35,9 +36,10 @@ interface ProductDetailsModalProps {
   product: Product
   isOpen: boolean
   onClose: () => void
+  parts?: Array<{ part_option_details: { name: string } }>
 }
 
-export default function ProductDetailsModal({ product, isOpen, onClose }: ProductDetailsModalProps) {
+export default function ProductDetailsModal({ product, isOpen, onClose, parts = [] }: ProductDetailsModalProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
 
@@ -100,20 +102,10 @@ export default function ProductDetailsModal({ product, isOpen, onClose }: Produc
               <p className="text-2xl font-bold mb-6">${product.price}</p>
               <p className="text-gray-600 mb-6">{product.description}</p>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
-                  <Link to={`/customize?config=${product.id}`}>Customize This Bike</Link>
-                </Button>
-                <Button variant="outline" size="lg" onClick={handleAddToCart} className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4" />
-                  Add to Cart
-                </Button>
-              </div>
-
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-lg font-bold mb-4">Key Features</h2>
                 <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
+                  {product.parts.map((part, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -129,29 +121,13 @@ export default function ProductDetailsModal({ product, isOpen, onClose }: Produc
                       >
                         <path d="M20 6 9 17l-5-5" />
                       </svg>
-                      {feature}
+                      {part.part_option_details.name}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
           </div>
-
-          {product.specifications && (
-            <div className="border-t border-gray-200 pt-6 mb-8">
-              <h2 className="text-xl font-bold mb-6">Technical Specifications</h2>
-              <div className="grid md:grid-cols-2 gap-x-12 gap-y-4">
-                {product.specifications.map((spec, index) => (
-                  <div key={index} className="py-2 border-b border-gray-100">
-                    <div className="flex justify-between">
-                      <span className="font-medium">{spec.name}</span>
-                      <span className="text-gray-600">{spec.value}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="sticky bottom-0 bg-gray-50 p-4 border-t">
