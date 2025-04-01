@@ -435,6 +435,15 @@ export default function BikeCustomizer({
     })
   }
 
+  // Check if all parts have been configured
+  const isConfigurationComplete = () => {
+    // If there are no parts, configuration can't be complete
+    if (parts.length === 0) return false;
+    
+    // Check if each part has a corresponding selection in configuration
+    return parts.every(part => configuration[part.name] !== undefined);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -550,6 +559,7 @@ export default function BikeCustomizer({
               <Button
                 className="w-full mt-6 bg-teal-600 hover:bg-teal-700 flex items-center justify-center gap-2"
                 onClick={addToCart}
+                disabled={!isConfigurationComplete()}
               >
                 <ShoppingCart className="h-4 w-4" />
                 Add to Cart
