@@ -131,6 +131,7 @@ export default function BikeCustomizer({
     const getPriceAdjustmentRules = async () => {
       try {
         const rulesData = await fetchPriceAdjustmentRules()
+        console.log("Price adjustment rules:", rulesData)
         setPriceAdjustmentRules(rulesData)
       } catch (err) {
         console.error("Failed to fetch price adjustment rules:", err)
@@ -195,20 +196,73 @@ export default function BikeCustomizer({
     
     const newAdjustedPrices: { [key: number]: number } = {}
     
-    // Start with no adjustments
+    // Convert configuration values to numbers for comparison
     const selectedOptionIds = Object.values(configuration).map(id => parseInt(id, 10))
+    console.log("Selected option IDs:", selectedOptionIds)
     
     // Check each rule
     priceAdjustmentRules.forEach(rule => {
+      // Log the rule for debugging
+      console.log("Checking rule:", rule, "Selected IDs:", selectedOptionIds)
+      
+      // Ensure we're using the correct field names from the API
+      const conditionOptionId = rule.condition_option
+      const affectedOptionId = rule.affected_option
+      
       // If the condition option is selected
-      if (selectedOptionIds.includes(rule.condition_option)) {
-        // Apply the adjusted price to the affected option
-        newAdjustedPrices[rule.affected_option] = parseFloat(rule.adjusted_price)
+      if (selectedOptionIds.includes(conditionOptionId)) {
+        // Find the affected option to get its base price
+        let affectedOption = null;
+        parts.forEach(part => {
+          const foundOption = part.options?.find(opt => opt.id === affectedOptionId);
+          if (foundOption) {
+            affectedOption = foundOption;
+          }
+        });
+        
+        if (affectedOption) {
+          // Store the adjusted price value from the rule - not the final price
+          // This is the amount to be added to the base price
+          newAdjustedPrices[affectedOptionId] = parseFloat(rule.adjusted_price);
+          console.log(`Rule activated: ${conditionOptionId} is selected, setting price adjustment for ${affectedOptionId} to ${rule.adjusted_price}`);
+        }
       }
     })
     
+    console.log("New price adjustments:", newAdjustedPrices)
     setAdjustedPrices(newAdjustedPrices)
   }, [configuration, priceAdjustmentRules, parts])
+
+  // Updated price calculation to consider price adjustments as additions to base price
+  useEffect(() => {
+    if (Object.keys(configuration).length === 0) return
+
+    let price = 0
+
+    // Add the price of each selected option, considering adjustments
+    Object.entries(configuration).forEach(([partName, optionId]) => {
+      const part = parts.find((p) => p.name === partName)
+      if (!part) return
+
+      const option = part.options.find((opt) => opt.id.toString() === optionId)
+      if (option) {
+        const optionIdNum = option.id
+        const basePrice = parseFloat(option.default_price)
+        const adjustment = adjustedPrices[optionIdNum]
+        
+        // If there's an adjustment, add it to the base price
+        if (adjustment !== undefined) {
+          console.log(`Option ${optionIdNum} base price: ${basePrice}, adjustment: ${adjustment}, final: ${basePrice + adjustment}`)
+          price += basePrice + adjustment
+        } else {
+          price += basePrice
+        }
+      }
+    })
+
+    console.log("Final price:", price)
+    setTotalPrice(price)
+  }, [configuration, parts, adjustedPrices])
 
   // Initialize configuration based on whether we have a preconfigured product
   const initializeConfiguration = (parts: any[]) => {
@@ -232,32 +286,6 @@ export default function BikeCustomizer({
 
     setConfiguration(initialConfig)
   }
-
-  // Updated price calculation to consider price adjustments
-  useEffect(() => {
-    if (Object.keys(configuration).length === 0) return
-
-    let price = 0
-
-    // Add the price of each selected option, considering adjustments
-    Object.entries(configuration).forEach(([partName, optionId]) => {
-      const part = parts.find((p) => p.name === partName)
-      if (!part) return
-
-      const option = part.options.find((opt) => opt.id.toString() === optionId)
-      if (option) {
-        // Check if there's an adjusted price for this option
-        const optionIdNum = parseInt(option.id, 10)
-        if (adjustedPrices[optionIdNum] !== undefined) {
-          price += adjustedPrices[optionIdNum]
-        } else {
-          price += parseFloat(option.default_price)
-        }
-      }
-    })
-
-    setTotalPrice(price)
-  }, [configuration, parts, adjustedPrices])
 
   // Refactor isCompatible to be a pure function with no state updates
   const isCompatible = (partName: string, optionId: string): boolean => {
@@ -329,25 +357,32 @@ export default function BikeCustomizer({
 
   // Get price for an option with adjustments considered
   const getOptionPrice = (option: any) => {
-    const optionIdNum = parseInt(option.id, 10)
-    if (adjustedPrices[optionIdNum] !== undefined) {
-      return adjustedPrices[optionIdNum]
+    const optionIdNum = option.id
+    const basePrice = parseFloat(option.default_price)
+    const adjustment = adjustedPrices[optionIdNum]
+    
+    if (adjustment !== undefined) {
+      return basePrice + adjustment
     }
-    return parseFloat(option.default_price)
+    return basePrice
   }
 
-  // Get formatted price display for an option
+  // Update formatted price display to show adjustment effect
   const getFormattedPriceDisplay = (option: any) => {
-    const optionIdNum = parseInt(option.id, 10)
-    const defaultPrice = parseFloat(option.default_price)
-    const finalPrice = adjustedPrices[optionIdNum] !== undefined ? adjustedPrices[optionIdNum] : defaultPrice
+    const optionIdNum = option.id
+    const basePrice = parseFloat(option.default_price)
+    const adjustment = adjustedPrices[optionIdNum]
+    const hasAdjustment = adjustment !== undefined
+    const finalPrice = hasAdjustment ? basePrice + adjustment : basePrice
     
-    // Show original price and adjusted price if they're different
-    if (adjustedPrices[optionIdNum] !== undefined && adjustedPrices[optionIdNum] !== defaultPrice) {
+    // If there's an adjustment that changes the price, show both
+    if (hasAdjustment && adjustment !== 0) {
+      const adjustmentText = adjustment > 0 ? `+$${adjustment}` : `-$${Math.abs(adjustment)}`
+      
       return (
         <>
-          <span className="line-through text-gray-400 text-sm mr-2">${defaultPrice}</span>
-          <span className="text-teal-600 font-semibold">${finalPrice}</span>
+          <span className="line-through text-gray-400 text-sm mr-2">${basePrice}</span>
+          <span className="text-teal-600 font-semibold">${finalPrice} <span className="text-xs">({adjustmentText})</span></span>
         </>
       )
     }
@@ -355,8 +390,39 @@ export default function BikeCustomizer({
     // Otherwise just show the price
     return finalPrice > 0 ? `+$${finalPrice}` : "Included"
   }
+  
+  // Update the Configuration Summary display with the same logic
+  const getPriceDisplay = (option: any) => {
+    const optionIdNum = parseInt(option.id, 10)
+    const basePrice = parseFloat(option.default_price)
+    const adjustment = adjustedPrices[optionIdNum]
+    const hasAdjustment = adjustment !== undefined
+    const finalPrice = hasAdjustment ? basePrice + adjustment : basePrice
 
-  // Updated getConfigDetails to use adjusted prices
+    // If there's an adjustment that changes the price, show both
+    if (hasAdjustment && adjustment !== 0) {
+      const adjustmentText = adjustment > 0 ? `+$${adjustment}` : `-$${Math.abs(adjustment)}`
+      
+      return (
+        <div className="flex flex-col items-end">
+          <div className="flex items-center">
+            <span className="line-through text-gray-400 text-xs mr-1">${basePrice}</span>
+            <span className="text-teal-600 font-semibold">${finalPrice}</span>
+          </div>
+          <span className="text-xs text-amber-600">{adjustmentText}</span>
+        </div>
+      )
+    }
+
+    // Otherwise just show the final price
+    return (
+      <span className="text-teal-600 font-semibold">
+        {finalPrice > 0 ? `$${finalPrice}` : "Included"}
+      </span>
+    )
+  }
+
+  // Update getConfigDetails to add adjustment to base price
   const getConfigDetails = () => {
     const details: { [key: string]: { name: string; price: number } } = {}
 
@@ -364,9 +430,9 @@ export default function BikeCustomizer({
       const option = getOptionDetails(partName, optionId)
       if (option) {
         const optionIdNum = parseInt(option.id, 10)
-        const finalPrice = adjustedPrices[optionIdNum] !== undefined 
-          ? adjustedPrices[optionIdNum] 
-          : parseFloat(option.default_price)
+        const basePrice = parseFloat(option.default_price)
+        const adjustment = adjustedPrices[optionIdNum]
+        const finalPrice = adjustment !== undefined ? basePrice + adjustment : basePrice
         
         details[partName] = {
           name: option.name,
@@ -484,27 +550,12 @@ export default function BikeCustomizer({
                 const option = getOptionDetails(partName, optionId)
                 if (!option) return null
                 
-                const optionIdNum = parseInt(option.id, 10)
-                const hasAdjustedPrice = adjustedPrices[optionIdNum] !== undefined
-                const finalPrice = hasAdjustedPrice ? adjustedPrices[optionIdNum] : parseFloat(option.default_price)
-
                 return (
                   <li key={partName} className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">{partName}</span>
                     <div className="flex items-center">
                       <span className="font-medium mr-4">{option.name}</span>
-                      {hasAdjustedPrice && parseFloat(option.default_price) !== finalPrice ? (
-                        <div>
-                          <span className="line-through text-gray-400 text-xs mr-1">
-                            ${parseFloat(option.default_price)}
-                          </span>
-                          <span className="text-teal-600 font-semibold">${finalPrice}</span>
-                        </div>
-                      ) : (
-                        <span className="text-teal-600 font-semibold">
-                          {finalPrice > 0 ? `$${finalPrice}` : "Included"}
-                        </span>
-                      )}
+                      {getPriceDisplay(option)}
                     </div>
                   </li>
                 )
