@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@shared/components/ui/alert"
 import { cn } from "@shared/lib/utils"
 import { useToast } from "@shared/components/ui/use-toast"
 import { useCart } from "@client/context/cart-context"
-import { fetchCategories, fetchPartsWithOptions } from "@client/services/api"
+import { fetchCategories, fetchPartsWithOptions, fetchIncompatibilityRules } from "@client/services/api"
 
 interface BikeCustomizerProps {
   initialConfiguration?: {
@@ -43,6 +43,10 @@ export default function BikeCustomizer({
   const [activeTab, setActiveTab] = useState<string>("")
   const [configuration, setConfiguration] = useState<{ [key: string]: string }>({})
   const [totalPrice, setTotalPrice] = useState(0)
+
+  // State for incompatibility rules
+  const [incompatibilityRules, setIncompatibilityRules] = useState<any[]>([])
+  const [incompatibilityMessages, setIncompatibilityMessages] = useState<{ [key: string]: string }>({})
 
   // Effect to load categories and find the category ID
   useEffect(() => {
@@ -99,6 +103,68 @@ export default function BikeCustomizer({
     loadPartsAndOptions()
   }, [categoryId])
 
+  // Fetch incompatibility rules when component mounts
+  useEffect(() => {
+    const getIncompatibilityRules = async () => {
+      try {
+        const rulesData = await fetchIncompatibilityRules()
+        setIncompatibilityRules(rulesData)
+      } catch (err) {
+        console.error("Failed to fetch incompatibility rules:", err)
+      }
+    }
+
+    getIncompatibilityRules()
+  }, [])
+
+  // Add a new useEffect to calculate incompatibility messages whenever configuration or rules change
+  useEffect(() => {
+    if (incompatibilityRules.length === 0 || parts.length === 0) return;
+
+    const newIncompatibilityMessages: { [key: string]: string } = {};
+
+    // For each part and its options
+    parts.forEach((part) => {
+      if (!part.options) return;
+
+      // Check each option against the current configuration
+      part.options.forEach((option) => {
+        const optionId = option.id.toString();
+
+        // Check this option against all selected options in the configuration
+        Object.entries(configuration).forEach(([configPartName, selectedOptionId]) => {
+          if (!selectedOptionId) return;
+          if (part.name === configPartName && optionId === selectedOptionId) return; // Skip checking against self
+
+          // Find the part for this configuration item
+          const configPart = parts.find((p) => p.name === configPartName);
+          if (!configPart) return;
+
+          // Find the selected option
+          const selectedOption = configPart.options.find(
+            (opt) => opt.id.toString() === selectedOptionId,
+          );
+          if (!selectedOption) return;
+
+          // Check for incompatibilities between these two options
+          for (const rule of incompatibilityRules) {
+            const isThisOptionInRule =
+              rule.part_option === option.id || rule.incompatible_with_option === option.id;
+            const isSelectedOptionInRule =
+              rule.part_option === selectedOption.id ||
+              rule.incompatible_with_option === selectedOption.id;
+
+            if (isThisOptionInRule && isSelectedOptionInRule) {
+              newIncompatibilityMessages[`${part.name}-${optionId}`] = rule.message;
+            }
+          }
+        });
+      });
+    });
+
+    setIncompatibilityMessages(newIncompatibilityMessages);
+  }, [configuration, incompatibilityRules, parts]);
+
   // Initialize configuration based on whether we have a preconfigured product
   const initializeConfiguration = (parts: any[]) => {
     const initialConfig: { [key: string]: string } = {}
@@ -142,13 +208,26 @@ export default function BikeCustomizer({
     setTotalPrice(price)
   }, [configuration, parts])
 
-  // Function to handle configuration changes
+  // Refactor isCompatible to be a pure function with no state updates
+  const isCompatible = (partName: string, optionId: string): boolean => {
+    // If we don't have incompatibility rules yet, consider everything compatible
+    if (incompatibilityRules.length === 0) return true;
+
+    // If this option is already in the current configuration, it's compatible
+    if (configuration[partName] === optionId) return true;
+
+    // Check if there's an incompatibility message for this option
+    return !incompatibilityMessages[`${partName}-${optionId}`];
+  };
+
+  // Update handleConfigChange to only update configuration, not incompatibility messages
   const handleConfigChange = (partName: string, optionId: string) => {
+    // Only update the configuration - the useEffect will handle incompatibility messages
     setConfiguration((prev) => ({
       ...prev,
       [partName]: optionId,
-    }))
-  }
+    }));
+  };
 
   // Function to move to the next part
   const goToNextPart = () => {
@@ -192,14 +271,16 @@ export default function BikeCustomizer({
   // Get the image for the current configuration based on active part - simplified
   const getCurrentImage = () => {
     // Try to use the active part's selected option's image
-    const activePart = parts.find(p => p.name === activeTab)
+    const activePart = parts.find((p) => p.name === activeTab)
     if (activePart && configuration[activeTab]) {
-      const activeOption = activePart.options.find(opt => opt.id.toString() === configuration[activeTab])
+      const activeOption = activePart.options.find(
+        (opt) => opt.id.toString() === configuration[activeTab],
+      )
       if (activeOption?.image_url) {
         return activeOption.image_url
       }
     }
-    
+
     // Fall back directly to product image or placeholder
     return productImage || "/placeholder.svg?height=300&width=400"
   }
@@ -413,9 +494,9 @@ export default function BikeCustomizer({
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   {part.options?.map((option) => {
-                    // For now, all options are compatible
-                    const compatible = true
                     const optionId = option.id.toString()
+                    const compatible = isCompatible(part.name, optionId)
+                    const incompatibilityMessage = incompatibilityMessages[`${part.name}-${optionId}`]
 
                     return (
                       <Card
@@ -481,6 +562,13 @@ export default function BikeCustomizer({
                             <p className="text-sm text-gray-500 mb-3 flex-grow">
                               {option.description || "No description available"}
                             </p>
+
+                            {!compatible && (
+                              <div className="flex items-center text-amber-600 mt-1 text-sm">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                {incompatibilityMessage || "Not compatible with current configuration"}
+                              </div>
+                            )}
                           </CardContent>
                         </label>
                       </Card>

@@ -80,7 +80,7 @@ SELECT setval('priceadjustmentrule_id_seq', (SELECT MAX(id) FROM priceadjustment
 -- Incompatibility Rules
 INSERT INTO incompatibilityrule (id, part_option_id, incompatible_with_option_id, message) VALUES
 (1, 5, 2, 'Mountain wheels can only be used with a Full-Suspension Frame.'),
-(2, 8, 5, 'Blue rims are incompatible with Mountain Wheels.');
+(2, 8, 5, 'White rims are incompatible with Mountain Wheels.');
 
 -- Reset the incompatibilityrule sequence
 SELECT setval('incompatibilityrule_id_seq', (SELECT MAX(id) FROM incompatibilityrule));
