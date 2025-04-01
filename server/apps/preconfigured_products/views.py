@@ -1,4 +1,4 @@
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -85,77 +85,63 @@ class BestSellingProductView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
-class TopProductsPerCategoryViewSet(ReadOnlyModelViewSet):
+class TopProductsPerCategoryViewSet(ViewSet):
     """
     API endpoint that returns the top-selling preconfigured products per category.
     This is a read-only view that doesn't require authentication.
     
-    By default, returns the top 3 preconfigured products for each category.
-    Use the 'limit' query parameter to change how many products per category are returned.
+    Returns the top preconfigured products for each category with full product details.
+    Use the 'limit' query parameter to change how many products per category are returned (default: 3).
     Use the 'category_id' query parameter to filter for a specific category.
     """
-    queryset = TopPreconfiguredProductsPerCategory.objects.all().order_by('category_id', '-times_ordered')
-    serializer_class = TopPreconfiguredProductsPerCategorySerializer
     permission_classes = [AllowAny]
     
-    def get_queryset(self):
-        """Allow filtering by category_id"""
-        queryset = super().get_queryset()
-        category_id = self.request.query_params.get('category_id')
+    def list(self, request):
+        """
+        Return top products with full preconfigured product details
+        """
+        # Get limit from query params, default to 3
+        limit = int(request.query_params.get('limit', 3))
+        
+        # Get the base queryset
+        queryset = TopPreconfiguredProductsPerCategory.objects.all().order_by('category_id', '-times_ordered')
+        
+        # Filter by category if needed
+        category_id = request.query_params.get('category_id')
         if category_id:
             queryset = queryset.filter(category_id=category_id)
-        return queryset
-    
-    def list(self, request, *args, **kwargs):
-        """
-        Override list method to group and limit results per category
-        """
-        queryset = self.filter_queryset(self.get_queryset())
-        
+            
         # Check if there are any results
         if not queryset.exists():
             return Response([])
         
-        # Get limit from query params, default to 3
-        limit = int(request.query_params.get('limit', 3))
-        
+        # Group by category and limit results
         result = []
+        preconfigured_ids = []
+        category_data = {}
+        
         for category_id, group in groupby(queryset, key=attrgetter('category_id')):
             # Convert group to list and limit the number of products per category
             products = list(group)[:limit]
-            # Serialize products for each category
-            serialized_products = self.get_serializer(products, many=True).data
-            result.extend(serialized_products)
             
-        return Response(result)
-    
-    @action(detail=False, methods=['get'])
-    def with_details(self, request):
-        """
-        Return top products with full preconfigured product details
-        """
-        # Get basic list response first (to leverage the same grouping/limiting logic)
-        response_data = self.list(request).data
-        
-        # Convert to list of IDs
-        preconfigured_ids = [item['preconfigured_product_id'] for item in response_data]
+            # Store analytics data for each product
+            for product in products:
+                preconfigured_ids.append(product.preconfigured_product_id)
+                category_data[product.preconfigured_product_id] = {
+                    'times_ordered': product.times_ordered,
+                    'category_id': product.category_id
+                }
         
         # Get the full product details
         products = PreConfiguredProduct.objects.filter(id__in=preconfigured_ids)
         
-        # Create a lookup of times_ordered by preconfigured_product_id
-        times_lookup = {item['preconfigured_product_id']: {
-            'times_ordered': item['times_ordered'],
-            'category_id': item['category_id']
-        } for item in response_data}
-        
         # Serialize and enrich with analytics data
         results = []
         for product in products:
-            if product.id in times_lookup:
+            if product.id in category_data:
                 product_data = PreConfiguredProductSerializer(product).data
-                product_data['times_ordered'] = times_lookup[product.id]['times_ordered']
-                product_data['category_id'] = times_lookup[product.id]['category_id']
+                product_data['times_ordered'] = category_data[product.id]['times_ordered']
+                product_data['category_id'] = category_data[product.id]['category_id']
                 results.append(product_data)
         
         return Response(results)

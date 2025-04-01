@@ -11,10 +11,10 @@ from .views import (
 router = DefaultRouter()
 router.register('products', PreConfiguredProductViewSet, basename='preconfigured-product')
 router.register('parts', PreConfiguredProductPartsViewSet, basename='preconfigured-product-part')
-router.register('top-products', TopProductsPerCategoryViewSet, basename='top-products-per-category')
 
 # The API URLs are determined automatically by the router, plus our custom API views
 urlpatterns = [
     path('', include(router.urls)),
     path('best-selling/', BestSellingProductView.as_view(), name='best-selling-product'),
+    path('top-products/', TopProductsPerCategoryViewSet.as_view({'get': 'list'}), name='top-products'),
 ]
