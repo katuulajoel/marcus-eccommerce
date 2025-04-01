@@ -7,6 +7,7 @@ from .models import (
     TopPreconfiguredProductsPerCategory
 )
 from apps.products.serializers import PartOptionSerializer
+from apps.products.models import Category
 
 class PreConfiguredProductPartsSerializer(serializers.ModelSerializer):
     part_option_details = PartOptionSerializer(source='part_option', read_only=True)
@@ -15,9 +16,15 @@ class PreConfiguredProductPartsSerializer(serializers.ModelSerializer):
         model = PreConfiguredProductParts
         fields = '__all__'
 
+class CategoryDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'description']
+
 class PreConfiguredProductSerializer(serializers.ModelSerializer):
     parts = PreConfiguredProductPartsSerializer(many=True, read_only=True)
     image_url = serializers.SerializerMethodField()
+    category_details = CategoryDetailsSerializer(source='category', read_only=True)
 
     class Meta:
         model = PreConfiguredProduct

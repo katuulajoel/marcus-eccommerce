@@ -162,7 +162,7 @@ class TopProductsPerCategoryViewSet(ViewSet):
                 product_data = PreConfiguredProductSerializer(product).data
                 product_data['times_ordered'] = category_data[product.id]['times_ordered']
                 product_data['image_url'] = product.image_url
-                product_data['description'] = product.description  # Include product description
+                product_data['description'] = product.description
                 
                 # Add category details
                 cat_id = category_data[product.id]['category_id']
@@ -188,3 +188,17 @@ class TopProductsPerCategoryViewSet(ViewSet):
                 results.append(product_data)
         
         return Response(results)
+
+class ProductsByCategoryView(APIView):
+    """
+    API endpoint to fetch preconfigured products by category ID.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, category_id, format=None):
+        try:
+            products = PreConfiguredProduct.objects.filter(category_id=category_id)
+            serializer = PreConfiguredProductSerializer(products, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

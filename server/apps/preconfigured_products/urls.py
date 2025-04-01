@@ -4,7 +4,8 @@ from .views import (
     PreConfiguredProductViewSet, 
     PreConfiguredProductPartsViewSet,
     BestSellingProductView,
-    TopProductsPerCategoryViewSet
+    TopProductsPerCategoryViewSet,
+    ProductsByCategoryView
 )
 
 # Create a router and register our viewsets
@@ -17,4 +18,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('best-selling/', BestSellingProductView.as_view(), name='best-selling-product'),
     path('top-products/', TopProductsPerCategoryViewSet.as_view({'get': 'list'}), name='top-products'),
+    path('products-by-category/<int:category_id>/', ProductsByCategoryView.as_view(), name='products-by-category'),
 ]

@@ -1,26 +1,46 @@
 "use client"
 
 import { Button } from "@shared/components/ui/button"
-
 import { useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import ProductCard from "@client/components/product-card"
 import SiteHeader from "@client/components/site-header"
 import ProductDetailsModal from "@client/components/product-details-modal"
-import { bikesByCategory, categoryTitles, categoryDescriptions } from "@client/data/bikes"
 import Footer from "@client/components/footer"
+import { useQuery } from "@tanstack/react-query"
+import { fetchProductsByCategory } from "@client/services/api"
 
 export default function CategoryPage() {
   const { category } = useParams<{ category: string }>()
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Check if category exists
-  const categoryKey = category?.toLowerCase() as keyof typeof bikesByCategory
-  const bikes = bikesByCategory[categoryKey] || []
-  const title = categoryTitles[categoryKey] || `${categoryKey?.charAt(0).toUpperCase() + categoryKey?.slice(1)} Bikes`
-  const description = categoryDescriptions[categoryKey] || ""
+  // Fetch products for the category
+  const { data: rawProducts, isLoading, isError } = useQuery({
+    queryKey: ["productsByCategory", category],
+    queryFn: () => fetchProductsByCategory(Number(category)),
+    enabled: !!category,
+  })
+
+  // Parse the API data
+  const products = rawProducts
+    ? rawProducts.map((product) => ({
+        id: product.id,
+        name: product.name,
+        price: parseFloat(product.base_price),
+        image: product.image_url,
+        description: product.description,
+        parts: product.parts.map((part) => ({
+          id: part.id,
+          name: part.part_option_details.name,
+          price: parseFloat(part.part_option_details.default_price),
+          image: part.part_option_details.image_url,
+          description: part.part_option_details.description,
+        })),
+        category_details: product.category_details,
+      }))
+    : []
 
   const openProductDetails = (product: any) => {
     setSelectedProduct(product)
@@ -31,11 +51,19 @@ export default function CategoryPage() {
     setIsModalOpen(false)
   }
 
-  if (!bikes.length) {
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <p>Loading products...</p>
+      </div>
+    )
+  }
+
+  if (isError || !products.length) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">Category Not Found</h1>
-        <p className="mb-8">The category you're looking for doesn't exist or has been removed.</p>
+        <p className="mb-8">The category you're looking for doesn't exist or has no products.</p>
         <Button asChild>
           <Link to="/">Return to Home</Link>
         </Button>
@@ -56,13 +84,13 @@ export default function CategoryPage() {
         </div>
 
         <div className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{title}</h1>
-          <p className="text-gray-600 max-w-3xl">{description}</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">{products[0]?.category_details?.name || "Category"}</h1>
+          <p className="text-gray-600 max-w-3xl">{products[0]?.category_details?.description || ""}</p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bikes.map((bike) => (
-            <ProductCard key={bike.id} product={bike} onViewDetails={() => openProductDetails(bike)} />
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} onViewDetails={() => openProductDetails(product)} />
           ))}
         </div>
       </main>

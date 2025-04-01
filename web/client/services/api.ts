@@ -13,10 +13,8 @@ export const fetchBestSellingProduct = async () => {
 };
 
 // Fetch a few products per category
-export const fetchProductsByCategory = async (category: string, limit: number = 3) => {
-  const response = await apiClient.get(`/api/categories/${category}/products`, {
-    params: { limit },
-  });
+export const fetchProductsByCategory = async (categoryId: number) => {
+  const response = await apiClient.get(`/api/preconfigured-products/products-by-category/${categoryId}/`);
   return response.data;
 };
 

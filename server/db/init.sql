@@ -222,6 +222,9 @@ CREATE INDEX IF NOT EXISTS idx_price_adjustment_combo ON priceadjustmentrule(aff
 -- IncompatibilityRule indexes
 CREATE INDEX IF NOT EXISTS idx_incompatibility_rule ON incompatibilityrule(part_option_id, incompatible_with_option_id);
 
+-- Add index for category_id in PreConfiguredProduct table
+CREATE INDEX IF NOT EXISTS idx_preconfiguredproduct_category_id ON preconfiguredproduct(category_id);
+
 -- Create materialized views for analytics
 -- 1. Top Preconfigured Products per Category
 -- Shows top-selling preconfigured variations per base category

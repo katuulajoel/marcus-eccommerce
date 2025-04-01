@@ -43,6 +43,7 @@ export default function Home() {
             description: product.description,
             parts: product.parts,
             category: categoryName,
+            category_id: product.category_details.id,
         });
       
         return acc;
@@ -145,7 +146,7 @@ export default function Home() {
                     </p>
                   </div>
                   <Link
-                    to={`/category/${category.toLowerCase()}`}
+                    to={`/category/${products[0]?.category_id}`}
                     className="hidden md:flex items-center text-teal-600 hover:text-teal-700 font-medium"
                   >
                     View all <ChevronRight className="h-4 w-4 ml-1" />
@@ -155,7 +156,7 @@ export default function Home() {
                 <ProductCarousel products={products} />
 
                 <div className="mt-6 md:hidden">
-                  <Link to={`/category/${category.toLowerCase()}`} className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
+                  <Link to={`/category/${products[0]?.category_id}`} className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
                     View all {category.toLowerCase()} bikes <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
                 </div>
