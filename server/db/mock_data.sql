@@ -30,7 +30,7 @@ SELECT setval('part_id_seq', (SELECT MAX(id) FROM part));
 
 -- Part Options
 INSERT INTO partoption (id, part_id, name, default_price, image_url, description) VALUES
-(1, 1, 'Full-Suspension Frame', 130.00, 'http://localhost:8000/media/images/partoption/frame_full_suspension.jpg', 'A durable and lightweight frame designed for rugged mountain trails. Provides excellent shock absorption and stability.'),
+(1, 1, 'Full-Suspension Frame', 130.00, 'http://localhost:8000/media/images/partoption/full_frame_suspension.jpg', 'A durable and lightweight frame designed for rugged mountain trails. Provides excellent shock absorption and stability.'),
 (2, 1, 'Diamond Frame', 100.00, 'http://localhost:8000/media/images/partoption/frame_diamond.jpg', 'A classic frame design known for its strength and simplicity. Ideal for city and road biking.'),
 (3, 2, 'Matte Finish', 50.00, 'http://localhost:8000/media/images/partoption/finish_matte.jpg', 'A sleek and modern matte finish that resists scratches and fingerprints. Perfect for a stylish look.'),
 (4, 2, 'Shiny Finish', 30.00, 'http://localhost:8000/media/images/partoption/finish_shiny.jpg', 'A glossy finish that enhances the bike’s appearance with a reflective shine. Easy to clean and maintain.'),

@@ -99,25 +99,24 @@ export default function BikeCustomizer({
     loadPartsAndOptions()
   }, [categoryId])
 
-  // Initialize configuration with first option of each part or use initialConfiguration
+  // Initialize configuration based on whether we have a preconfigured product
   const initializeConfiguration = (parts: any[]) => {
     const initialConfig: { [key: string]: string } = {}
 
-    // For each part, select the first option by default
-    parts.forEach((part) => {
-      if (part.options && part.options.length > 0) {
-        initialConfig[part.name] = part.options[0].id.toString()
-      }
-    })
-
-    // Override with provided initial configuration if available
     if (initialConfiguration) {
+      // If we have a preconfigured product, use its configuration
       Object.keys(initialConfiguration).forEach((key) => {
         const part = parts.find((p) => p.name === key)
         if (part && part.options.some((opt) => opt.id.toString() === initialConfiguration[key])) {
           initialConfig[key] = initialConfiguration[key]
         }
       })
+    } else {
+      // If creating from scratch, only initialize the first part (if any)
+      // to give the user a starting point
+      if (parts.length > 0 && parts[0].options && parts[0].options.length > 0) {
+        initialConfig[parts[0].name] = parts[0].options[0].id.toString()
+      }
     }
 
     setConfiguration(initialConfig)
@@ -155,7 +154,17 @@ export default function BikeCustomizer({
   const goToNextPart = () => {
     const currentIndex = parts.findIndex((part) => part.name === activeTab)
     if (currentIndex < parts.length - 1) {
-      setActiveTab(parts[currentIndex + 1].name)
+      const nextPart = parts[currentIndex + 1]
+      setActiveTab(nextPart.name)
+
+      // If the next part doesn't have a selection yet and has options,
+      // automatically select the first option
+      if (!configuration[nextPart.name] && nextPart.options && nextPart.options.length > 0) {
+        setConfiguration((prev) => ({
+          ...prev,
+          [nextPart.name]: nextPart.options[0].id.toString(),
+        }))
+      }
     }
   }
 
@@ -330,6 +339,14 @@ export default function BikeCustomizer({
                   </li>
                 )
               })}
+
+              {/* Show unconfigured parts as pending */}
+              {parts.filter((part) => !configuration[part.name]).map((part) => (
+                <li key={part.name} className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-600">{part.name}</span>
+                  <span className="text-amber-500 italic">Not yet configured</span>
+                </li>
+              ))}
             </ul>
 
             <div className="pt-4 border-t border-gray-200">
@@ -380,7 +397,11 @@ export default function BikeCustomizer({
                     <p className="text-gray-500">Select your preferred option</p>
                   </div>
                   {part.step !== parts[parts.length - 1].step && (
-                    <Button onClick={goToNextPart} className="bg-teal-600 hover:bg-teal-700">
+                    <Button
+                      onClick={goToNextPart}
+                      className="bg-teal-600 hover:bg-teal-700"
+                      disabled={!configuration[part.name]} // Disable if no selection made
+                    >
                       Next <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   )}
