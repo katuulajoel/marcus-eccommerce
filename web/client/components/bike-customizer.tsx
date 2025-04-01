@@ -11,7 +11,12 @@ import { Alert, AlertDescription } from "@shared/components/ui/alert"
 import { cn } from "@shared/lib/utils"
 import { useToast } from "@shared/components/ui/use-toast"
 import { useCart } from "@client/context/cart-context"
-import { fetchCategories, fetchPartsWithOptions, fetchIncompatibilityRules } from "@client/services/api"
+import { 
+  fetchCategories, 
+  fetchPartsWithOptions, 
+  fetchIncompatibilityRules,
+  fetchPriceAdjustmentRules 
+} from "@client/services/api"
 
 interface BikeCustomizerProps {
   initialConfiguration?: {
@@ -47,6 +52,10 @@ export default function BikeCustomizer({
   // State for incompatibility rules
   const [incompatibilityRules, setIncompatibilityRules] = useState<any[]>([])
   const [incompatibilityMessages, setIncompatibilityMessages] = useState<{ [key: string]: string }>({})
+
+  // Add state for price adjustment rules and adjusted prices
+  const [priceAdjustmentRules, setPriceAdjustmentRules] = useState<any[]>([])
+  const [adjustedPrices, setAdjustedPrices] = useState<{ [key: number]: number }>({})
 
   // Effect to load categories and find the category ID
   useEffect(() => {
@@ -117,6 +126,20 @@ export default function BikeCustomizer({
     getIncompatibilityRules()
   }, [])
 
+  // Fetch price adjustment rules when component mounts
+  useEffect(() => {
+    const getPriceAdjustmentRules = async () => {
+      try {
+        const rulesData = await fetchPriceAdjustmentRules()
+        setPriceAdjustmentRules(rulesData)
+      } catch (err) {
+        console.error("Failed to fetch price adjustment rules:", err)
+      }
+    }
+
+    getPriceAdjustmentRules()
+  }, [])
+
   // Add a new useEffect to calculate incompatibility messages whenever configuration or rules change
   useEffect(() => {
     if (incompatibilityRules.length === 0 || parts.length === 0) return;
@@ -165,6 +188,28 @@ export default function BikeCustomizer({
     setIncompatibilityMessages(newIncompatibilityMessages);
   }, [configuration, incompatibilityRules, parts]);
 
+  // Calculate adjusted prices whenever configuration or rules change
+  useEffect(() => {
+    // Skip if we don't have rules or parts data yet
+    if (priceAdjustmentRules.length === 0 || parts.length === 0) return
+    
+    const newAdjustedPrices: { [key: number]: number } = {}
+    
+    // Start with no adjustments
+    const selectedOptionIds = Object.values(configuration).map(id => parseInt(id, 10))
+    
+    // Check each rule
+    priceAdjustmentRules.forEach(rule => {
+      // If the condition option is selected
+      if (selectedOptionIds.includes(rule.condition_option)) {
+        // Apply the adjusted price to the affected option
+        newAdjustedPrices[rule.affected_option] = parseFloat(rule.adjusted_price)
+      }
+    })
+    
+    setAdjustedPrices(newAdjustedPrices)
+  }, [configuration, priceAdjustmentRules, parts])
+
   // Initialize configuration based on whether we have a preconfigured product
   const initializeConfiguration = (parts: any[]) => {
     const initialConfig: { [key: string]: string } = {}
@@ -188,25 +233,31 @@ export default function BikeCustomizer({
     setConfiguration(initialConfig)
   }
 
-  // Calculate total price whenever configuration changes
+  // Updated price calculation to consider price adjustments
   useEffect(() => {
     if (Object.keys(configuration).length === 0) return
 
     let price = 0
 
-    // Add the price of each selected option
+    // Add the price of each selected option, considering adjustments
     Object.entries(configuration).forEach(([partName, optionId]) => {
       const part = parts.find((p) => p.name === partName)
       if (!part) return
 
       const option = part.options.find((opt) => opt.id.toString() === optionId)
       if (option) {
-        price += parseFloat(option.default_price)
+        // Check if there's an adjusted price for this option
+        const optionIdNum = parseInt(option.id, 10)
+        if (adjustedPrices[optionIdNum] !== undefined) {
+          price += adjustedPrices[optionIdNum]
+        } else {
+          price += parseFloat(option.default_price)
+        }
       }
     })
 
     setTotalPrice(price)
-  }, [configuration, parts])
+  }, [configuration, parts, adjustedPrices])
 
   // Refactor isCompatible to be a pure function with no state updates
   const isCompatible = (partName: string, optionId: string): boolean => {
@@ -276,16 +327,50 @@ export default function BikeCustomizer({
     return productImage || "/placeholder.svg?height=300&width=400"
   }
 
-  // Create configuration details object for cart
+  // Get price for an option with adjustments considered
+  const getOptionPrice = (option: any) => {
+    const optionIdNum = parseInt(option.id, 10)
+    if (adjustedPrices[optionIdNum] !== undefined) {
+      return adjustedPrices[optionIdNum]
+    }
+    return parseFloat(option.default_price)
+  }
+
+  // Get formatted price display for an option
+  const getFormattedPriceDisplay = (option: any) => {
+    const optionIdNum = parseInt(option.id, 10)
+    const defaultPrice = parseFloat(option.default_price)
+    const finalPrice = adjustedPrices[optionIdNum] !== undefined ? adjustedPrices[optionIdNum] : defaultPrice
+    
+    // Show original price and adjusted price if they're different
+    if (adjustedPrices[optionIdNum] !== undefined && adjustedPrices[optionIdNum] !== defaultPrice) {
+      return (
+        <>
+          <span className="line-through text-gray-400 text-sm mr-2">${defaultPrice}</span>
+          <span className="text-teal-600 font-semibold">${finalPrice}</span>
+        </>
+      )
+    }
+    
+    // Otherwise just show the price
+    return finalPrice > 0 ? `+$${finalPrice}` : "Included"
+  }
+
+  // Updated getConfigDetails to use adjusted prices
   const getConfigDetails = () => {
     const details: { [key: string]: { name: string; price: number } } = {}
 
     Object.entries(configuration).forEach(([partName, optionId]) => {
       const option = getOptionDetails(partName, optionId)
       if (option) {
+        const optionIdNum = parseInt(option.id, 10)
+        const finalPrice = adjustedPrices[optionIdNum] !== undefined 
+          ? adjustedPrices[optionIdNum] 
+          : parseFloat(option.default_price)
+        
         details[partName] = {
           name: option.name,
-          price: parseFloat(option.default_price),
+          price: finalPrice,
         }
       }
     })
@@ -398,15 +483,28 @@ export default function BikeCustomizer({
               {Object.entries(configuration).map(([partName, optionId]) => {
                 const option = getOptionDetails(partName, optionId)
                 if (!option) return null
+                
+                const optionIdNum = parseInt(option.id, 10)
+                const hasAdjustedPrice = adjustedPrices[optionIdNum] !== undefined
+                const finalPrice = hasAdjustedPrice ? adjustedPrices[optionIdNum] : parseFloat(option.default_price)
 
                 return (
                   <li key={partName} className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">{partName}</span>
                     <div className="flex items-center">
                       <span className="font-medium mr-4">{option.name}</span>
-                      <span className="text-teal-600 font-semibold">
-                        {parseFloat(option.default_price) > 0 ? `$${option.default_price}` : "Included"}
-                      </span>
+                      {hasAdjustedPrice && parseFloat(option.default_price) !== finalPrice ? (
+                        <div>
+                          <span className="line-through text-gray-400 text-xs mr-1">
+                            ${parseFloat(option.default_price)}
+                          </span>
+                          <span className="text-teal-600 font-semibold">${finalPrice}</span>
+                        </div>
+                      ) : (
+                        <span className="text-teal-600 font-semibold">
+                          {finalPrice > 0 ? `$${finalPrice}` : "Included"}
+                        </span>
+                      )}
                     </div>
                   </li>
                 )
@@ -550,7 +648,7 @@ export default function BikeCustomizer({
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium text-lg">{option.name}</h4>
                               <span className="text-teal-600 font-semibold">
-                                {parseFloat(option.default_price) > 0 ? `+$${option.default_price}` : "Included"}
+                                {getFormattedPriceDisplay(option)}
                               </span>
                             </div>
 
