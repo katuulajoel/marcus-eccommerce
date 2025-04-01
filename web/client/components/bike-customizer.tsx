@@ -189,18 +189,18 @@ export default function BikeCustomizer({
     return option?.image_url || "/placeholder.svg?height=150&width=150"
   }
 
-  // Get the image for the current configuration
+  // Get the image for the current configuration based on active part - simplified
   const getCurrentImage = () => {
-    // Try to get the frame/main part image
-    const mainPartName = parts[0]?.name
-    if (mainPartName && configuration[mainPartName]) {
-      const option = getOptionDetails(mainPartName, configuration[mainPartName])
-      if (option?.image_url) {
-        return option.image_url
+    // Try to use the active part's selected option's image
+    const activePart = parts.find(p => p.name === activeTab)
+    if (activePart && configuration[activeTab]) {
+      const activeOption = activePart.options.find(opt => opt.id.toString() === configuration[activeTab])
+      if (activeOption?.image_url) {
+        return activeOption.image_url
       }
     }
-
-    // Fall back to product image
+    
+    // Fall back directly to product image or placeholder
     return productImage || "/placeholder.svg?height=300&width=400"
   }
 
