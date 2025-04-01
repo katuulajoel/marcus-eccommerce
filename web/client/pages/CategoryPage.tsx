@@ -31,13 +31,8 @@ export default function CategoryPage() {
         price: parseFloat(product.base_price),
         image: product.image_url,
         description: product.description,
-        parts: product.parts.map((part) => ({
-          id: part.id,
-          name: part.part_option_details.name,
-          price: parseFloat(part.part_option_details.default_price),
-          image: part.part_option_details.image_url,
-          description: part.part_option_details.description,
-        })),
+        parts: product.parts,
+        category: product.category_details.name,
         category_details: product.category_details,
       }))
     : []
@@ -90,7 +85,11 @@ export default function CategoryPage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} onViewDetails={() => openProductDetails(product)} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onViewDetails={() => openProductDetails(product)}
+            />
           ))}
         </div>
       </main>
