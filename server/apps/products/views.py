@@ -16,6 +16,14 @@ class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AllowGetAnonymously]
+    
+    @action(detail=True, methods=['get'])
+    def parts(self, request, pk=None):
+        """Get all parts for a specific category"""
+        category = self.get_object()
+        parts = Part.objects.filter(category=category)
+        serializer = PartSerializer(parts, many=True)
+        return Response(serializer.data)
 
 class PartViewSet(ModelViewSet):
     """
@@ -31,9 +39,9 @@ class PartViewSet(ModelViewSet):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        category_id = self.request.query_params.get('category_id', None)  # Changed from product_id
+        category_id = self.request.query_params.get('category_id', None)
         if category_id:
-            queryset = queryset.filter(category_id=category_id)  # Changed from product_id
+            queryset = queryset.filter(category_id=category_id)
         return queryset
     
     @action(detail=True, methods=['get'])

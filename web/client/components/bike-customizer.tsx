@@ -1,186 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AlertCircle, ChevronRight, Check, ShoppingCart } from "lucide-react"
+import { AlertCircle, ChevronRight, Check, ShoppingCart, Loader2 } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@shared/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs"
 import { Card, CardContent } from "@shared/components/ui/card"
 import { Badge } from "@shared/components/ui/badge"
+import { Alert, AlertDescription } from "@shared/components/ui/alert"
 import { cn } from "@shared/lib/utils"
 import { useToast } from "@shared/components/ui/use-toast"
 import { useCart } from "@client/context/cart-context"
-
-// Define the bike configuration options and prices with added images
-const bikeOptions = {
-  frameType: [
-    {
-      id: "full-suspension",
-      name: "Full-suspension",
-      price: 1200,
-      image: "/placeholder.svg?height=300&width=400",
-      partImage: "/placeholder.svg?height=150&width=150",
-      description:
-        "Full-suspension frames offer maximum comfort and control on rough terrain with front and rear shock absorption.",
-    },
-    {
-      id: "diamond",
-      name: "Diamond",
-      price: 900,
-      image: "/placeholder.svg?height=300&width=400",
-      partImage: "/placeholder.svg?height=150&width=150",
-      description:
-        "Diamond frames provide a classic design with excellent stiffness and power transfer, ideal for efficiency.",
-    },
-    {
-      id: "step-through",
-      name: "Step-through",
-      price: 850,
-      image: "/placeholder.svg?height=300&width=400",
-      partImage: "/placeholder.svg?height=150&width=150",
-      description:
-        "Step-through frames allow easy mounting and dismounting, perfect for urban riding and casual cyclists.",
-    },
-  ],
-  frameFinish: [
-    {
-      id: "matte",
-      name: "Matte",
-      price: 100,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Matte finish provides a sophisticated, non-reflective look that hides minor scratches.",
-    },
-    {
-      id: "shiny",
-      name: "Shiny",
-      price: 150,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Shiny finish gives a glossy, eye-catching appearance that makes your bike stand out.",
-    },
-  ],
-  wheels: [
-    {
-      id: "road",
-      name: "Road wheels",
-      price: 300,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Road wheels are lightweight and aerodynamic, designed for speed and efficiency on paved surfaces.",
-    },
-    {
-      id: "mountain",
-      name: "Mountain wheels",
-      price: 350,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Mountain wheels are durable and wide, providing excellent traction and stability on rough terrain.",
-    },
-    {
-      id: "fat",
-      name: "Fat bike wheels",
-      price: 450,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description:
-        "Fat bike wheels offer maximum surface area for superior traction in snow, sand, and extremely loose terrain.",
-    },
-  ],
-  rimColor: [
-    {
-      id: "red",
-      name: "Red",
-      price: 50,
-      color: "#ef4444",
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Vibrant red rims add a bold, energetic accent to your bike.",
-    },
-    {
-      id: "black",
-      name: "Black",
-      price: 0,
-      color: "#000000",
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Classic black rims provide a timeless, versatile look that matches any frame.",
-    },
-    {
-      id: "blue",
-      name: "Blue",
-      price: 50,
-      color: "#3b82f6",
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Cool blue rims create a distinctive appearance that stands out from the crowd.",
-    },
-  ],
-  chain: [
-    {
-      id: "single-speed",
-      name: "Single-speed chain",
-      price: 80,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "Single-speed chains offer simplicity, low maintenance, and a clean look for urban riding.",
-    },
-    {
-      id: "8-speed",
-      name: "8-speed chain",
-      price: 120,
-      partImage: "/placeholder.svg?height=150&width=150",
-      description: "8-speed chains provide versatility with multiple gears to handle various terrains and gradients.",
-    },
-  ],
-}
-
-// Define compatibility rules
-const compatibilityRules = {
-  frameType: {
-    "full-suspension": {
-      wheels: ["mountain", "fat"],
-      chain: ["8-speed"],
-    },
-    diamond: {
-      wheels: ["road", "mountain"],
-      chain: ["single-speed", "8-speed"],
-    },
-    "step-through": {
-      wheels: ["road"],
-      chain: ["single-speed"],
-    },
-  },
-  wheels: {
-    fat: {
-      frameType: ["full-suspension"],
-    },
-  },
-}
-
-// Part order and display names for the bike visualization
-const partOrder = [
-  {
-    key: "frameType",
-    name: "Frame Type",
-    description: "The main structure of your bike that determines its overall shape and riding style.",
-  },
-  {
-    key: "frameFinish",
-    name: "Frame Finish",
-    description: "The surface treatment that affects both appearance and durability of your frame.",
-  },
-  {
-    key: "wheels",
-    name: "Wheels",
-    description: "The type of wheels affects how your bike handles different terrains and conditions.",
-  },
-  { key: "rimColor", name: "Rim Color", description: "Customize the look of your wheels with different rim colors." },
-  {
-    key: "chain",
-    name: "Chain",
-    description: "The drivetrain component that transfers power from the pedals to the wheels.",
-  },
-]
+import { fetchCategories, fetchPartsWithOptions } from "@client/services/api"
 
 interface BikeCustomizerProps {
   initialConfiguration?: {
-    frameType: string
-    frameFinish: string
-    wheels: string
-    rimColor: string
-    chain: string
+    [key: string]: string
   } | null
   productName?: string
   productImage?: string
@@ -193,141 +28,183 @@ export default function BikeCustomizer({
   productName = "Custom Product",
   productImage = "/placeholder.svg?height=300&width=400",
   productId = "custom-product",
-  category = "mountain",
+  category = "bicycles",
 }: BikeCustomizerProps) {
-  const [configuration, setConfiguration] = useState(
-    initialConfiguration || {
-      frameType: "diamond",
-      frameFinish: "matte",
-      wheels: "road",
-      rimColor: "black",
-      chain: "single-speed",
-    },
-  )
-
-  const [totalPrice, setTotalPrice] = useState(0)
-  const [focusedPart, setFocusedPart] = useState<string | null>("frameType")
-  const [activeTab, setActiveTab] = useState("frameType")
   const { toast } = useToast()
   const { addItem } = useCart()
 
-  // Here you could fetch category-specific parts from an API
+  // State for API data
+  const [categoryId, setCategoryId] = useState<number | null>(null)
+  const [parts, setParts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // State for customization
+  const [activeTab, setActiveTab] = useState<string>("")
+  const [configuration, setConfiguration] = useState<{ [key: string]: string }>({})
+  const [totalPrice, setTotalPrice] = useState(0)
+
+  // Effect to load categories and find the category ID
   useEffect(() => {
-    // In a real implementation, we would fetch data based on the category
-    console.log(`Fetching parts for category: ${category}`)
-    // API call would go here
-    // For now, we'll use the hardcoded bikeOptions
+    const getCategory = async () => {
+      try {
+        if (!category) return
+
+        const categories = await fetchCategories()
+        const matchedCategory = categories.find(
+          (cat) => cat.name.toLowerCase() === category.toLowerCase(),
+        )
+
+        if (matchedCategory) {
+          setCategoryId(matchedCategory.id)
+        } else {
+          setError(`Category "${category}" not found.`)
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err)
+        setError("Failed to load category information.")
+      }
+    }
+
+    getCategory()
   }, [category])
 
-  // Check if an option is compatible with the current configuration
-  const isCompatible = (category, optionId) => {
-    // If there are no specific rules for this category, it's compatible
-    if (!compatibilityRules[category]) {
-      return true
-    }
+  // Effect to load parts and options when categoryId changes
+  useEffect(() => {
+    const loadPartsAndOptions = async () => {
+      if (!categoryId) return
 
-    // For categories like "wheels" that have rules for specific options
-    if (compatibilityRules[category][optionId]) {
-      // Check if the current frameType is compatible with this option
-      const allowedFrameTypes = compatibilityRules[category][optionId].frameType
-      if (allowedFrameTypes && !allowedFrameTypes.includes(configuration.frameType)) {
-        return false
+      setLoading(true)
+      try {
+        const partsData = await fetchPartsWithOptions(categoryId)
+
+        // Sort parts by step order (already sorted by the API)
+        setParts(partsData)
+
+        // Set the first part as active if we have parts
+        if (partsData.length > 0) {
+          setActiveTab(partsData[0].name)
+        }
+
+        // Initialize configuration with first option of each part
+        initializeConfiguration(partsData)
+      } catch (err) {
+        console.error("Failed to load parts:", err)
+        setError("Failed to load product parts. Please try again later.")
+      } finally {
+        setLoading(false)
       }
     }
 
-    // For frameType compatibility rules
-    if (category === "wheels" || category === "chain") {
-      // Check if the current frameType has restrictions for this category
-      const frameTypeRules = compatibilityRules.frameType[configuration.frameType]
-      if (frameTypeRules && frameTypeRules[category]) {
-        return frameTypeRules[category].includes(optionId)
-      }
-    }
+    loadPartsAndOptions()
+  }, [categoryId])
 
-    // If no specific rules apply, it's compatible
-    return true
-  }
+  // Initialize configuration with first option of each part or use initialConfiguration
+  const initializeConfiguration = (parts: any[]) => {
+    const initialConfig: { [key: string]: string } = {}
 
-  // Handle configuration changes
-  const handleConfigChange = (category, value) => {
-    // Create a new configuration object
-    const newConfig = { ...configuration, [category]: value }
-
-    // Check if we need to update other options for compatibility
-    Object.keys(compatibilityRules).forEach((ruleCategory) => {
-      if (ruleCategory === category && compatibilityRules[ruleCategory][value]) {
-        // This category has rules that might affect other categories
-        Object.entries(compatibilityRules[ruleCategory][value]).forEach(([affectedCategory, allowedValues]) => {
-          // If the current value for the affected category is not allowed, change it to the first allowed value
-          if (!allowedValues.includes(newConfig[affectedCategory])) {
-            newConfig[affectedCategory] = allowedValues[0]
-          }
-        })
+    // For each part, select the first option by default
+    parts.forEach((part) => {
+      if (part.options && part.options.length > 0) {
+        initialConfig[part.name] = part.options[0].id.toString()
       }
     })
 
-    setConfiguration(newConfig)
+    // Override with provided initial configuration if available
+    if (initialConfiguration) {
+      Object.keys(initialConfiguration).forEach((key) => {
+        const part = parts.find((p) => p.name === key)
+        if (part && part.options.some((opt) => opt.id.toString() === initialConfiguration[key])) {
+          initialConfig[key] = initialConfiguration[key]
+        }
+      })
+    }
+
+    setConfiguration(initialConfig)
   }
 
   // Calculate total price whenever configuration changes
   useEffect(() => {
+    if (Object.keys(configuration).length === 0) return
+
     let price = 0
 
     // Add the price of each selected option
-    Object.entries(configuration).forEach(([category, selectedId]) => {
-      const option = bikeOptions[category]?.find((opt) => opt.id === selectedId)
+    Object.entries(configuration).forEach(([partName, optionId]) => {
+      const part = parts.find((p) => p.name === partName)
+      if (!part) return
+
+      const option = part.options.find((opt) => opt.id.toString() === optionId)
       if (option) {
-        price += option.price
+        price += parseFloat(option.default_price)
       }
     })
 
     setTotalPrice(price)
-  }, [configuration])
+  }, [configuration, parts])
 
-  // Get the current frame image based on the selected frame type
-  const getCurrentFrameImage = () => {
-    const frameOption = bikeOptions.frameType.find((opt) => opt.id === configuration.frameType)
-    return frameOption ? frameOption.image : "/placeholder.svg?height=300&width=400"
+  // Function to handle configuration changes
+  const handleConfigChange = (partName: string, optionId: string) => {
+    setConfiguration((prev) => ({
+      ...prev,
+      [partName]: optionId,
+    }))
   }
 
-  // Get part image for current configuration
-  const getPartImage = (category: string) => {
-    const selectedId = configuration[category]
-    const option = bikeOptions[category].find((opt) => opt.id === selectedId)
-    return option?.partImage || "/placeholder.svg?height=150&width=150"
-  }
-
-  // Get current option for a given category
-  const getCurrentOption = (category: string) => {
-    const selectedId = configuration[category]
-    return bikeOptions[category].find((opt) => opt.id === selectedId)
-  }
-
-  // Function to move to the next part in the customization flow
+  // Function to move to the next part
   const goToNextPart = () => {
-    const currentIndex = partOrder.findIndex((part) => part.key === activeTab)
-    if (currentIndex < partOrder.length - 1) {
-      setActiveTab(partOrder[currentIndex + 1].key)
-      setFocusedPart(partOrder[currentIndex + 1].key)
+    const currentIndex = parts.findIndex((part) => part.name === activeTab)
+    if (currentIndex < parts.length - 1) {
+      setActiveTab(parts[currentIndex + 1].name)
     }
   }
 
   // Get the current part description
   const getCurrentPartDescription = () => {
-    const part = partOrder.find((p) => p.key === activeTab)
-    return part?.description || ""
+    const part = parts.find((p) => p.name === activeTab)
+    const option = part?.options.find((opt) => opt.id.toString() === configuration[part?.name])
+    return option?.description || part?.description || ""
+  }
+
+  // Get option details
+  const getOptionDetails = (partName: string, optionId: string) => {
+    const part = parts.find((p) => p.name === partName)
+    if (!part) return null
+
+    return part.options.find((opt) => opt.id.toString() === optionId)
+  }
+
+  // Get image for the selected option
+  const getOptionImage = (partName: string, optionId: string) => {
+    const option = getOptionDetails(partName, optionId)
+    return option?.image_url || "/placeholder.svg?height=150&width=150"
+  }
+
+  // Get the image for the current configuration
+  const getCurrentImage = () => {
+    // Try to get the frame/main part image
+    const mainPartName = parts[0]?.name
+    if (mainPartName && configuration[mainPartName]) {
+      const option = getOptionDetails(mainPartName, configuration[mainPartName])
+      if (option?.image_url) {
+        return option.image_url
+      }
+    }
+
+    // Fall back to product image
+    return productImage || "/placeholder.svg?height=300&width=400"
   }
 
   // Create configuration details object for cart
   const getConfigDetails = () => {
     const details: { [key: string]: { name: string; price: number } } = {}
 
-    Object.entries(configuration).forEach(([category, selectedId]) => {
-      const option = bikeOptions[category]?.find((opt) => opt.id === selectedId)
+    Object.entries(configuration).forEach(([partName, optionId]) => {
+      const option = getOptionDetails(partName, optionId)
       if (option) {
-        details[category] = {
+        details[partName] = {
           name: option.name,
-          price: option.price,
+          price: parseFloat(option.default_price),
         }
       }
     })
@@ -335,7 +212,7 @@ export default function BikeCustomizer({
     return details
   }
 
-  // Add the bike to cart
+  // Add the product to cart
   const addToCart = () => {
     const uniqueId = `${productId}-${Date.now()}`
 
@@ -355,62 +232,80 @@ export default function BikeCustomizer({
     })
   }
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-10 w-10 text-teal-600 animate-spin mb-4" />
+        <p className="text-lg text-gray-600">Loading product options...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (parts.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500">No customization options found for this product category.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
-      {/* Header with product info if customizing a pre-configured product */}
-      {productName && (
-        <div className="bg-white rounded-lg border shadow-sm p-6 flex flex-col md:flex-row gap-6 items-center">
-          {productImage && (
-            <div className="relative w-full md:w-1/3 h-[200px]">
-              <img
-                src={productImage || "/placeholder.svg"}
-                alt={productName}
-                className="object-contain w-full h-full"
-              />
-            </div>
-          )}
-          <div className="md:w-2/3">
-            <h2 className="text-2xl font-bold mb-2">Build Your Dream Product</h2>
-            <p className="text-gray-600 mb-4">
-              You're customizing the <span className="font-semibold">{productName}</span>. Feel free to modify any
-              options to create your perfect product.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(configuration).map(([category, value]) => {
-                const option = bikeOptions[category]?.find((opt) => opt.id === value)
-                if (!option) return null
+      {/* Header with product info */}
+      <div className="bg-white rounded-lg border shadow-sm p-6 flex flex-col md:flex-row gap-6 items-center">
+        {productImage && (
+          <div className="relative w-full md:w-1/3 h-[200px]">
+            <img
+              src={productImage || "/placeholder.svg"}
+              alt={productName}
+              className="object-contain w-full h-full"
+            />
+          </div>
+        )}
+        <div className="md:w-2/3">
+          <h2 className="text-2xl font-bold mb-2">Build Your Dream Product</h2>
+          <p className="text-gray-600 mb-4">
+            {productName !== "Custom Product" ? (
+              <>
+                You're customizing the <span className="font-semibold">{productName}</span>. Feel free to modify any
+                options to create your perfect product.
+              </>
+            ) : (
+              "Customize every aspect of your product to create the perfect item for your style and needs."
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(configuration).map(([partName, optionId]) => {
+              const option = getOptionDetails(partName, optionId)
+              if (!option) return null
 
-                return (
-                  <Badge key={category} variant="outline" className="bg-white">
-                    {option.name}
-                  </Badge>
-                )
-              })}
-            </div>
+              return (
+                <Badge key={partName} variant="outline" className="bg-white">
+                  {option.name}
+                </Badge>
+              )
+            })}
           </div>
         </div>
-      )}
-
-      {/* If not customizing a pre-configured product */}
-      {!productName && (
-        <div className="bg-white rounded-lg border shadow-sm p-6">
-          <h2 className="text-2xl font-bold mb-2">Build Your Dream Product</h2>
-          <p className="text-gray-600">
-            Customize every aspect of your product to create the perfect item for your style and needs. Select from
-            premium components and watch your creation come to life.
-          </p>
-        </div>
-      )}
+      </div>
 
       {/* Main customization area */}
       <div className="grid md:grid-cols-5 gap-8">
-        {/* Left side: Bike visualization */}
+        {/* Left side: Product visualization */}
         <div className="md:col-span-2 bg-white rounded-lg border shadow-sm p-6">
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <div className="relative w-full h-[300px] mx-auto">
               <img
-                src={getCurrentFrameImage() || "/placeholder.svg"}
-                alt={`${configuration.frameType} bike frame`}
+                src={getCurrentImage()}
+                alt={productName}
                 className="object-contain w-full h-full"
               />
             </div>
@@ -419,17 +314,17 @@ export default function BikeCustomizer({
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Configuration Summary</h3>
             <ul className="space-y-3">
-              {Object.entries(configuration).map(([category, value]) => {
-                const option = bikeOptions[category]?.find((opt) => opt.id === value)
-                const categoryName = partOrder.find((p) => p.key === category)?.name
+              {Object.entries(configuration).map(([partName, optionId]) => {
+                const option = getOptionDetails(partName, optionId)
+                if (!option) return null
 
                 return (
-                  <li key={category} className="flex justify-between items-center py-2 border-b">
-                    <span className="text-gray-600">{categoryName}</span>
+                  <li key={partName} className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">{partName}</span>
                     <div className="flex items-center">
-                      <span className="font-medium mr-4">{option?.name}</span>
+                      <span className="font-medium mr-4">{option.name}</span>
                       <span className="text-teal-600 font-semibold">
-                        {option?.price ? `$${option.price}` : "Included"}
+                        {parseFloat(option.default_price) > 0 ? `$${option.default_price}` : "Included"}
                       </span>
                     </div>
                   </li>
@@ -463,17 +358,13 @@ export default function BikeCustomizer({
 
           {/* Tabs for part selection */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            {/* Breadcrumb navigation */}
+            {/* Tab navigation */}
             <TabsList className="w-full grid grid-cols-5 mb-6">
-              {partOrder.map((part) => (
+              {parts.map((part) => (
                 <TabsTrigger
-                  key={part.key}
-                  value={part.key}
-                  onClick={() => {
-                    setActiveTab(part.key)
-                    setFocusedPart(part.key)
-                  }}
-                  className={cn(activeTab === part.key ? "border-b-2 border-teal-600" : "")}
+                  key={part.id}
+                  value={part.name}
+                  className={cn(activeTab === part.name ? "border-b-2 border-teal-600" : "")}
                 >
                   {part.name}
                 </TabsTrigger>
@@ -481,14 +372,14 @@ export default function BikeCustomizer({
             </TabsList>
 
             {/* Part options */}
-            {Object.keys(bikeOptions).map((category) => (
-              <TabsContent key={category} value={category} className="pt-4">
+            {parts.map((part) => (
+              <TabsContent key={part.id} value={part.name} className="pt-4">
                 <div className="mb-4 flex justify-between items-center">
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">{partOrder.find((p) => p.key === category)?.name}</h3>
+                    <h3 className="text-xl font-semibold mb-1">{part.name}</h3>
                     <p className="text-gray-500">Select your preferred option</p>
                   </div>
-                  {category !== partOrder[partOrder.length - 1].key && (
+                  {part.step !== parts[parts.length - 1].step && (
                     <Button onClick={goToNextPart} className="bg-teal-600 hover:bg-teal-700">
                       Next <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
@@ -496,44 +387,47 @@ export default function BikeCustomizer({
                 </div>
 
                 <RadioGroup
-                  value={configuration[category]}
-                  onValueChange={(value) => handleConfigChange(category, value)}
+                  value={configuration[part.name] || ""}
+                  onValueChange={(value) => handleConfigChange(part.name, value)}
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
-                  {bikeOptions[category].map((option) => {
-                    const compatible = isCompatible(category, option.id)
+                  {part.options?.map((option) => {
+                    // For now, all options are compatible
+                    const compatible = true
+                    const optionId = option.id.toString()
+
                     return (
                       <Card
-                        key={option.id}
+                        key={optionId}
                         className={cn(
                           "relative overflow-hidden transition-all",
-                          configuration[category] === option.id ? "ring-2 ring-teal-600" : "border",
+                          configuration[part.name] === optionId ? "ring-2 ring-teal-600" : "border",
                           !compatible ? "opacity-60" : "hover:shadow-md",
                         )}
                       >
                         <div
                           className={cn(
                             "absolute inset-0 z-0",
-                            configuration[category] === option.id ? "bg-teal-50" : "bg-transparent",
+                            configuration[part.name] === optionId ? "bg-teal-50" : "bg-transparent",
                           )}
                         />
 
                         <RadioGroupItem
-                          value={option.id}
-                          id={`${category}-${option.id}`}
+                          value={optionId}
+                          id={`${part.name}-${optionId}`}
                           className="sr-only peer"
                           disabled={!compatible}
                         />
 
                         <label
-                          htmlFor={`${category}-${option.id}`}
+                          htmlFor={`${part.name}-${optionId}`}
                           className={cn(
                             "flex flex-col h-full cursor-pointer z-10 relative",
                             !compatible && "cursor-not-allowed",
                           )}
                         >
                           <div className="relative h-40 bg-gray-50 border-b">
-                            {category === "rimColor" ? (
+                            {part.name.toLowerCase().includes("color") ? (
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <div
                                   className="h-20 w-20 rounded-full border-4 border-gray-200"
@@ -542,13 +436,13 @@ export default function BikeCustomizer({
                               </div>
                             ) : (
                               <img
-                                src={option.partImage || "/placeholder.svg"}
+                                src={getOptionImage(part.name, optionId)}
                                 alt={option.name}
                                 className="object-contain p-2 w-full h-full"
                               />
                             )}
 
-                            {configuration[category] === option.id && (
+                            {configuration[part.name] === optionId && (
                               <div className="absolute top-2 right-2 bg-teal-600 text-white rounded-full p-1">
                                 <Check className="h-4 w-4" />
                               </div>
@@ -559,20 +453,13 @@ export default function BikeCustomizer({
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium text-lg">{option.name}</h4>
                               <span className="text-teal-600 font-semibold">
-                                {option.price > 0 ? `+$${option.price}` : "Included"}
+                                {parseFloat(option.default_price) > 0 ? `+$${option.default_price}` : "Included"}
                               </span>
                             </div>
 
                             <p className="text-sm text-gray-500 mb-3 flex-grow">
                               {option.description || "No description available"}
                             </p>
-
-                            {!compatible && (
-                              <div className="flex items-center text-amber-600 mt-1 text-sm">
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                                Not compatible with current configuration
-                              </div>
-                            )}
                           </CardContent>
                         </label>
                       </Card>

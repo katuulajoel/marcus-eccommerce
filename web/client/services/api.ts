@@ -35,3 +35,27 @@ export const fetchCategories = async () => {
   const response = await apiClient.get("/api/categories/");
   return response.data;
 };
+
+// Fetch all parts with their options for a category
+export const fetchPartsWithOptions = async (categoryId: number) => {
+  try {
+    // Use the direct endpoint that returns parts with nested options
+    const response = await apiClient.get(`/api/categories/${categoryId}/parts/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching parts with options:", error);
+    throw error;
+  }
+};
+
+// Fetch all incompatibility rules
+export const fetchIncompatibilityRules = async () => {
+  const response = await apiClient.get("/api/configurator/incompatibilities/");
+  return response.data;
+};
+
+// Fetch all price adjustment rules
+export const fetchPriceAdjustmentRules = async () => {
+  const response = await apiClient.get("/api/configurator/price-adjustments/");
+  return response.data;
+};
