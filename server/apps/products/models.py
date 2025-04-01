@@ -25,6 +25,7 @@ class PartOption(models.Model):
     part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='options')
     name = models.CharField(max_length=255)
     default_price = models.DecimalField(max_digits=10, decimal_places=2)
+    image_url = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'partoption'

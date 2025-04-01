@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS public.partoption (
     id integer NOT NULL DEFAULT nextval('partoption_id_seq'::regclass),
     name character varying(255) NOT NULL,
     default_price numeric(10, 2) NOT NULL,
+    image_url character varying(255),
     CONSTRAINT partoption_pkey PRIMARY KEY (id)
 );
 
@@ -59,6 +60,7 @@ CREATE TABLE IF NOT EXISTS public.preconfiguredproduct (
     id integer NOT NULL DEFAULT nextval('preconfiguredproduct_id_seq'::regclass),
     name character varying(255) NOT NULL,
     base_price numeric(10, 2) NOT NULL,
+    image_url character varying(255),
     CONSTRAINT preconfiguredproduct_pkey PRIMARY KEY (id)
 );
 

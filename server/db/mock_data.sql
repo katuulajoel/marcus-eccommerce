@@ -29,25 +29,25 @@ INSERT INTO part (id, name, category_id) VALUES
 SELECT setval('part_id_seq', (SELECT MAX(id) FROM part));
 
 -- Part Options
-INSERT INTO partoption (id, part_id, name, default_price) VALUES
-(1, 1, 'Full-Suspension Frame', 130.00),
-(2, 1, 'Diamond Frame', 100.00),
-(3, 2, 'Matte Finish', 50.00),
-(4, 2, 'Shiny Finish', 30.00),
-(5, 3, 'Mountain Wheels', 90.00),
-(6, 3, 'Road Wheels', 80.00),
-(7, 4, 'Black Rims', 20.00),
-(8, 4, 'Blue Rims', 20.00),
-(9, 5, '8-Speed Chain', 45.00),
-(10, 5, 'Single-Speed Chain', 40.00);
+INSERT INTO partoption (id, part_id, name, default_price, image_url) VALUES
+(1, 1, 'Full-Suspension Frame', 130.00, '/media/partoption/frame_full_suspension.jpg'),
+(2, 1, 'Diamond Frame', 100.00, '/media/partoption/frame_diamond.jpg'),
+(3, 2, 'Matte Finish', 50.00, '/media/partoption/finish_matte.jpg'),
+(4, 2, 'Shiny Finish', 30.00, '/media/partoption/finish_shiny.jpg'),
+(5, 3, 'Mountain Wheels', 90.00, '/media/partoption/wheels_mountain.jpg'),
+(6, 3, 'Road Wheels', 80.00, '/media/partoption/wheels_road.jpg'),
+(7, 4, 'red', 20.00, '/media/partoption/red_rims.jpg'),
+(8, 4, 'white', 20.00, '/media/partoption/white_rims.jpg'),
+(9, 5, '8-Speed Chain', 45.00, '/media/partoption/chain_8_speed.jpg'),
+(10, 5, 'Single-Speed Chain', 40.00, '/media/partoption/chain_single_speed.jpg');
 
 -- Reset the partoption sequence
 SELECT setval('partoption_id_seq', (SELECT MAX(id) FROM partoption));
 
 -- Preconfigured Products
-INSERT INTO preconfiguredproduct (id, category_id, name, base_price) VALUES
-(1, 1, 'Mountain Bike', 450.00),
-(2, 1, 'City Bike', 300.00);
+INSERT INTO preconfiguredproduct (id, category_id, name, base_price, image_url) VALUES
+(1, 1, 'Mountain Bike', 450.00, '/media/preconfigured/mountain_bike.jpg'),
+(2, 1, 'City Bike', 300.00, '/media/preconfigured/city_bike.jpg');
 
 -- Reset the preconfiguredproduct sequence
 SELECT setval('preconfiguredproduct_id_seq', (SELECT MAX(id) FROM preconfiguredproduct));

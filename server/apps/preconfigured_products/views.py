@@ -81,6 +81,7 @@ class BestSellingProductView(APIView):
                 # Include the analytics data
                 data = serializer.data
                 data['times_ordered'] = best_selling.times_ordered
+                data['image_url'] = product.image_url  # Include image_url in the response
                 return Response(data)
             return Response({"message": "No best-selling product found"}, status=404)
         except Exception as e:
@@ -147,6 +148,7 @@ class TopProductsPerCategoryViewSet(ViewSet):
             if product.id in category_data:
                 product_data = PreConfiguredProductSerializer(product).data
                 product_data['times_ordered'] = category_data[product.id]['times_ordered']
+                product_data['image_url'] = product.image_url
                 
                 # Add category details
                 cat_id = category_data[product.id]['category_id']
