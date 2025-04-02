@@ -139,7 +139,7 @@ export default function ProductDetailsModal({ product, isOpen, onClose, parts = 
                 Add to Cart
               </Button>
               <Button asChild className="bg-teal-600 hover:bg-teal-700">
-                <Link to={`/customize?config=${product.id}`}>Customize</Link>
+                <Link to={`/customize?product=${product.id}&category=${product.category}`}>Customize</Link>
               </Button>
             </div>
           </div>
