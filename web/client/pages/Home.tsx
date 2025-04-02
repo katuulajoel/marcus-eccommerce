@@ -79,7 +79,9 @@ export default function Home() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
-                      <Link to={`/customize?config=${bestSeller.id}`}>Customize This Bike</Link>
+                      <Link to={`/customize?product=${bestSeller.id}&category=${bestSeller.category_details.name.toLowerCase()}`}>
+                        Customize This Bike
+                      </Link>
                     </Button>
                   </div>
                   <div className="mt-8">

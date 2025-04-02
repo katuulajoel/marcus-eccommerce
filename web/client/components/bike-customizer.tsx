@@ -16,17 +16,14 @@ import {
   fetchPartsWithOptions, 
   fetchIncompatibilityRules,
   fetchPriceAdjustmentRules,
-  fetchCategoryStock
+  fetchCategoryStock,
+  fetchProductById
 } from "@client/services/api"
+import { useQuery } from "@tanstack/react-query"
 
 interface BikeCustomizerProps {
-  initialConfiguration?: {
-    [key: string]: string
-  } | null
-  productName?: string
-  productImage?: string
   productId?: string
-  category?: string
+  category: string
 }
 
 interface StockInfo {
@@ -36,11 +33,8 @@ interface StockInfo {
 }
 
 export default function BikeCustomizer({
-  initialConfiguration = null,
-  productName = "Custom Product",
-  productImage = "/placeholder.svg?height=300&width=400",
-  productId = "custom-product",
-  category = "bicycles",
+  productId,
+  category,
 }: BikeCustomizerProps) {
   const { toast } = useToast()
   const { addItem } = useCart()
@@ -64,6 +58,17 @@ export default function BikeCustomizer({
   // Add state for price adjustment rules and adjusted prices
   const [priceAdjustmentRules, setPriceAdjustmentRules] = useState<any[]>([])
   const [adjustedPrices, setAdjustedPrices] = useState<{ [key: number]: number }>({})
+
+
+  const { 
+      data: preConfiguredProduct, 
+      isLoading: isLoadingPreConfiguredProduct,
+      error: productError
+  } = useQuery({
+      queryKey: ["productById", productId],
+      queryFn: () => productId ? fetchProductById(productId) : null,
+      enabled: !!productId,
+  })
 
   // Effect to load categories and find the category ID
   useEffect(() => {
@@ -107,8 +112,8 @@ export default function BikeCustomizer({
           setActiveTab(partsData[0].name)
         }
 
-        // Initialize configuration with first option of each part
-        initializeConfiguration(partsData)
+        // Don't initialize configuration here, we'll do it separately
+        // after preConfiguredProduct loads
       } catch (err) {
         console.error("Failed to load parts:", err)
         setError("Failed to load product parts. Please try again later.")
@@ -119,6 +124,18 @@ export default function BikeCustomizer({
 
     loadPartsAndOptions()
   }, [categoryId])
+
+  // New effect to initialize configuration when parts and preConfiguredProduct are available
+  useEffect(() => {
+    // Only run initialization if we have parts loaded
+    if (parts.length === 0) return
+
+    // If preConfiguredProduct is loading, wait for it
+    if (productId && isLoadingPreConfiguredProduct) return
+
+    // Now initialize the configuration
+    initializeConfiguration(parts)
+  }, [parts, preConfiguredProduct, isLoadingPreConfiguredProduct])
 
   // Fetch stock information when component mounts AND when categoryId changes
   useEffect(() => {
@@ -280,16 +297,33 @@ export default function BikeCustomizer({
     setTotalPrice(price)
   }, [configuration, parts, adjustedPrices])
 
-  // Initialize configuration based on whether we have a preconfigured product
+  // Update to use preConfiguredProduct data if available
   const initializeConfiguration = (parts: any[]) => {
     const initialConfig: { [key: string]: string } = {}
 
-    if (initialConfiguration) {
-      // If we have a preconfigured product, use its configuration
-      Object.keys(initialConfiguration).forEach((key) => {
-        const part = parts.find((p) => p.name === key)
-        if (part && part.options.some((opt) => opt.id.toString() === initialConfiguration[key])) {
-          initialConfig[key] = initialConfiguration[key]
+    // If we have a preconfigured product, use its configuration
+    if (preConfiguredProduct && preConfiguredProduct.parts) {
+      // For each part in our available parts
+      parts.forEach((part) => {
+        // Try to find a matching preconfigured part option
+        const preConfiguredPart = preConfiguredProduct.parts.find(
+          (p) => {
+            // Find the option in our available options that matches the preconfigured part_option
+            const matchingOption = part.options.find(
+              (opt) => opt.id === p.part_option
+            )
+            // If we found a matching option for this part, return true
+            return matchingOption !== undefined
+          }
+        )
+
+        // If we found a matching preconfigured part, set it in our configuration
+        if (preConfiguredPart) {
+          initialConfig[part.name] = preConfiguredPart.part_option.toString()
+        }
+        // If no preconfigured part was found but we have options, select the first one
+        else if (part.options && part.options.length > 0) {
+          initialConfig[part.name] = part.options[0].id.toString()
         }
       })
     } else {
@@ -399,8 +433,8 @@ export default function BikeCustomizer({
       }
     }
 
-    // Fall back directly to product image or placeholder
-    return productImage || "/placeholder.svg?height=300&width=400"
+    // Fall back directly to placeholder
+    return "/placeholder.svg?height=300&width=400"
   }
 
   // Get price for an option with adjustments considered
@@ -469,9 +503,9 @@ export default function BikeCustomizer({
 
     addItem({
       id: uniqueId,
-      name: productName,
+      name: preConfiguredProduct.name || 'Custom Product',
       price: totalPrice,
-      image: productImage,
+      image: preConfiguredProduct.image_url,
       quantity: 1,
       configuration: { ...configuration },
       configDetails: getConfigDetails(),
@@ -479,7 +513,7 @@ export default function BikeCustomizer({
 
     toast({
       title: "Added to cart",
-      description: `${productName} has been added to your cart.`,
+      description: `${preConfiguredProduct.name || 'Custom Product'} has been added to your cart.`,
     })
   }
 
@@ -521,11 +555,11 @@ export default function BikeCustomizer({
     <div className="space-y-8">
       {/* Header with product info */}
       <div className="bg-white rounded-lg border shadow-sm p-6 flex flex-col md:flex-row gap-6 items-center">
-        {productImage && (
+        {preConfiguredProduct && (
           <div className="relative w-full md:w-1/3 h-[200px]">
             <img
-              src={productImage || "/placeholder.svg"}
-              alt={productName}
+              src={preConfiguredProduct.image_url || "/placeholder.svg"}
+              alt={preConfiguredProduct.name}
               className="object-contain w-full h-full"
             />
           </div>
@@ -533,9 +567,9 @@ export default function BikeCustomizer({
         <div className="md:w-2/3">
           <h2 className="text-2xl font-bold mb-2">Build Your Dream Product</h2>
           <p className="text-gray-600 mb-4">
-            {productName !== "Custom Product" ? (
+            {preConfiguredProduct ? (
               <>
-                You're customizing the <span className="font-semibold">{productName}</span>. Feel free to modify any
+                You're customizing the <span className="font-semibold">{preConfiguredProduct.name}</span>. Feel free to modify any
                 options to create your perfect product.
               </>
             ) : (
@@ -565,7 +599,7 @@ export default function BikeCustomizer({
             <div className="relative w-full h-[300px] mx-auto">
               <img
                 src={getCurrentImage()}
-                alt={productName}
+                alt="Part Image"
                 className="object-contain w-full h-full"
               />
             </div>

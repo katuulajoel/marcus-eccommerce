@@ -64,4 +64,10 @@ export const fetchPriceAdjustmentRules = async () => {
 export const fetchCategoryStock = async (categoryId: number) => {
     const response = await apiClient.get(`/api/categories/${categoryId}/stock/`);
     return response.data;
-  };
+};
+
+// Fetch product details by ID
+export const fetchProductById = async (productId: number) => {
+    const response = await apiClient.get(`/api/preconfigured-products/products/${productId}/`);
+    return response.data;
+};
