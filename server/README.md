@@ -44,6 +44,25 @@ The easiest way to get started is using Docker, which will set up all required s
    docker compose down
    ```
 
+## API Documentation
+
+You can access the Swagger API documentation at:
+- Swagger UI: [http://localhost:8000/swagger/](http://localhost:8000/api/swagger/)
+
+## Default Superuser Credentials
+
+The default superuser credentials are as follows (set in the `docker-compose` environment variables):
+
+- **Username**: `admin`
+- **Email**: `admin@example.com`
+- **Password**: `admin123`
+
+You can change these credentials by updating the following environment variables in the `docker-compose` file:
+
+- `DJANGO_SUPERUSER_USERNAME`
+- `DJANGO_SUPERUSER_EMAIL`
+- `DJANGO_SUPERUSER_PASSWORD`
+
 ## API Endpoints
 
 - Categories API: `/api/categories/`
