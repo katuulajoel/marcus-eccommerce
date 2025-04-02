@@ -16,6 +16,7 @@
     - [Frontend Setup](#frontend-setup)
     - [Current State of the Applications](#current-state-of-the-applications)
     - [Cart Implementation](#cart-implementation)
+12. [Future Plans](#future-plans)
 
 ## Overview
 
@@ -542,3 +543,7 @@ For detailed instructions on setting up the frontend applications (client and ad
 - Items added to the cart are stored locally, allowing users to retain their cart even after refreshing the page.
 - Future plans include:
   - Integrating the checkout process to create an order in the backend.
+
+## Future Plans
+
+- **Message Brokers**: Plan to integrate message brokers like RabbitMQ to handle tasks such as sending order confirmation emails and other asynchronous workflows.
