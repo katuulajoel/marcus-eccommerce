@@ -24,6 +24,23 @@ class CategoryViewSet(ModelViewSet):
         parts = Part.objects.filter(category=category)
         serializer = PartSerializer(parts, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def stock(self, request, pk=None):
+        """Get stock information for all parts in this category"""
+        category = self.get_object()
+        
+        # Get all part options for this category
+        parts = Part.objects.filter(category=category)
+        part_ids = [part.id for part in parts]
+        part_options = PartOption.objects.filter(part_id__in=part_ids)
+        option_ids = [option.id for option in part_options]
+        
+        # Get stock for these part options
+        stocks = Stock.objects.filter(part_option_id__in=option_ids)
+        serializer = StockSerializer(stocks, many=True)
+        
+        return Response(serializer.data)
 
 class PartViewSet(ModelViewSet):
     """

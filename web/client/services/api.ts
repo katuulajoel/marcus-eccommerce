@@ -59,3 +59,9 @@ export const fetchPriceAdjustmentRules = async () => {
   const response = await apiClient.get("/api/configurator/price-adjustments/");
   return response.data;
 };
+
+// Fetch stock information for a specific category
+export const fetchCategoryStock = async (categoryId: number) => {
+    const response = await apiClient.get(`/api/categories/${categoryId}/stock/`);
+    return response.data;
+  };
