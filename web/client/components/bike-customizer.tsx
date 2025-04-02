@@ -15,7 +15,8 @@ import {
   fetchCategories, 
   fetchPartsWithOptions, 
   fetchIncompatibilityRules,
-  fetchPriceAdjustmentRules 
+  fetchPriceAdjustmentRules,
+  fetchCategoryStock
 } from "@client/services/api"
 
 interface BikeCustomizerProps {
@@ -26,6 +27,12 @@ interface BikeCustomizerProps {
   productImage?: string
   productId?: string
   category?: string
+}
+
+interface StockInfo {
+  id: number
+  quantity: number
+  part_option: number
 }
 
 export default function BikeCustomizer({
@@ -43,6 +50,7 @@ export default function BikeCustomizer({
   const [parts, setParts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [stockInfo, setStockInfo] = useState<StockInfo[]>([])
 
   // State for customization
   const [activeTab, setActiveTab] = useState<string>("")
@@ -112,6 +120,23 @@ export default function BikeCustomizer({
     loadPartsAndOptions()
   }, [categoryId])
 
+  // Fetch stock information when component mounts AND when categoryId changes
+  useEffect(() => {
+    if (!categoryId) return;
+
+    const getStockInfo = async () => {
+      try {
+        const stockData = await fetchCategoryStock(categoryId)
+        setStockInfo(stockData)
+      } catch (err) {
+        console.error("Failed to fetch stock information:", err)
+        // No need to set error state - we can still function without stock info
+      }
+    }
+
+    getStockInfo()
+  }, [categoryId])
+
   // Fetch incompatibility rules when component mounts
   useEffect(() => {
     const getIncompatibilityRules = async () => {
@@ -131,7 +156,6 @@ export default function BikeCustomizer({
     const getPriceAdjustmentRules = async () => {
       try {
         const rulesData = await fetchPriceAdjustmentRules()
-        console.log("Price adjustment rules:", rulesData)
         setPriceAdjustmentRules(rulesData)
       } catch (err) {
         console.error("Failed to fetch price adjustment rules:", err)
@@ -198,13 +222,9 @@ export default function BikeCustomizer({
     
     // Convert configuration values to numbers for comparison
     const selectedOptionIds = Object.values(configuration).map(id => parseInt(id, 10))
-    console.log("Selected option IDs:", selectedOptionIds)
     
     // Check each rule
     priceAdjustmentRules.forEach(rule => {
-      // Log the rule for debugging
-      console.log("Checking rule:", rule, "Selected IDs:", selectedOptionIds)
-      
       // Ensure we're using the correct field names from the API
       const conditionOptionId = rule.condition_option
       const affectedOptionId = rule.affected_option
@@ -224,12 +244,10 @@ export default function BikeCustomizer({
           // Store the adjusted price value from the rule - not the final price
           // This is the amount to be added to the base price
           newAdjustedPrices[affectedOptionId] = parseFloat(rule.adjusted_price);
-          console.log(`Rule activated: ${conditionOptionId} is selected, setting price adjustment for ${affectedOptionId} to ${rule.adjusted_price}`);
         }
       }
     })
     
-    console.log("New price adjustments:", newAdjustedPrices)
     setAdjustedPrices(newAdjustedPrices)
   }, [configuration, priceAdjustmentRules, parts])
 
@@ -252,7 +270,6 @@ export default function BikeCustomizer({
         
         // If there's an adjustment, add it to the base price
         if (adjustment !== undefined) {
-          console.log(`Option ${optionIdNum} base price: ${basePrice}, adjustment: ${adjustment}, final: ${basePrice + adjustment}`)
           price += basePrice + adjustment
         } else {
           price += basePrice
@@ -260,7 +277,6 @@ export default function BikeCustomizer({
       }
     })
 
-    console.log("Final price:", price)
     setTotalPrice(price)
   }, [configuration, parts, adjustedPrices])
 
@@ -287,7 +303,31 @@ export default function BikeCustomizer({
     setConfiguration(initialConfig)
   }
 
-  // Refactor isCompatible to be a pure function with no state updates
+  // Check stock quantity for a specific option
+  const getStockQuantity = (optionId: number): number => {
+    const stock = stockInfo.find(item => item.part_option === optionId)
+    return stock ? stock.quantity : 0
+  }
+
+  // Check if an option is in stock
+  const isInStock = (optionId: number): boolean => {
+    return getStockQuantity(optionId) > 0
+  }
+
+  // Get stock status text - updated thresholds
+  const getStockStatusText = (optionId: number): string => {
+    const quantity = getStockQuantity(optionId)
+    
+    if (quantity === 0) {
+      return "Out of stock"
+    } else if (quantity <= 5) {
+      return `Low stock (${quantity})`
+    } else {
+      return `In stock (${quantity})`
+    }
+  }
+
+  // Refactor isCompatible to be a pure function with no state updates and consider stock
   const isCompatible = (partName: string, optionId: string): boolean => {
     // If we don't have incompatibility rules yet, consider everything compatible
     if (incompatibilityRules.length === 0) return true;
@@ -298,6 +338,14 @@ export default function BikeCustomizer({
     // Check if there's an incompatibility message for this option
     return !incompatibilityMessages[`${partName}-${optionId}`];
   };
+
+  // Check if an option is available (both compatible and in stock)
+  const isOptionAvailable = (partName: string, optionId: string): boolean => {
+    const isCompatibleOption = isCompatible(partName, optionId)
+    const isOptionInStock = isInStock(parseInt(optionId, 10))
+    
+    return isCompatibleOption && isOptionInStock
+  }
 
   // Update handleConfigChange to only update configuration, not incompatibility messages
   const handleConfigChange = (partName: string, optionId: string) => {
@@ -620,16 +668,26 @@ export default function BikeCustomizer({
                 >
                   {part.options?.map((option) => {
                     const optionId = option.id.toString()
+                    const optionIdNum = parseInt(optionId, 10)
                     const compatible = isCompatible(part.name, optionId)
                     const incompatibilityMessage = incompatibilityMessages[`${part.name}-${optionId}`]
-
+                    
+                    // Check if this option exists in our stock data
+                    const stockItem = stockInfo.find(item => item.part_option === optionIdNum)
+                    // Get stock quantity (0 if no stock info found)
+                    const stockQuantity = stockItem ? stockItem.quantity : 0
+                    const inStock = stockQuantity > 0
+                    // Update low stock threshold to 5 items
+                    const isLowStock = inStock && stockQuantity <= 5
+                    const isAvailable = compatible && inStock
+                    
                     return (
                       <Card
                         key={optionId}
                         className={cn(
                           "relative overflow-hidden transition-all",
                           configuration[part.name] === optionId ? "ring-2 ring-teal-600" : "border",
-                          !compatible ? "opacity-60" : "hover:shadow-md",
+                          !isAvailable ? "opacity-60" : "hover:shadow-md",
                         )}
                       >
                         <div
@@ -639,18 +697,24 @@ export default function BikeCustomizer({
                           )}
                         />
 
+                        {!inStock && (
+                          <div className="absolute top-0 right-0 bg-red-500 text-white font-bold py-1 px-3 transform rotate-45 translate-y-2 translate-x-8 z-20">
+                            Out of Stock
+                          </div>
+                        )}
+
                         <RadioGroupItem
                           value={optionId}
                           id={`${part.name}-${optionId}`}
                           className="sr-only peer"
-                          disabled={!compatible}
+                          disabled={!isAvailable}
                         />
 
                         <label
                           htmlFor={`${part.name}-${optionId}`}
                           className={cn(
                             "flex flex-col h-full cursor-pointer z-10 relative",
-                            !compatible && "cursor-not-allowed",
+                            !isAvailable && "cursor-not-allowed",
                           )}
                         >
                           <div className="relative h-40 bg-gray-50 border-b">
@@ -687,6 +751,23 @@ export default function BikeCustomizer({
                             <p className="text-sm text-gray-500 mb-3 flex-grow">
                               {option.description || "No description available"}
                             </p>
+
+                            {/* Stock status indicator */}
+                            <div className={cn(
+                              "text-sm font-medium flex items-center",
+                              !inStock ? "text-red-600" : isLowStock ? "text-amber-600" : "text-green-600"
+                            )}>
+                              <span className={cn(
+                                "w-2 h-2 rounded-full mr-2",
+                                !inStock ? "bg-red-600" : isLowStock ? "bg-amber-600" : "bg-green-600"
+                              )}></span>
+                              {inStock 
+                                ? isLowStock 
+                                  ? `Low stock (${stockQuantity})`
+                                  : `In stock (${stockQuantity})`
+                                : "Out of stock"
+                              }
+                            </div>
 
                             {!compatible && (
                               <div className="flex items-center text-amber-600 mt-1 text-sm">
