@@ -94,3 +94,20 @@ Each application has its own Vite configuration file:
 - Root config: `/vite.config.js` - Defines shared aliases
 - Client config: `/web/client/vite.config.js` - Client-specific settings
 - Admin config: `/web/admin/vite.config.js` - Admin-specific settings
+
+### Environment Variables
+
+Environment variables are used to configure the application. You can define them in `.env` or `.env.local` files located in the `web` directory. The `.env.local` file is ignored by version control and can be used for local development.
+
+Example `.env.local` file:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000/
+```
+
+Ensure that all required variables are defined before running the application. The following variables are commonly used:
+
+- `VITE_API_BASE_URL`: Base URL for the API
+- `VITE_<OTHER_VARIABLES>`: Add any additional variables as needed
+
+For production, ensure the environment variables are properly set in your deployment environment.
