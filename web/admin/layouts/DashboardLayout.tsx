@@ -3,8 +3,9 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Link, useLocation, Outlet } from "react-router-dom"
-import { Bike, Box, DollarSign, Layers, PanelLeft, Puzzle, Settings, ShoppingCart, Users, X } from "lucide-react"
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom"
+import { Bike, Box, DollarSign, Layers, LogOut, PanelLeft, Puzzle, ShoppingCart, User, Users, X } from "lucide-react"
+import { useAuth } from "@admin/context/auth-context"
 import { cn } from "@shared/lib/utils"
 import { Button } from "@shared/components/ui/button"
 import { ScrollArea } from "@shared/components/ui/scroll-area"
@@ -61,7 +62,16 @@ const navItems: NavItem[] = [
 
 export default function DashboardLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+
+  const handleLogout = () => {
+    if (confirm("Are you sure you want to logout?")) {
+      logout()
+      navigate("/login")
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -81,10 +91,14 @@ export default function DashboardLayout() {
           <Bike className="h-6 w-6" />
           <span className="font-bold">Bike Configurator Admin</span>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-            <span className="sr-only">Settings</span>
+        <div className="ml-auto flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{user?.username || "Admin"}</span>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+            <LogOut className="h-5 w-5" />
+            <span className="sr-only">Logout</span>
           </Button>
         </div>
       </header>

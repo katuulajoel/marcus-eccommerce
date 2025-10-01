@@ -8,12 +8,34 @@ import IncompatibilityRules from "@admin/pages/IncompatibilityRules"
 import Orders from "@admin/pages/Orders"
 import Customers from "@admin/pages/Customers"
 import PreconfiguredProducts from "@admin/pages/PreconfiguredProducts"
+import Login from "@admin/pages/Login"
+import ProtectedRoute from "@admin/components/ProtectedRoute"
+import { useAuth } from "@admin/context/auth-context"
 
 function App() {
+  const { isAuthenticated } = useAuth()
+
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard/products" replace />} />
-      <Route path="/dashboard" element={<DashboardLayout />}>
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/dashboard/products" replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="products" element={<Products />} />
         <Route path="parts" element={<Parts />} />
         <Route path="part-options" element={<PartOptions />} />
