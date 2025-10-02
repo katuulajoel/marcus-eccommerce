@@ -1,3 +1,4 @@
 .idx/dev.nix
 .vscode/settings.json
 .playwright-mcp/
+server/media/
