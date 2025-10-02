@@ -42,7 +42,7 @@ export interface PreconfiguredProductCreateInput {
   name: string;
   category: number;
   base_price: number | string;
-  image_url?: string;
+  image?: File | string;
   description?: string;
   part_options?: number[]; // Array of part option IDs
 }
@@ -51,7 +51,7 @@ export interface PreconfiguredProductUpdateInput {
   name?: string;
   category?: number;
   base_price?: number | string;
-  image_url?: string;
+  image?: File | null;
   description?: string;
   part_options?: number[]; // Array of part option IDs to update configuration
 }
@@ -81,7 +81,25 @@ export const preconfiguredProductService = {
    * Create new preconfigured product
    */
   create: async (data: PreconfiguredProductCreateInput): Promise<PreconfiguredProduct> => {
-    const response = await adminApiClient.post<PreconfiguredProduct>('/api/preconfigured-products/products/', data);
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('category', String(data.category));
+    formData.append('base_price', String(data.base_price));
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    if (data.part_options) {
+      data.part_options.forEach(id => formData.append('part_options', String(id)));
+    }
+
+    const response = await adminApiClient.post<PreconfiguredProduct>('/api/preconfigured-products/products/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -93,19 +111,26 @@ export const preconfiguredProductService = {
     category: number,
     basePrice: number,
     partOptionIds: number[],
-    imageUrl?: string,
+    image?: File,
     description?: string
   ): Promise<PreconfiguredProduct> => {
-    const productData: PreconfiguredProductCreateInput = {
-      name,
-      category,
-      base_price: basePrice.toFixed(2),
-      image_url: imageUrl,
-      description,
-      part_options: partOptionIds,
-    };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('category', String(category));
+    formData.append('base_price', basePrice.toFixed(2));
+    if (image) {
+      formData.append('image', image);
+    }
+    if (description) {
+      formData.append('description', description);
+    }
+    partOptionIds.forEach(id => formData.append('part_options', String(id)));
 
-    const response = await adminApiClient.post<PreconfiguredProduct>('/api/preconfigured-products/products/', productData);
+    const response = await adminApiClient.post<PreconfiguredProduct>('/api/preconfigured-products/products/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -113,7 +138,35 @@ export const preconfiguredProductService = {
    * Update existing preconfigured product
    */
   update: async (id: number, data: PreconfiguredProductUpdateInput): Promise<PreconfiguredProduct> => {
-    const response = await adminApiClient.patch<PreconfiguredProduct>(`/api/preconfigured-products/products/${id}/`, data);
+    const formData = new FormData();
+    if (data.name !== undefined) {
+      formData.append('name', data.name);
+    }
+    if (data.category !== undefined) {
+      formData.append('category', String(data.category));
+    }
+    if (data.base_price !== undefined) {
+      formData.append('base_price', String(data.base_price));
+    }
+    if (data.image !== undefined) {
+      if (data.image === null) {
+        formData.append('image', '');
+      } else {
+        formData.append('image', data.image);
+      }
+    }
+    if (data.description !== undefined) {
+      formData.append('description', data.description);
+    }
+    if (data.part_options) {
+      data.part_options.forEach(id => formData.append('part_options', String(id)));
+    }
+
+    const response = await adminApiClient.patch<PreconfiguredProduct>(`/api/preconfigured-products/products/${id}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

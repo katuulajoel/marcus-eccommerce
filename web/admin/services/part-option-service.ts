@@ -20,7 +20,7 @@ export interface PartOptionCreateInput {
   part: number;
   default_price: number;
   minimum_payment_percentage?: number;
-  image_url?: string;
+  image?: File;
   description?: string;
 }
 
@@ -29,7 +29,7 @@ export interface PartOptionUpdateInput {
   part?: number;
   default_price?: number;
   minimum_payment_percentage?: number;
-  image_url?: string;
+  image?: File | null;
   description?: string;
 }
 
@@ -58,7 +58,25 @@ export const partOptionService = {
    * Create new part option
    */
   create: async (data: PartOptionCreateInput): Promise<PartOption> => {
-    const response = await adminApiClient.post<PartOption>('/api/part-options/', data);
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('part', String(data.part));
+    formData.append('default_price', String(data.default_price));
+    if (data.minimum_payment_percentage !== undefined) {
+      formData.append('minimum_payment_percentage', String(data.minimum_payment_percentage));
+    }
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+
+    const response = await adminApiClient.post<PartOption>('/api/part-options/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -66,7 +84,35 @@ export const partOptionService = {
    * Update existing part option
    */
   update: async (id: number, data: PartOptionUpdateInput): Promise<PartOption> => {
-    const response = await adminApiClient.patch<PartOption>(`/api/part-options/${id}/`, data);
+    const formData = new FormData();
+    if (data.name !== undefined) {
+      formData.append('name', data.name);
+    }
+    if (data.part !== undefined) {
+      formData.append('part', String(data.part));
+    }
+    if (data.default_price !== undefined) {
+      formData.append('default_price', String(data.default_price));
+    }
+    if (data.minimum_payment_percentage !== undefined) {
+      formData.append('minimum_payment_percentage', String(data.minimum_payment_percentage));
+    }
+    if (data.image !== undefined) {
+      if (data.image === null) {
+        formData.append('image', '');
+      } else {
+        formData.append('image', data.image);
+      }
+    }
+    if (data.description !== undefined) {
+      formData.append('description', data.description);
+    }
+
+    const response = await adminApiClient.patch<PartOption>(`/api/part-options/${id}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

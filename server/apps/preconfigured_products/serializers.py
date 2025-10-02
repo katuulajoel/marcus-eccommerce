@@ -37,8 +37,12 @@ class PreConfiguredProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_image_url(self, obj):
-        if obj.image_url:
-            return f"{settings.MEDIA_URL}{obj.image_url}" if obj.image_url.startswith("/") else obj.image_url
+        """Return full URL for image if it exists."""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
         return None
 
     def create(self, validated_data):

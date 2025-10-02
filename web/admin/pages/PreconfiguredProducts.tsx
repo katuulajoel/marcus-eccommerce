@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { ArrowUpDown, Copy, Eye, MoreHorizontal, Plus, Search, Trash, Edit } from "lucide-react"
+import { ArrowUpDown, Copy, Eye, MoreHorizontal, Plus, Search, Trash, Edit, Image as ImageIcon } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { Card, CardContent } from "@shared/components/ui/card"
 import {
@@ -26,6 +26,7 @@ import { partOptionService, type PartOption } from "@admin/services/part-option-
 import { priceRuleService, type PriceAdjustmentRule } from "@admin/services/price-rule-service"
 import { incompatibilityService, type IncompatibilityRule } from "@admin/services/incompatibility-service"
 import { Textarea } from "@shared/components/ui/textarea"
+import { ImageUpload } from "@admin/components/ImageUpload"
 
 export default function PreconfiguredProductsPage() {
   // State for data
@@ -53,6 +54,7 @@ export default function PreconfiguredProductsPage() {
   const [totalPrice, setTotalPrice] = useState(0)
   const [configName, setConfigName] = useState("")
   const [configDescription, setConfigDescription] = useState("")
+  const [configImage, setConfigImage] = useState<File | null>(null)
 
   const { toast } = useToast()
 
@@ -74,7 +76,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Error",
         description: "Failed to load preconfigured products",
-        variant: "destructive",
+        className: "destructive"
       })
     } finally {
       setIsLoading(false)
@@ -157,7 +159,7 @@ export default function PreconfiguredProductsPage() {
 
   // Get total price for an option (base + adjustment)
   const getOptionTotalPrice = (option: PartOption): number => {
-    const basePrice = parseFloat(option.default_price)
+    const basePrice = parseFloat(option.default_price.toString())
     const adjustment = getAdjustedPrice(option.id)
     return basePrice + adjustment
   }
@@ -211,7 +213,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Error",
         description: "Failed to load parts for category",
-        variant: "destructive",
+        className: "destructive",
       })
     }
   }
@@ -253,6 +255,7 @@ export default function PreconfiguredProductsPage() {
     setTotalPrice(0)
     setConfigName("")
     setConfigDescription("")
+    setConfigImage(null)
     setParts([])
     setIsAddDialogOpen(true)
   }
@@ -262,7 +265,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Validation Error",
         description: "Please enter a configuration name",
-        variant: "destructive",
+        className: "destructive",
       })
       return
     }
@@ -271,7 +274,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Validation Error",
         description: "Please complete all configuration steps",
-        variant: "destructive",
+        className: "destructive",
       })
       return
     }
@@ -284,7 +287,7 @@ export default function PreconfiguredProductsPage() {
         selectedCategoryId!,
         totalPrice,
         partOptionIds,
-        undefined,
+        configImage || undefined,
         configDescription.trim() || undefined
       )
 
@@ -294,12 +297,13 @@ export default function PreconfiguredProductsPage() {
       })
 
       setIsAddDialogOpen(false)
+      setConfigImage(null)
       loadProducts()
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to create preconfigured product",
-        variant: "destructive",
+        className: "destructive",
       })
     }
   }
@@ -311,7 +315,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Validation Error",
         description: "Please enter a configuration name",
-        variant: "destructive",
+        className: "destructive",
       })
       return
     }
@@ -320,7 +324,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Validation Error",
         description: "Please complete all configuration steps",
-        variant: "destructive",
+        className: "destructive",
       })
       return
     }
@@ -332,6 +336,7 @@ export default function PreconfiguredProductsPage() {
         name: configName,
         description: configDescription.trim() || undefined,
         base_price: totalPrice.toFixed(2),
+        image: configImage || undefined,
         part_options: partOptionIds,
       })
 
@@ -346,7 +351,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Error",
         description: "Failed to update preconfigured product",
-        variant: "destructive",
+        className: "destructive",
       })
     }
   }
@@ -383,7 +388,7 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Error",
         description: "Failed to load product configuration",
-        variant: "destructive",
+        className: "destructive",
       })
     }
   }
@@ -404,38 +409,51 @@ export default function PreconfiguredProductsPage() {
       toast({
         title: "Error",
         description: "Failed to delete preconfigured product",
-        variant: "destructive",
+        className: "destructive",
       })
     }
   }
 
   const handleDuplicate = async (product: PreconfiguredProduct) => {
     try {
-      const partOptionIds = product.parts?.map((p) => p.part_option) || []
-
+      const partOptionIds = product.parts?.map((p) => p.part_option) || [];
+      let imageFile: File | undefined;
+  
+      if (product.image_url) {
+        try {
+          const response = await fetch(product.image_url);
+          const blob = await response.blob();
+          const filename = product.image_url.split('/').pop() || 'image.jpg';
+          imageFile = new File([blob], filename, { type: blob.type });
+        } catch (error) {
+          console.error('Error loading image:', error);
+        }
+      }
+  
       await preconfiguredProductService.createWithParts(
         `${product.name} (Copy)`,
         product.category,
         parseFloat(product.base_price),
         partOptionIds,
-        product.image_url,
+        imageFile,
         product.description
-      )
-
+      );
+  
       toast({
         title: "Success",
         description: "Preconfigured product duplicated successfully",
-      })
-
-      loadProducts()
+      });
+  
+      loadProducts();
     } catch (error) {
+      console.error('Error duplicating product:', error);
       toast({
         title: "Error",
         description: "Failed to duplicate preconfigured product",
-        variant: "destructive",
-      })
+        className: "destructive",
+      });
     }
-  }
+  };
 
   // Get summary of selected options
   const getOptionsSummary = (product: PreconfiguredProduct): string => {
@@ -477,7 +495,8 @@ export default function PreconfiguredProductsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[300px]">
+                <TableHead className="w-[80px]">Image</TableHead>
+                <TableHead className="w-[250px]">
                   <div className="flex items-center gap-1">
                     Name
                     <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -485,7 +504,7 @@ export default function PreconfiguredProductsPage() {
                     </Button>
                   </div>
                 </TableHead>
-                <TableHead className="w-[200px]">
+                <TableHead className="w-[180px]">
                   <div className="flex items-center gap-1">
                     Category
                     <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -508,19 +527,32 @@ export default function PreconfiguredProductsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No preconfigured products found.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredProducts.map((product) => (
                   <TableRow key={product.id}>
+                    <TableCell>
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>
                       <Link to={`/dashboard/categories`} className="text-primary hover:underline">
@@ -639,7 +671,7 @@ export default function PreconfiguredProductsPage() {
                             <div className="text-center font-medium">{option.name}</div>
                             <div className="text-center">
                               <div className="text-muted-foreground">
-                                ${parseFloat(option.default_price).toFixed(2)}
+                                ${parseFloat(option.default_price.toString()).toFixed(2)}
                                 {priceAdjustment !== 0 && (
                                   <span className="text-xs text-primary ml-1">
                                     {priceAdjustment > 0 ? "+" : ""}${priceAdjustment.toFixed(2)}
@@ -683,6 +715,10 @@ export default function PreconfiguredProductsPage() {
                         rows={3}
                       />
                     </div>
+                    <ImageUpload
+                      label="Product Image"
+                      onImageChange={(file) => setConfigImage(file)}
+                    />
                   </div>
                 )}
 
@@ -818,7 +854,7 @@ export default function PreconfiguredProductsPage() {
                             <div className="text-center font-medium">{option.name}</div>
                             <div className="text-center">
                               <div className="text-muted-foreground">
-                                ${parseFloat(option.default_price).toFixed(2)}
+                                ${parseFloat(option.default_price.toString()).toFixed(2)}
                                 {priceAdjustment !== 0 && (
                                   <span className="text-xs text-primary ml-1">
                                     {priceAdjustment > 0 ? "+" : ""}${priceAdjustment.toFixed(2)}
@@ -862,6 +898,12 @@ export default function PreconfiguredProductsPage() {
                         rows={3}
                       />
                     </div>
+                    <ImageUpload
+                      label="Product Image"
+                      currentImageUrl={selectedProduct?.image_url}
+                      onImageChange={(file) => setConfigImage(file)}
+                      onImageClear={() => setConfigImage(null)}
+                    />
                   </div>
                 )}
 

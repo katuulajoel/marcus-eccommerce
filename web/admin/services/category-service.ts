@@ -17,14 +17,14 @@ export interface Category {
 export interface CategoryCreateInput {
   name: string;
   description: string;
-  image_url?: string;
+  image?: File;
   is_active?: boolean;
 }
 
 export interface CategoryUpdateInput {
   name?: string;
   description?: string;
-  image_url?: string;
+  image?: File | null;
   is_active?: boolean;
 }
 
@@ -52,7 +52,21 @@ export const categoryService = {
    * Create new category
    */
   create: async (data: CategoryCreateInput): Promise<Category> => {
-    const response = await adminApiClient.post<Category>('/api/categories/', data);
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+    if (data.is_active !== undefined) {
+      formData.append('is_active', String(data.is_active));
+    }
+
+    const response = await adminApiClient.post<Category>('/api/categories/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -60,7 +74,30 @@ export const categoryService = {
    * Update existing category
    */
   update: async (id: number, data: CategoryUpdateInput): Promise<Category> => {
-    const response = await adminApiClient.patch<Category>(`/api/categories/${id}/`, data);
+    const formData = new FormData();
+    if (data.name !== undefined) {
+      formData.append('name', data.name);
+    }
+    if (data.description !== undefined) {
+      formData.append('description', data.description);
+    }
+    if (data.image !== undefined) {
+      if (data.image === null) {
+        // Clear the image
+        formData.append('image', '');
+      } else {
+        formData.append('image', data.image);
+      }
+    }
+    if (data.is_active !== undefined) {
+      formData.append('is_active', String(data.is_active));
+    }
+
+    const response = await adminApiClient.patch<Category>(`/api/categories/${id}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

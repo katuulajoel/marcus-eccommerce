@@ -1,6 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Category, Part, PartOption, Stock
 from .serializers import CategorySerializer, PartSerializer, PartOptionSerializer, StockSerializer
 from .permissions import AllowGetAnonymously
@@ -8,14 +9,15 @@ from .permissions import AllowGetAnonymously
 class CategoryViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing categories
-    
-    **Authentication required**: 
+
+    **Authentication required**:
     - GET: No (anyone can view categories)
     - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AllowGetAnonymously]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     @action(detail=True, methods=['get'])
     def parts(self, request, pk=None):
@@ -80,6 +82,7 @@ class PartOptionViewSet(ModelViewSet):
     queryset = PartOption.objects.all()
     serializer_class = PartOptionSerializer
     permission_classes = [AllowGetAnonymously]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         queryset = super().get_queryset()

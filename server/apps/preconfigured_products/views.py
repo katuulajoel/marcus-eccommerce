@@ -3,17 +3,18 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import F
 from itertools import groupby
 from operator import attrgetter
 from .models import (
-    PreConfiguredProduct, 
+    PreConfiguredProduct,
     PreConfiguredProductParts,
     BestSellingPreconfiguredProduct,
     TopPreconfiguredProductsPerCategory
 )
 from .serializers import (
-    PreConfiguredProductSerializer, 
+    PreConfiguredProductSerializer,
     PreConfiguredProductPartsSerializer,
     BestSellingPreconfiguredProductSerializer,
     TopPreconfiguredProductsPerCategorySerializer
@@ -24,16 +25,17 @@ from apps.products.models import Category
 class PreConfiguredProductViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing pre-configured products
-    
+
     Pre-configured products are complete product configurations within a category.
-    
-    **Authentication required**: 
+
+    **Authentication required**:
     - GET: No (anyone can view pre-configured products)
     - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = PreConfiguredProduct.objects.all()
     serializer_class = PreConfiguredProductSerializer
     permission_classes = [AllowGetAnonymously]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     @action(detail=True, methods=['get'])
     def parts(self, request, pk=None):

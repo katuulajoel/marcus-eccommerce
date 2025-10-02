@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS public.category (
     id integer NOT NULL DEFAULT nextval('category_id_seq'::regclass),
     name character varying(255) NOT NULL,
     description text,
+    image character varying(100),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT category_pkey PRIMARY KEY (id)
 );
@@ -53,7 +54,9 @@ CREATE TABLE IF NOT EXISTS public.partoption (
     name character varying(255) NOT NULL,
     default_price numeric(10, 2) NOT NULL,
     image_url character varying(255),
+    image character varying(100),
     description text,
+    minimum_payment_percentage numeric(3, 2) DEFAULT 0.00,
     CONSTRAINT partoption_pkey PRIMARY KEY (id)
 );
 
@@ -63,6 +66,7 @@ CREATE TABLE IF NOT EXISTS public.preconfiguredproduct (
     name character varying(255) NOT NULL,
     base_price numeric(10, 2) NOT NULL,
     image_url character varying(255),
+    image character varying(100),
     description text,
     CONSTRAINT preconfiguredproduct_pkey PRIMARY KEY (id)
 );

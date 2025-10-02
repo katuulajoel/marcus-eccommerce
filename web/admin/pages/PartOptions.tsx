@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowUpDown, Edit, MoreHorizontal, Plus, Search, Trash } from "lucide-react"
+import { ArrowUpDown, Edit, MoreHorizontal, Plus, Search, Trash, Image as ImageIcon } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { Card, CardContent } from "@shared/components/ui/card"
 import {
@@ -22,6 +22,7 @@ import { Textarea } from "@shared/components/ui/textarea"
 import { useToast } from "@shared/components/ui/use-toast"
 import { partOptionService, type PartOption } from "../services/part-option-service"
 import { partService, type Part } from "../services/part-service"
+import { ImageUpload } from "@admin/components/ImageUpload"
 
 export default function PartOptionsPage() {
   const [partOptions, setPartOptions] = useState<PartOption[]>([])
@@ -39,7 +40,7 @@ export default function PartOptionsPage() {
     part: "",
     default_price: 0,
     minimum_payment_percentage: 0,
-    image_url: "",
+    image: null as File | null,
     description: "",
   })
 
@@ -49,7 +50,7 @@ export default function PartOptionsPage() {
     part: "",
     default_price: 0,
     minimum_payment_percentage: 0,
-    image_url: "",
+    image: null as File | null,
     description: "",
   })
 
@@ -100,7 +101,7 @@ export default function PartOptionsPage() {
       part: option.part.toString(),
       default_price: option.default_price,
       minimum_payment_percentage: option.minimum_payment_percentage || 0,
-      image_url: option.image_url || "",
+      image: null,
       description: option.description || "",
     })
     setIsEditDialogOpen(true)
@@ -113,7 +114,7 @@ export default function PartOptionsPage() {
         part: parseInt(addForm.part),
         default_price: addForm.default_price,
         minimum_payment_percentage: addForm.minimum_payment_percentage,
-        image_url: addForm.image_url || undefined,
+        image: addForm.image || undefined,
         description: addForm.description || undefined,
       })
       toast({
@@ -121,7 +122,7 @@ export default function PartOptionsPage() {
         description: "Part option created successfully",
       })
       setIsAddDialogOpen(false)
-      setAddForm({ name: "", part: "", default_price: 0, minimum_payment_percentage: 0, image_url: "", description: "" })
+      setAddForm({ name: "", part: "", default_price: 0, minimum_payment_percentage: 0, image: null, description: "" })
       loadPartOptions()
     } catch (error) {
       toast({
@@ -141,7 +142,7 @@ export default function PartOptionsPage() {
         part: parseInt(editForm.part),
         default_price: editForm.default_price,
         minimum_payment_percentage: editForm.minimum_payment_percentage,
-        image_url: editForm.image_url || undefined,
+        image: editForm.image || undefined,
         description: editForm.description || undefined,
       })
       toast({
@@ -261,15 +262,10 @@ export default function PartOptionsPage() {
                   Minimum upfront payment required (0-100%). Example: 70 = 70% required upfront, 0 = no upfront payment required
                 </p>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="image_url">Image URL (optional)</Label>
-                <Input
-                  id="image_url"
-                  placeholder="https://example.com/image.jpg"
-                  value={addForm.image_url}
-                  onChange={(e) => setAddForm({ ...addForm, image_url: e.target.value })}
-                />
-              </div>
+              <ImageUpload
+                label="Part Option Image"
+                onImageChange={(file) => setAddForm({ ...addForm, image: file })}
+              />
               <div className="grid gap-2">
                 <Label htmlFor="description">Description (optional)</Label>
                 <Textarea
@@ -302,8 +298,9 @@ export default function PartOptionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[250px]">Option Name</TableHead>
-                  <TableHead className="w-[200px]">Part</TableHead>
+                  <TableHead className="w-[80px]">Image</TableHead>
+                  <TableHead className="w-[220px]">Option Name</TableHead>
+                  <TableHead className="w-[180px]">Part</TableHead>
                   <TableHead className="w-[130px]">Default Price</TableHead>
                   <TableHead className="w-[150px]">Min Payment %</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
@@ -312,13 +309,26 @@ export default function PartOptionsPage() {
               <TableBody>
                 {filteredOptions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       No part options found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredOptions.map((option) => (
                     <TableRow key={option.id}>
+                      <TableCell>
+                        {option.image_url ? (
+                          <img
+                            src={option.image_url}
+                            alt={option.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">{option.name}</TableCell>
                       <TableCell>{option.part_name || `Part #${option.part}`}</TableCell>
                       <TableCell>${Number(option.default_price).toFixed(2)}</TableCell>
@@ -417,14 +427,12 @@ export default function PartOptionsPage() {
                   Minimum upfront payment required (0-100%). Example: 70 = 70% required upfront, 0 = no upfront payment required
                 </p>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-image_url">Image URL (optional)</Label>
-                <Input
-                  id="edit-image_url"
-                  value={editForm.image_url}
-                  onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })}
-                />
-              </div>
+              <ImageUpload
+                label="Part Option Image"
+                currentImageUrl={selectedOption?.image_url}
+                onImageChange={(file) => setEditForm({ ...editForm, image: file })}
+                onImageClear={() => setEditForm({ ...editForm, image: null })}
+              />
               <div className="grid gap-2">
                 <Label htmlFor="edit-description">Description (optional)</Label>
                 <Textarea

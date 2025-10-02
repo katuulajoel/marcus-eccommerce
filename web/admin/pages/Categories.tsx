@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
-import { ArrowUpDown, Edit, MoreHorizontal, Plus, Search, Trash } from "lucide-react"
+import { ArrowUpDown, Edit, MoreHorizontal, Plus, Search, Trash, Image as ImageIcon } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { Card, CardContent } from "@shared/components/ui/card"
 import { Checkbox } from "@shared/components/ui/checkbox"
@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@shared/components/ui/textarea"
 import { categoryService, type Category } from "@admin/services/category-service"
 import { useToast } from "@shared/components/ui/use-toast"
+import { ImageUpload } from "@admin/components/ImageUpload"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -33,18 +34,28 @@ export default function CategoriesPage() {
   const { toast } = useToast()
 
   // Form state for add dialog
-  const [addForm, setAddForm] = useState({
+  const [addForm, setAddForm] = useState<{
+    name: string;
+    description: string;
+    image?: File;
+    is_active: boolean;
+  }>({
     name: "",
     description: "",
-    image_url: "",
+    image: undefined,
     is_active: true,
   })
 
   // Form state for edit dialog
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    description: string;
+    image: File | null;
+    is_active: boolean;
+  }>({
     name: "",
     description: "",
-    image_url: "",
+    image: null,
     is_active: true,
   })
 
@@ -80,7 +91,7 @@ export default function CategoriesPage() {
     setEditForm({
       name: category.name,
       description: category.description,
-      image_url: category.image_url || "",
+      image: null,
       is_active: category.is_active,
     })
     setIsEditDialogOpen(true)
@@ -94,7 +105,7 @@ export default function CategoriesPage() {
         description: "Category created successfully",
       })
       setIsAddDialogOpen(false)
-      setAddForm({ name: "", description: "", image_url: "", is_active: true })
+      setAddForm({ name: "", description: "", image: undefined, is_active: true })
       loadCategories()
     } catch (error) {
       toast({
@@ -191,15 +202,10 @@ export default function CategoriesPage() {
                   onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                  id="image_url"
-                  placeholder="https://example.com/bikes.jpg"
-                  value={addForm.image_url}
-                  onChange={(e) => setAddForm({ ...addForm, image_url: e.target.value })}
-                />
-              </div>
+              <ImageUpload
+                label="Category Image"
+                onImageChange={(file) => setAddForm({ ...addForm, image: file ?? undefined })}
+              />
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="active"
@@ -224,7 +230,8 @@ export default function CategoriesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[300px]">
+                <TableHead className="w-[80px]">Image</TableHead>
+                <TableHead className="w-[250px]">
                   <div className="flex items-center gap-1">
                     Category Name
                     <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -248,19 +255,32 @@ export default function CategoriesPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredCategories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No categories found.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredCategories.map((category) => (
                   <TableRow key={category.id}>
+                    <TableCell>
+                      {category.image_url ? (
+                        <img
+                          src={category.image_url}
+                          alt={category.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{category.name}</TableCell>
                     <TableCell>{category.description}</TableCell>
                     <TableCell>
@@ -320,14 +340,12 @@ export default function CategoriesPage() {
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-image_url">Image URL</Label>
-                <Input
-                  id="edit-image_url"
-                  value={editForm.image_url}
-                  onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })}
-                />
-              </div>
+              <ImageUpload
+                label="Category Image"
+                currentImageUrl={selectedCategory?.image_url}
+                onImageChange={(file) => setEditForm({ ...editForm, image: file })}
+                onImageClear={() => setEditForm({ ...editForm, image: null })}
+              />
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="edit-active"
