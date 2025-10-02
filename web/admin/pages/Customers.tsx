@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { Link } from "react-router-dom"
 import { ArrowUpDown, Eye, MoreHorizontal, Search } from "lucide-react"
@@ -19,95 +19,79 @@ import { Input } from "@shared/components/ui/input"
 import { Label } from "@shared/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs"
+import { customerService, type Customer, type CustomerOrder } from "@admin/services/customer-service"
+import { orderService, type Order } from "@admin/services/order-service"
 
-// Sample data
-const customers = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@example.com",
-    ordersCount: 3,
-    totalSpent: 2499.97,
-    joinedDate: new Date("2023-01-15"),
-    address: "123 Main St, Anytown, CA 12345",
-    phone: "(555) 123-4567",
-    orders: [
-      { id: "ORD-001", date: new Date("2023-05-15"), total: 899.99, status: "Completed" },
-      { id: "ORD-006", date: new Date("2023-07-10"), total: 799.99, status: "Shipped" },
-      { id: "ORD-012", date: new Date("2023-09-22"), total: 799.99, status: "Completed" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Jane Doe",
-    email: "jane.doe@example.com",
-    ordersCount: 1,
-    totalSpent: 599.99,
-    joinedDate: new Date("2023-02-20"),
-    address: "456 Oak Ave, Somewhere, NY 67890",
-    phone: "(555) 234-5678",
-    orders: [{ id: "ORD-002", date: new Date("2023-05-20"), total: 599.99, status: "Pending" }],
-  },
-  {
-    id: "3",
-    name: "Robert Johnson",
-    email: "robert.johnson@example.com",
-    ordersCount: 2,
-    totalSpent: 2149.98,
-    joinedDate: new Date("2023-03-10"),
-    address: "789 Pine Rd, Elsewhere, TX 54321",
-    phone: "(555) 345-6789",
-    orders: [
-      { id: "ORD-003", date: new Date("2023-05-25"), total: 1299.99, status: "Shipped" },
-      { id: "ORD-009", date: new Date("2023-08-15"), total: 849.99, status: "Completed" },
-    ],
-  },
-  {
-    id: "4",
-    name: "Emily Wilson",
-    email: "emily.wilson@example.com",
-    ordersCount: 1,
-    totalSpent: 749.99,
-    joinedDate: new Date("2023-04-05"),
-    address: "321 Elm St, Nowhere, WA 13579",
-    phone: "(555) 456-7890",
-    orders: [{ id: "ORD-004", date: new Date("2023-06-01"), total: 749.99, status: "Cancelled" }],
-  },
-  {
-    id: "5",
-    name: "Michael Brown",
-    email: "michael.brown@example.com",
-    ordersCount: 2,
-    totalSpent: 1699.98,
-    joinedDate: new Date("2023-05-12"),
-    address: "654 Maple Dr, Somewhere, FL 97531",
-    phone: "(555) 567-8901",
-    orders: [
-      { id: "ORD-005", date: new Date("2023-06-05"), total: 849.99, status: "Pending" },
-      { id: "ORD-011", date: new Date("2023-09-10"), total: 849.99, status: "Completed" },
-    ],
-  },
-]
+interface CustomerWithStats extends Customer {
+  ordersCount: number;
+  totalSpent: number;
+}
 
 export default function CustomersPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<(typeof customers)[0] | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithStats | null>(null)
+  const [selectedCustomerOrders, setSelectedCustomerOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([])
+  const [loading, setLoading] = useState(true)
   const itemsPerPage = 5
+
+  useEffect(() => {
+    loadCustomers()
+  }, [])
+
+  const loadCustomers = async () => {
+    try {
+      setLoading(true)
+      const [customersData, ordersData] = await Promise.all([
+        customerService.getAll(),
+        orderService.getAll()
+      ])
+
+      // Calculate stats for each customer
+      const customersWithStats: CustomerWithStats[] = customersData.map(customer => {
+        const customerOrders = ordersData.filter(order => order.customer === customer.id)
+        const totalSpent = Number(customerOrders.reduce((sum, order) => sum + Number(order.total_price || 0), 0).toFixed(2))
+
+        return {
+          ...customer,
+          ordersCount: customerOrders.length,
+          totalSpent
+        }
+      })
+
+      setCustomers(customersWithStats)
+    } catch (error) {
+      console.error('Failed to load customers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredCustomers = customers.filter(
     (customer) =>
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
   const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
-  const handleView = (customer: (typeof customers)[0]) => {
-    setSelectedCustomer(customer)
-    setIsViewDialogOpen(true)
+  const handleView = async (customer: CustomerWithStats) => {
+    try {
+      // Fetch customer's orders
+      const allOrders = await orderService.getAll()
+      const customerOrders = allOrders.filter(order => order.customer === customer.id)
+      setSelectedCustomerOrders(customerOrders)
+      setSelectedCustomer(customer)
+      setIsViewDialogOpen(true)
+    } catch (error) {
+      console.error('Failed to load customer orders:', error)
+      setSelectedCustomer(customer)
+      setSelectedCustomerOrders([])
+      setIsViewDialogOpen(true)
+    }
   }
 
   return (
@@ -161,7 +145,13 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedCustomers.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    Loading customers...
+                  </TableCell>
+                </TableRow>
+              ) : paginatedCustomers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
                     No customers found.
@@ -170,10 +160,10 @@ export default function CustomersPage() {
               ) : (
                 paginatedCustomers.map((customer) => (
                   <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>{customer.email}</TableCell>
+                    <TableCell className="font-medium">{customer.name || 'N/A'}</TableCell>
+                    <TableCell>{customer.email || 'N/A'}</TableCell>
                     <TableCell>{customer.ordersCount}</TableCell>
-                    <TableCell>{format(customer.joinedDate, "MMM d, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(customer.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -241,23 +231,19 @@ export default function CustomersPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label>Name</Label>
-                      <div className="rounded-md border p-2">{selectedCustomer.name}</div>
+                      <div className="rounded-md border p-2">{selectedCustomer.name || 'N/A'}</div>
                     </div>
                     <div className="grid gap-2">
                       <Label>Email</Label>
-                      <div className="rounded-md border p-2">{selectedCustomer.email}</div>
+                      <div className="rounded-md border p-2">{selectedCustomer.email || 'N/A'}</div>
                     </div>
                     <div className="grid gap-2">
                       <Label>Phone</Label>
-                      <div className="rounded-md border p-2">{selectedCustomer.phone}</div>
+                      <div className="rounded-md border p-2">{selectedCustomer.phone || 'N/A'}</div>
                     </div>
                     <div className="grid gap-2">
                       <Label>Joined Date</Label>
-                      <div className="rounded-md border p-2">{format(selectedCustomer.joinedDate, "MMMM d, yyyy")}</div>
-                    </div>
-                    <div className="col-span-2 grid gap-2">
-                      <Label>Address</Label>
-                      <div className="rounded-md border p-2">{selectedCustomer.address}</div>
+                      <div className="rounded-md border p-2">{format(new Date(selectedCustomer.created_at), "MMMM d, yyyy")}</div>
                     </div>
                     <div className="grid gap-2">
                       <Label>Total Orders</Label>
@@ -265,7 +251,7 @@ export default function CustomersPage() {
                     </div>
                     <div className="grid gap-2">
                       <Label>Total Spent</Label>
-                      <div className="rounded-md border p-2 font-bold">${selectedCustomer.totalSpent.toFixed(2)}</div>
+                      <div className="rounded-md border p-2 font-bold">${Number(selectedCustomer.totalSpent).toFixed(2)}</div>
                     </div>
                   </div>
                 </TabsContent>
@@ -276,22 +262,39 @@ export default function CustomersPage() {
                         <TableHead>Order ID</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Total</TableHead>
+                        <TableHead>Paid</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedCustomer.orders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell>
-                            <Link to={`/dashboard/orders`} className="text-primary hover:underline">
-                              {order.id}
-                            </Link>
+                      {selectedCustomerOrders.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                            No orders found
                           </TableCell>
-                          <TableCell>{format(order.date, "MMM d, yyyy")}</TableCell>
-                          <TableCell>${order.total.toFixed(2)}</TableCell>
-                          <TableCell>{order.status}</TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        selectedCustomerOrders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell>
+                              Order ORD-{order.id.toString().padStart(3, "0")}
+                            </TableCell>
+                            <TableCell>{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
+                            <TableCell className="font-medium">${Number(order.total_price).toFixed(2)}</TableCell>
+                            <TableCell className="text-green-600">${Number(order.amount_paid).toFixed(2)}</TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                order.fulfillment_status === 'in_production' ? 'bg-yellow-100 text-yellow-700' :
+                                order.fulfillment_status === 'ready_for_pickup' ? 'bg-yellow-100 text-yellow-700' :
+                                order.fulfillment_status === 'in_delivery' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {order.fulfillment_status.charAt(0).toUpperCase() + order.fulfillment_status.slice(1)}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </TabsContent>

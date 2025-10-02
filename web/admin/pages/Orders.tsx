@@ -151,6 +151,7 @@ export default function OrdersPage() {
   const [paymentAmount, setPaymentAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("Credit Card")
   const [paidBy, setPaidBy] = useState<"customer" | "delivery_person">("customer")
+  const [fulfillmentStatus, setFulfillmentStatus] = useState<string>("")
   const { toast } = useToast()
 
   useEffect(() => {
@@ -190,7 +191,33 @@ export default function OrdersPage() {
 
   const handleView = (order: Order) => {
     setSelectedOrder(order)
+    setFulfillmentStatus(order.fulfillment_status)
     setIsViewDialogOpen(true)
+  }
+
+  const handleUpdateFulfillmentStatus = async () => {
+    if (!selectedOrder || !fulfillmentStatus) return
+
+    try {
+      await orderService.updateFulfillmentStatus(selectedOrder.id, fulfillmentStatus)
+
+      toast({
+        title: "Success",
+        description: "Fulfillment status updated successfully",
+      })
+
+      // Reload orders and update selected order
+      await loadOrders()
+      const updatedOrder = await orderService.getById(selectedOrder.id)
+      setSelectedOrder(updatedOrder)
+      setFulfillmentStatus(updatedOrder.fulfillment_status)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update fulfillment status",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleRecordPayment = async () => {
@@ -255,6 +282,27 @@ export default function OrdersPage() {
       default:
         return "secondary"
     }
+  }
+
+  const getFulfillmentStatusBadgeVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "delivered":
+        return "success"
+      case "in_delivery":
+        return "info"
+      case "ready_for_pickup":
+        return "info"
+      case "in_production":
+        return "warning"
+      case "pending":
+        return "secondary"
+      default:
+        return "secondary"
+    }
+  }
+
+  const formatFulfillmentStatus = (status: string) => {
+    return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   return (
@@ -324,7 +372,7 @@ export default function OrdersPage() {
                 </TableHead>
                 <TableHead className="w-[120px]">Amount Paid</TableHead>
                 <TableHead className="w-[130px]">Payment Status</TableHead>
-                <TableHead className="w-[120px]">Order Status</TableHead>
+                <TableHead className="w-[140px]">Fulfillment</TableHead>
                 <TableHead className="w-[150px]">
                   <div className="flex items-center gap-1">
                     Created At
@@ -373,7 +421,9 @@ export default function OrdersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">In Progress</Badge>
+                      <Badge variant={getFulfillmentStatusBadgeVariant(order.fulfillment_status) as any}>
+                        {formatFulfillmentStatus(order.fulfillment_status)}
+                      </Badge>
                     </TableCell>
                     <TableCell>{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell>
@@ -411,10 +461,11 @@ export default function OrdersPage() {
           {selectedOrder && (
             <div className="grid gap-6 py-4">
               <Tabs defaultValue="payment">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="payment">Payment Info</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="payment">Payment</TabsTrigger>
+                  <TabsTrigger value="fulfillment">Fulfillment</TabsTrigger>
                   <TabsTrigger value="shipping">Shipping</TabsTrigger>
-                  <TabsTrigger value="configuration">Configuration</TabsTrigger>
+                  <TabsTrigger value="configuration">Config</TabsTrigger>
                 </TabsList>
                 <TabsContent value="payment" className="grid gap-4 py-4">
                   <div className="grid gap-4">
@@ -496,6 +547,76 @@ export default function OrdersPage() {
                           No payments recorded yet
                         </div>
                       )}
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="fulfillment" className="grid gap-4 py-4">
+                  <div className="grid gap-4">
+                    <div className="rounded-lg border p-4 bg-muted/50">
+                      <h3 className="font-semibold mb-3">Fulfillment Status</h3>
+                      <div className="grid gap-4">
+                        <div>
+                          <Label className="text-muted-foreground">Current Status</Label>
+                          <div className="mt-2">
+                            <Badge variant={getFulfillmentStatusBadgeVariant(selectedOrder.fulfillment_status) as any} className="text-sm">
+                              {formatFulfillmentStatus(selectedOrder.fulfillment_status)}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="fulfillment-status">Update Status</Label>
+                          <Select value={fulfillmentStatus} onValueChange={setFulfillmentStatus}>
+                            <SelectTrigger id="fulfillment-status">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="in_production">In Production</SelectItem>
+                              <SelectItem value="ready_for_pickup">Ready for Pickup</SelectItem>
+                              <SelectItem value="in_delivery">In Delivery</SelectItem>
+                              <SelectItem value="delivered">Delivered</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          onClick={handleUpdateFulfillmentStatus}
+                          disabled={fulfillmentStatus === selectedOrder.fulfillment_status}
+                        >
+                          Update Fulfillment Status
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <h3 className="font-semibold mb-3">Order Information</h3>
+                      <div className="grid gap-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-muted-foreground">Is Fulfillable</Label>
+                            <div className="font-medium">
+                              {selectedOrder.is_fulfillable ? (
+                                <span className="text-green-600">✓ Yes</span>
+                              ) : (
+                                <span className="text-red-600">✗ No</span>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Payment Status</Label>
+                            <div className="mt-1">
+                              <Badge variant={getPaymentStatusBadgeVariant(selectedOrder.payment_status) as any}>
+                                {selectedOrder.payment_status.charAt(0).toUpperCase() + selectedOrder.payment_status.slice(1)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        {!selectedOrder.is_fulfillable && (
+                          <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3">
+                            <p className="text-sm text-yellow-800">
+                              ⚠️ This order cannot be fulfilled yet. Customer needs to pay at least ${Number(selectedOrder.minimum_required_amount).toFixed(2)} (currently paid: ${Number(selectedOrder.amount_paid).toFixed(2)})
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -660,7 +781,10 @@ export default function OrdersPage() {
 
               <div className="grid gap-2">
                 <Label htmlFor="paidBy">Paid By *</Label>
-                <Select value={paidBy} onValueChange={setPaidBy}>
+                <Select 
+                  value={paidBy} 
+                  onValueChange={(value: string) => setPaidBy(value as "customer" | "delivery_person")}
+                >
                   <SelectTrigger id="paidBy">
                     <SelectValue />
                   </SelectTrigger>

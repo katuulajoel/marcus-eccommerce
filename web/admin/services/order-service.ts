@@ -51,6 +51,7 @@ export interface Order {
   minimum_required_amount: number;
   amount_paid: number;
   payment_status: 'pending' | 'partial' | 'completed';
+  fulfillment_status: 'pending' | 'in_production' | 'ready_for_pickup' | 'in_delivery' | 'delivered';
   is_fulfillable: boolean;
   created_at: string;
   products: OrderProduct[];
@@ -94,10 +95,10 @@ export const orderService = {
   },
 
   /**
-   * Update order status (if needed)
+   * Update order fulfillment status
    */
-  updateStatus: async (id: number, status: string): Promise<Order> => {
-    const response = await adminApiClient.patch<Order>(`/api/orders/${id}/`, { status });
+  updateFulfillmentStatus: async (id: number, fulfillment_status: string): Promise<Order> => {
+    const response = await adminApiClient.patch<Order>(`/api/orders/${id}/`, { fulfillment_status });
     return response.data;
   },
 };

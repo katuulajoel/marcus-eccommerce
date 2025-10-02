@@ -34,6 +34,14 @@ class Orders(models.Model):
         ('completed', 'Completed'),
     ]
 
+    FULFILLMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_production', 'In Production'),
+        ('ready_for_pickup', 'Ready for Pickup'),
+        ('in_delivery', 'In Delivery'),
+        ('delivered', 'Delivered'),
+    ]
+
     id = models.AutoField(primary_key=True)
     customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, db_column='customer_id')
     shipping_address = models.ForeignKey(ShippingAddress, related_name='orders', on_delete=models.PROTECT, db_column='shipping_address_id', null=True)
@@ -41,6 +49,7 @@ class Orders(models.Model):
     minimum_required_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    fulfillment_status = models.CharField(max_length=20, choices=FULFILLMENT_STATUS_CHOICES, default='pending')
     is_fulfillable = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
