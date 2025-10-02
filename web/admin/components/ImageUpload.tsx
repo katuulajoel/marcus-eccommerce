@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useState, useRef } from "react"
 import { Upload, X, Image as ImageIcon } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { Label } from "@shared/components/ui/label"
@@ -24,6 +24,8 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
+  const [isCleared, setIsCleared] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(
     (file: File | null) => {
@@ -32,6 +34,9 @@ export function ImageUpload({
         onImageChange(null)
         return
       }
+
+      // Reset cleared state when new file is selected
+      setIsCleared(false)
 
       // Validate file size
       const maxSizeBytes = maxSizeMB * 1024 * 1024
@@ -82,15 +87,22 @@ export function ImageUpload({
     handleFile(file)
   }
 
-  const handleClear = () => {
+  const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setPreview(null)
+    setIsCleared(true)
     onImageChange(null)
     if (onImageClear) {
       onImageClear()
     }
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
-  const displayImage = preview || currentImageUrl
+  const displayImage = preview || (!isCleared && currentImageUrl)
 
   return (
     <div className="grid gap-2">
