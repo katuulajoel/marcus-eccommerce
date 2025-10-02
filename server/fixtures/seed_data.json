@@ -1,0 +1,636 @@
+[
+  {
+    "model": "customers.customer",
+    "pk": 1,
+    "fields": {
+      "name": "Alice Johnson",
+      "email": "alice.j@example.com",
+      "phone": "+256701234567",
+      "created_at": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "customers.customer",
+    "pk": 2,
+    "fields": {
+      "name": "Bob Smith",
+      "email": "bob.smith@example.com",
+      "phone": "+256712345678",
+      "created_at": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 1,
+    "fields": {
+      "name": "Bicycles",
+      "description": "A wide range of customizable bicycles designed for various terrains and purposes. Includes options for mountain biking, city commuting, and road cycling.",
+      "image": null,
+      "created_at": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "products.part",
+    "pk": 1,
+    "fields": {
+      "name": "Frame",
+      "category": 1,
+      "step": 1
+    }
+  },
+  {
+    "model": "products.part",
+    "pk": 2,
+    "fields": {
+      "name": "Finish",
+      "category": 1,
+      "step": 2
+    }
+  },
+  {
+    "model": "products.part",
+    "pk": 3,
+    "fields": {
+      "name": "Wheels",
+      "category": 1,
+      "step": 3
+    }
+  },
+  {
+    "model": "products.part",
+    "pk": 4,
+    "fields": {
+      "name": "Rims",
+      "category": 1,
+      "step": 4
+    }
+  },
+  {
+    "model": "products.part",
+    "pk": 5,
+    "fields": {
+      "name": "Chain",
+      "category": 1,
+      "step": 5
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 1,
+    "fields": {
+      "part": 1,
+      "name": "Full-Suspension Frame",
+      "default_price": "130.00",
+      "image": null,
+      "description": "A durable and lightweight frame designed for rugged mountain trails. Provides excellent shock absorption and stability.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 2,
+    "fields": {
+      "part": 1,
+      "name": "Diamond Frame",
+      "default_price": "100.00",
+      "image": null,
+      "description": "A classic frame design known for its strength and simplicity. Ideal for city and road biking.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 3,
+    "fields": {
+      "part": 2,
+      "name": "Matte Finish",
+      "default_price": "50.00",
+      "image": null,
+      "description": "A sleek and modern matte finish that resists scratches and fingerprints. Perfect for a stylish look.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 4,
+    "fields": {
+      "part": 2,
+      "name": "Shiny Finish",
+      "default_price": "30.00",
+      "image": null,
+      "description": "A glossy finish that enhances the bike's appearance with a reflective shine. Easy to clean and maintain.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 5,
+    "fields": {
+      "part": 3,
+      "name": "Mountain Wheels",
+      "default_price": "90.00",
+      "image": null,
+      "description": "Sturdy wheels designed for off-road biking. Provides excellent grip and durability on uneven terrain.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 6,
+    "fields": {
+      "part": 3,
+      "name": "Road Wheels",
+      "default_price": "80.00",
+      "image": null,
+      "description": "Lightweight wheels optimized for speed and efficiency on paved roads. Ideal for long-distance rides.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 7,
+    "fields": {
+      "part": 4,
+      "name": "Red Rims",
+      "default_price": "20.00",
+      "image": null,
+      "description": "Vibrant red rims that add a bold and sporty look to your bike. Made from high-quality materials for durability.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 8,
+    "fields": {
+      "part": 4,
+      "name": "White Rims",
+      "default_price": "20.00",
+      "image": null,
+      "description": "Elegant white rims that complement any bike design. Provides a clean and modern aesthetic.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 9,
+    "fields": {
+      "part": 5,
+      "name": "8-Speed Chain",
+      "default_price": "45.00",
+      "image": null,
+      "description": "A high-performance chain designed for smooth and reliable shifting across 8-speed gears.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 10,
+    "fields": {
+      "part": 5,
+      "name": "Single-Speed Chain",
+      "default_price": "40.00",
+      "image": null,
+      "description": "A durable chain built for single-speed bikes. Offers low maintenance and long-lasting performance.",
+      "minimum_payment_percentage": "0.00"
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproduct",
+    "pk": 1,
+    "fields": {
+      "category": 1,
+      "name": "Mountain Bike",
+      "base_price": "450.00",
+      "image": null,
+      "description": "A rugged mountain bike equipped with top-quality components for off-road adventures. Designed for durability and performance on challenging trails."
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproduct",
+    "pk": 2,
+    "fields": {
+      "category": 1,
+      "name": "City Bike",
+      "base_price": "300.00",
+      "image": null,
+      "description": "A versatile city bike perfect for commuting and leisure rides. Combines comfort, style, and practicality for urban environments."
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 1,
+    "fields": {
+      "preconfigured_product": 1,
+      "part_option": 1
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 2,
+    "fields": {
+      "preconfigured_product": 1,
+      "part_option": 3
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 3,
+    "fields": {
+      "preconfigured_product": 1,
+      "part_option": 5
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 4,
+    "fields": {
+      "preconfigured_product": 1,
+      "part_option": 7
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 5,
+    "fields": {
+      "preconfigured_product": 1,
+      "part_option": 9
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 6,
+    "fields": {
+      "preconfigured_product": 2,
+      "part_option": 2
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 7,
+    "fields": {
+      "preconfigured_product": 2,
+      "part_option": 4
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 8,
+    "fields": {
+      "preconfigured_product": 2,
+      "part_option": 6
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 9,
+    "fields": {
+      "preconfigured_product": 2,
+      "part_option": 8
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 10,
+    "fields": {
+      "preconfigured_product": 2,
+      "part_option": 10
+    }
+  },
+  {
+    "model": "configurator.priceadjustmentrule",
+    "pk": 1,
+    "fields": {
+      "affected_option": 3,
+      "condition_option": 1,
+      "adjusted_price": "50.00"
+    }
+  },
+  {
+    "model": "configurator.priceadjustmentrule",
+    "pk": 2,
+    "fields": {
+      "affected_option": 3,
+      "condition_option": 2,
+      "adjusted_price": "35.00"
+    }
+  },
+  {
+    "model": "configurator.priceadjustmentrule",
+    "pk": 3,
+    "fields": {
+      "affected_option": 9,
+      "condition_option": 6,
+      "adjusted_price": "10.00"
+    }
+  },
+  {
+    "model": "configurator.incompatibilityrule",
+    "pk": 1,
+    "fields": {
+      "part_option": 5,
+      "incompatible_with_option": 2,
+      "message": "Mountain wheels can only be used with a Full-Suspension Frame."
+    }
+  },
+  {
+    "model": "configurator.incompatibilityrule",
+    "pk": 2,
+    "fields": {
+      "part_option": 8,
+      "incompatible_with_option": 5,
+      "message": "White rims are incompatible with Mountain Wheels."
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 1,
+    "fields": {
+      "part_option": 1,
+      "quantity": 15
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 2,
+    "fields": {
+      "part_option": 2,
+      "quantity": 20
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 3,
+    "fields": {
+      "part_option": 3,
+      "quantity": 25
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 4,
+    "fields": {
+      "part_option": 4,
+      "quantity": 30
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 5,
+    "fields": {
+      "part_option": 5,
+      "quantity": 10
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 6,
+    "fields": {
+      "part_option": 6,
+      "quantity": 20
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 7,
+    "fields": {
+      "part_option": 7,
+      "quantity": 18
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 8,
+    "fields": {
+      "part_option": 8,
+      "quantity": 12
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 9,
+    "fields": {
+      "part_option": 9,
+      "quantity": 15
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 10,
+    "fields": {
+      "part_option": 10,
+      "quantity": 20
+    }
+  },
+  {
+    "model": "orders.shippingaddress",
+    "pk": 1,
+    "fields": {
+      "recipient_name": "Alice Johnson",
+      "phone_number": "+256701234567",
+      "address_line1": "123 Main Street",
+      "address_line2": "Apt 4B",
+      "city": "Kampala",
+      "state_province": "Central Region",
+      "postal_code": "00256",
+      "country": "Uganda"
+    }
+  },
+  {
+    "model": "orders.shippingaddress",
+    "pk": 2,
+    "fields": {
+      "recipient_name": "Bob Smith",
+      "phone_number": "+256712345678",
+      "address_line1": "456 Oak Avenue",
+      "address_line2": null,
+      "city": "Kampala",
+      "state_province": "Central Region",
+      "postal_code": "00256",
+      "country": "Uganda"
+    }
+  },
+  {
+    "model": "orders.orders",
+    "pk": 1,
+    "fields": {
+      "customer": 1,
+      "shipping_address": 1,
+      "total_price": "335.00",
+      "minimum_required_amount": "0.00",
+      "amount_paid": "335.00",
+      "payment_status": "completed",
+      "fulfillment_status": "delivered",
+      "is_fulfillable": true,
+      "created_at": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "orders.orders",
+    "pk": 2,
+    "fields": {
+      "customer": 2,
+      "shipping_address": 2,
+      "total_price": "490.00",
+      "minimum_required_amount": "0.00",
+      "amount_paid": "245.00",
+      "payment_status": "partial",
+      "fulfillment_status": "in_production",
+      "is_fulfillable": true,
+      "created_at": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "orders.orderproduct",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "preconfigured_product": 2,
+      "custom_name": "City Cruiser",
+      "base_product_name": "City Bike"
+    }
+  },
+  {
+    "model": "orders.orderproduct",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "preconfigured_product": 1,
+      "custom_name": "Trail Blazer",
+      "base_product_name": "Mountain Bike"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 1,
+    "fields": {
+      "order_product": 1,
+      "part_name": "Frame",
+      "option_name": "Diamond Frame",
+      "final_price": "100.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 2,
+    "fields": {
+      "order_product": 1,
+      "part_name": "Finish",
+      "option_name": "Shiny Finish",
+      "final_price": "30.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 3,
+    "fields": {
+      "order_product": 1,
+      "part_name": "Wheels",
+      "option_name": "Road Wheels",
+      "final_price": "80.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 4,
+    "fields": {
+      "order_product": 1,
+      "part_name": "Rims",
+      "option_name": "White Rims",
+      "final_price": "20.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 5,
+    "fields": {
+      "order_product": 1,
+      "part_name": "Chain",
+      "option_name": "Single-Speed Chain",
+      "final_price": "40.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 6,
+    "fields": {
+      "order_product": 2,
+      "part_name": "Frame",
+      "option_name": "Full-Suspension Frame",
+      "final_price": "130.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 7,
+    "fields": {
+      "order_product": 2,
+      "part_name": "Finish",
+      "option_name": "Matte Finish",
+      "final_price": "50.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 8,
+    "fields": {
+      "order_product": 2,
+      "part_name": "Wheels",
+      "option_name": "Mountain Wheels",
+      "final_price": "90.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 9,
+    "fields": {
+      "order_product": 2,
+      "part_name": "Rims",
+      "option_name": "Red Rims",
+      "final_price": "20.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.orderitem",
+    "pk": 10,
+    "fields": {
+      "order_product": 2,
+      "part_name": "Chain",
+      "option_name": "8-Speed Chain",
+      "final_price": "45.00",
+      "minimum_payment_required": "0.00"
+    }
+  },
+  {
+    "model": "orders.payment",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "amount": "335.00",
+      "payment_method": "Mobile Money",
+      "paid_by": "customer",
+      "transaction_reference": "MM-2024-001",
+      "payment_date": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "orders.payment",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "amount": "245.00",
+      "payment_method": "Bank Transfer",
+      "paid_by": "customer",
+      "transaction_reference": "BT-2024-001",
+      "payment_date": "2025-10-02T22:00:00Z"
+    }
+  }
+]

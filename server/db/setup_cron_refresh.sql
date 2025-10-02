@@ -11,23 +11,23 @@ BEGIN
         GRANT USAGE ON SCHEMA cron TO ecommerce_user;
         
         -- Step 3: Create unique indexes for both materialized views
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique 
-        ON TopPreconfiguredProductsPerCategory (category_id, preconfigured_product_id);
-        
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique
+        ON toppreconfiguredproductspercategory (category_id, preconfigured_product_id);
+
         CREATE UNIQUE INDEX IF NOT EXISTS idx_best_selling_unique
-        ON BestSellingPreconfiguredProduct (preconfigured_product_id);
-        
+        ON bestsellingpreconfiguredproduct (preconfigured_product_id);
+
         -- Step 4: Schedule automatic refreshes using different dollar quote delimiters
-                PERFORM cron.schedule(
+        PERFORM cron.schedule(
           'refresh_top_preconfigured_products',
           '0 */6 * * *',
-          'REFRESH MATERIALIZED VIEW CONCURRENTLY TopPreconfiguredProductsPerCategory'
+          'REFRESH MATERIALIZED VIEW CONCURRENTLY toppreconfiguredproductspercategory'
         );
-        
+
         PERFORM cron.schedule(
           'refresh_best_selling_preconfigured',
           '5 */6 * * *',
-          'REFRESH MATERIALIZED VIEW CONCURRENTLY BestSellingPreconfiguredProduct'
+          'REFRESH MATERIALIZED VIEW CONCURRENTLY bestsellingpreconfiguredproduct'
         );
         
         RAISE NOTICE 'Successfully set up pg_cron for materialized view refreshes';
@@ -39,8 +39,8 @@ END;
 $$;
 
 -- Create the indexes anyway, even if pg_cron isn't available
-CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique 
-ON TopPreconfiguredProductsPerCategory (category_id, preconfigured_product_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_top_preconfigured_unique
+ON toppreconfiguredproductspercategory (category_id, preconfigured_product_id);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_best_selling_unique
-ON BestSellingPreconfiguredProduct (preconfigured_product_id);
+ON bestsellingpreconfiguredproduct (preconfigured_product_id);

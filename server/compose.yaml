@@ -9,7 +9,10 @@ services:
              ./scripts/wait-for-db.sh db &&
              python manage.py makemigrations &&
              python manage.py migrate &&
+             python manage.py setup_views &&
              python scripts/create_superuser.py &&
+             python manage.py seed_db &&
+             python manage.py refresh_views &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
@@ -24,7 +27,8 @@ services:
       - DJANGO_SUPERUSER_EMAIL=admin@example.com
       - DJANGO_SUPERUSER_PASSWORD=admin123
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -34,10 +38,6 @@ services:
       dockerfile: Dockerfile.postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ./db/setup_cron_refresh.sql:/docker-entrypoint-initdb.d/02-setup_cron_refresh.sql
-      - ./db/mock_data.sql:/docker-entrypoint-initdb.d/03-mock_data.sql
-      - ./db/refresh_materialized_views.sql:/docker-entrypoint-initdb.d/04-refresh_materialized_views.sql
     environment:
       POSTGRES_USER: ecommerce_user
       POSTGRES_PASSWORD: ecommerce_password
@@ -46,6 +46,11 @@ services:
       - "5433:5432"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:

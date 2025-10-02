@@ -168,23 +168,11 @@ await fetch('/api/categories/1/', {
 
 If you have existing data using `image_url` CharField:
 
-### 1. Run the migration script
-
-```bash
-cd server
-python scripts/migrate_images.py
-```
-
-This will:
-- List all records with `image_url` values
-- Help you identify which images need manual upload
-- Provide guidance on next steps
-
-### 2. Manual Upload (if needed)
+### 1. Manual Upload (if needed)
 
 For external URLs, download images and upload them through the admin interface.
 
-### 3. Remove old fields
+### 2. Remove old fields
 
 After confirming all images are migrated:
 
