@@ -10,21 +10,19 @@ export interface PriceAdjustmentRule {
   condition_option_name?: string;
   affected_option: number;
   affected_option_name?: string;
-  price_change: number;
-  created_at: string;
-  updated_at: string;
+  adjusted_price: number;
 }
 
 export interface PriceAdjustmentRuleCreateInput {
   condition_option: number;
   affected_option: number;
-  price_change: number;
+  adjusted_price: number;
 }
 
 export interface PriceAdjustmentRuleUpdateInput {
   condition_option?: number;
   affected_option?: number;
-  price_change?: number;
+  adjusted_price?: number;
 }
 
 /**

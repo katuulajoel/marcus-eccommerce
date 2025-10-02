@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowUpDown, Edit, MoreHorizontal, Plus, Search, Trash } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { Card, CardContent } from "@shared/components/ui/card"
@@ -18,74 +18,160 @@ import { Input } from "@shared/components/ui/input"
 import { Label } from "@shared/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
-
-// Sample data
-const partOptions = [
-  {
-    id: "1",
-    name: "Aluminum Frame",
-    partId: "1",
-    partName: "Frame",
-    basePrice: 299.99,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "2",
-    name: "Carbon Fiber Frame",
-    partId: "1",
-    partName: "Frame",
-    basePrice: 599.99,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "3",
-    name: "Standard Wheels",
-    partId: "2",
-    partName: "Wheels",
-    basePrice: 149.99,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "4",
-    name: "Performance Wheels",
-    partId: "2",
-    partName: "Wheels",
-    basePrice: 249.99,
-    image: "/placeholder.svg",
-  },
-  {
-    id: "5",
-    name: "Flat Handlebars",
-    partId: "3",
-    partName: "Handlebars",
-    basePrice: 79.99,
-    image: "/placeholder.svg",
-  },
-]
-
-const parts = [
-  { id: "1", name: "Frame" },
-  { id: "2", name: "Wheels" },
-  { id: "3", name: "Handlebars" },
-  { id: "4", name: "Saddle" },
-  { id: "5", name: "Brakes" },
-]
+import { Textarea } from "@shared/components/ui/textarea"
+import { useToast } from "@shared/components/ui/use-toast"
+import { partOptionService, type PartOption } from "../services/part-option-service"
+import { partService, type Part } from "../services/part-service"
 
 export default function PartOptionsPage() {
+  const [partOptions, setPartOptions] = useState<PartOption[]>([])
+  const [parts, setParts] = useState<Part[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedOption, setSelectedOption] = useState<(typeof partOptions)[0] | null>(null)
+  const [selectedOption, setSelectedOption] = useState<PartOption | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const { toast } = useToast()
+
+  // Form state for add
+  const [addForm, setAddForm] = useState({
+    name: "",
+    part: "",
+    default_price: 0,
+    image_url: "",
+    description: "",
+  })
+
+  // Form state for edit
+  const [editForm, setEditForm] = useState({
+    name: "",
+    part: "",
+    default_price: 0,
+    image_url: "",
+    description: "",
+  })
+
+  useEffect(() => {
+    loadPartOptions()
+    loadParts()
+  }, [])
+
+  const loadPartOptions = async () => {
+    try {
+      setIsLoading(true)
+      const data = await partOptionService.getAll()
+      setPartOptions(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load part options",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loadParts = async () => {
+    try {
+      const data = await partService.getAll()
+      setParts(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load parts",
+        variant: "destructive",
+      })
+    }
+  }
 
   const filteredOptions = partOptions.filter(
     (option) =>
       option.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      option.partName.toLowerCase().includes(searchQuery.toLowerCase()),
+      (option.part_name && option.part_name.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
-  const handleEdit = (option: (typeof partOptions)[0]) => {
+  const handleEdit = (option: PartOption) => {
     setSelectedOption(option)
+    setEditForm({
+      name: option.name,
+      part: option.part.toString(),
+      default_price: option.default_price,
+      image_url: option.image_url || "",
+      description: option.description || "",
+    })
     setIsEditDialogOpen(true)
+  }
+
+  const handleAdd = async () => {
+    try {
+      await partOptionService.create({
+        name: addForm.name,
+        part: parseInt(addForm.part),
+        default_price: addForm.default_price,
+        image_url: addForm.image_url || undefined,
+        description: addForm.description || undefined,
+      })
+      toast({
+        title: "Success",
+        description: "Part option created successfully",
+      })
+      setIsAddDialogOpen(false)
+      setAddForm({ name: "", part: "", default_price: 0, image_url: "", description: "" })
+      loadPartOptions()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create part option",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!selectedOption) return
+
+    try {
+      await partOptionService.update(selectedOption.id, {
+        name: editForm.name,
+        part: parseInt(editForm.part),
+        default_price: editForm.default_price,
+        image_url: editForm.image_url || undefined,
+        description: editForm.description || undefined,
+      })
+      toast({
+        title: "Success",
+        description: "Part option updated successfully",
+      })
+      setIsEditDialogOpen(false)
+      setSelectedOption(null)
+      loadPartOptions()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update part option",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this part option?")) return
+
+    try {
+      await partOptionService.delete(id)
+      toast({
+        title: "Success",
+        description: "Part option deleted successfully",
+      })
+      loadPartOptions()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete part option",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -99,7 +185,7 @@ export default function PartOptionsPage() {
         <div className="flex w-full items-center gap-2 md:w-1/3">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search options..."
+            placeholder="Search part options..."
             className="w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -109,28 +195,33 @@ export default function PartOptionsPage() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Option
+              Add Part Option
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader>
-              <DialogTitle>Add New Option</DialogTitle>
-              <DialogDescription>Create a new option for a part in the bike configurator</DialogDescription>
+              <DialogTitle>Add New Part Option</DialogTitle>
+              <DialogDescription>Create a new option for a specific part</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Option Name</Label>
-                <Input id="name" placeholder="Aluminum Frame" />
+                <Input
+                  id="name"
+                  placeholder="Aluminum Frame"
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="part">Part</Label>
-                <Select>
+                <Select value={addForm.part} onValueChange={(value) => setAddForm({ ...addForm, part: value })}>
                   <SelectTrigger id="part">
                     <SelectValue placeholder="Select a part" />
                   </SelectTrigger>
                   <SelectContent>
                     {parts.map((part) => (
-                      <SelectItem key={part.id} value={part.id}>
+                      <SelectItem key={part.id} value={part.id.toString()}>
                         {part.name}
                       </SelectItem>
                     ))}
@@ -138,19 +229,43 @@ export default function PartOptionsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="price">Base Price ($)</Label>
-                <Input id="price" type="number" min="0" step="0.01" placeholder="299.99" />
+                <Label htmlFor="price">Default Price ($)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="299.99"
+                  value={addForm.default_price}
+                  onChange={(e) => setAddForm({ ...addForm, default_price: parseFloat(e.target.value) || 0 })}
+                />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="image">Option Image</Label>
-                <Input id="image" type="file" />
+                <Label htmlFor="image_url">Image URL (optional)</Label>
+                <Input
+                  id="image_url"
+                  placeholder="https://example.com/image.jpg"
+                  value={addForm.image_url}
+                  onChange={(e) => setAddForm({ ...addForm, image_url: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description (optional)</Label>
+                <Textarea
+                  id="description"
+                  placeholder="High-quality aluminum frame..."
+                  value={addForm.description}
+                  onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => setIsAddDialogOpen(false)}>Save Option</Button>
+              <Button onClick={handleAdd} disabled={!addForm.name || !addForm.part}>
+                Save Part Option
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -158,111 +273,88 @@ export default function PartOptionsPage() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[80px]">Image</TableHead>
-                <TableHead className="w-[250px]">
-                  <div className="flex items-center gap-1">
-                    Option Name
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <ArrowUpDown className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </TableHead>
-                <TableHead className="w-[200px]">
-                  <div className="flex items-center gap-1">
-                    Part
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <ArrowUpDown className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </TableHead>
-                <TableHead className="w-[150px]">
-                  <div className="flex items-center gap-1">
-                    Base Price
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <ArrowUpDown className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOptions.length === 0 ? (
+          {isLoading ? (
+            <div className="flex h-24 items-center justify-center">
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    No options found.
-                  </TableCell>
+                  <TableHead className="w-[250px]">Option Name</TableHead>
+                  <TableHead className="w-[200px]">Part</TableHead>
+                  <TableHead className="w-[150px]">Default Price</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
-              ) : (
-                filteredOptions.map((option) => (
-                  <TableRow key={option.id}>
-                    <TableCell>
-                      <img
-                        src={option.image || "/placeholder.svg"}
-                        alt={option.name}
-                        width={40}
-                        height={40}
-                        className="rounded-md object-cover"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{option.name}</TableCell>
-                    <TableCell>
-                      <span className="text-primary">{option.partName}</span>
-                    </TableCell>
-                    <TableCell>${option.basePrice.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(option)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              </TableHeader>
+              <TableBody>
+                {filteredOptions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      No part options found.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredOptions.map((option) => (
+                    <TableRow key={option.id}>
+                      <TableCell className="font-medium">{option.name}</TableCell>
+                      <TableCell>{option.part_name || `Part #${option.part}`}</TableCell>
+                      <TableCell>${Number(option.default_price).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(option)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(option.id)}>
+                              <Trash className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {/* Edit Option Dialog */}
+      {/* Edit Part Option Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Edit Option</DialogTitle>
-            <DialogDescription>Update the option details</DialogDescription>
+            <DialogTitle>Edit Part Option</DialogTitle>
+            <DialogDescription>Update the part option details</DialogDescription>
           </DialogHeader>
           {selectedOption && (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-name">Option Name</Label>
-                <Input id="edit-name" defaultValue={selectedOption.name} />
+                <Input
+                  id="edit-name"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-part">Part</Label>
-                <Select defaultValue={selectedOption.partId}>
+                <Select value={editForm.part} onValueChange={(value) => setEditForm({ ...editForm, part: value })}>
                   <SelectTrigger id="edit-part">
                     <SelectValue placeholder="Select a part" />
                   </SelectTrigger>
                   <SelectContent>
                     {parts.map((part) => (
-                      <SelectItem key={part.id} value={part.id}>
+                      <SelectItem key={part.id} value={part.id.toString()}>
                         {part.name}
                       </SelectItem>
                     ))}
@@ -270,21 +362,31 @@ export default function PartOptionsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-price">Base Price ($)</Label>
-                <Input id="edit-price" type="number" min="0" step="0.01" defaultValue={selectedOption.basePrice} />
+                <Label htmlFor="edit-price">Default Price ($)</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editForm.default_price}
+                  onChange={(e) => setEditForm({ ...editForm, default_price: parseFloat(e.target.value) || 0 })}
+                />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-image">Option Image</Label>
-                <div className="mb-2">
-                  <img
-                    src={selectedOption.image || "/placeholder.svg"}
-                    alt={selectedOption.name}
-                    width={100}
-                    height={100}
-                    className="rounded-md object-cover"
-                  />
-                </div>
-                <Input id="edit-image" type="file" />
+                <Label htmlFor="edit-image_url">Image URL (optional)</Label>
+                <Input
+                  id="edit-image_url"
+                  value={editForm.image_url}
+                  onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description (optional)</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                />
               </div>
             </div>
           )}
@@ -292,11 +394,12 @@ export default function PartOptionsPage() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setIsEditDialogOpen(false)}>Save Changes</Button>
+            <Button onClick={handleUpdate} disabled={!editForm.name || !editForm.part}>
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-

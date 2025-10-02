@@ -6,25 +6,23 @@ import { adminApiClient } from './api-client';
 
 export interface IncompatibilityRule {
   id: number;
-  option_a: number;
+  part_option: number;
   option_a_name?: string;
-  option_b: number;
+  incompatible_with_option: number;
   option_b_name?: string;
-  incompatibility_message?: string;
-  created_at: string;
-  updated_at: string;
+  message: string;
 }
 
 export interface IncompatibilityRuleCreateInput {
-  option_a: number;
-  option_b: number;
-  incompatibility_message?: string;
+  part_option: number;
+  incompatible_with_option: number;
+  message: string;
 }
 
 export interface IncompatibilityRuleUpdateInput {
-  option_a?: number;
-  option_b?: number;
-  incompatibility_message?: string;
+  part_option?: number;
+  incompatible_with_option?: number;
+  message?: string;
 }
 
 /**

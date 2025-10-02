@@ -11,8 +11,7 @@ export interface PartOption {
   part_name?: string;
   default_price: number;
   image_url?: string;
-  created_at: string;
-  updated_at: string;
+  description?: string;
 }
 
 export interface PartOptionCreateInput {
@@ -20,6 +19,7 @@ export interface PartOptionCreateInput {
   part: number;
   default_price: number;
   image_url?: string;
+  description?: string;
 }
 
 export interface PartOptionUpdateInput {
@@ -27,6 +27,7 @@ export interface PartOptionUpdateInput {
   part?: number;
   default_price?: number;
   image_url?: string;
+  description?: string;
 }
 
 /**

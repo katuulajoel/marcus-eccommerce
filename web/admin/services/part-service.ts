@@ -9,21 +9,19 @@ export interface Part {
   name: string;
   category: number;
   category_name?: string;
-  step_number: number;
-  created_at: string;
-  updated_at: string;
+  step: number;
 }
 
 export interface PartCreateInput {
   name: string;
   category: number;
-  step_number: number;
+  step: number;
 }
 
 export interface PartUpdateInput {
   name?: string;
   category?: number;
-  step_number?: number;
+  step?: number;
 }
 
 /**
