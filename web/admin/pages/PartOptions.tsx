@@ -38,6 +38,7 @@ export default function PartOptionsPage() {
     name: "",
     part: "",
     default_price: 0,
+    minimum_payment_percentage: 0,
     image_url: "",
     description: "",
   })
@@ -47,6 +48,7 @@ export default function PartOptionsPage() {
     name: "",
     part: "",
     default_price: 0,
+    minimum_payment_percentage: 0,
     image_url: "",
     description: "",
   })
@@ -97,6 +99,7 @@ export default function PartOptionsPage() {
       name: option.name,
       part: option.part.toString(),
       default_price: option.default_price,
+      minimum_payment_percentage: option.minimum_payment_percentage || 0,
       image_url: option.image_url || "",
       description: option.description || "",
     })
@@ -109,6 +112,7 @@ export default function PartOptionsPage() {
         name: addForm.name,
         part: parseInt(addForm.part),
         default_price: addForm.default_price,
+        minimum_payment_percentage: addForm.minimum_payment_percentage,
         image_url: addForm.image_url || undefined,
         description: addForm.description || undefined,
       })
@@ -117,7 +121,7 @@ export default function PartOptionsPage() {
         description: "Part option created successfully",
       })
       setIsAddDialogOpen(false)
-      setAddForm({ name: "", part: "", default_price: 0, image_url: "", description: "" })
+      setAddForm({ name: "", part: "", default_price: 0, minimum_payment_percentage: 0, image_url: "", description: "" })
       loadPartOptions()
     } catch (error) {
       toast({
@@ -136,6 +140,7 @@ export default function PartOptionsPage() {
         name: editForm.name,
         part: parseInt(editForm.part),
         default_price: editForm.default_price,
+        minimum_payment_percentage: editForm.minimum_payment_percentage,
         image_url: editForm.image_url || undefined,
         description: editForm.description || undefined,
       })
@@ -241,6 +246,22 @@ export default function PartOptionsPage() {
                 />
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="minimum_payment_percentage">Minimum Payment Percentage (%)</Label>
+                <Input
+                  id="minimum_payment_percentage"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="100"
+                  placeholder="70"
+                  value={addForm.minimum_payment_percentage * 100}
+                  onChange={(e) => setAddForm({ ...addForm, minimum_payment_percentage: (parseFloat(e.target.value) || 0) / 100 })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimum upfront payment required (0-100%). Example: 70 = 70% required upfront, 0 = no upfront payment required
+                </p>
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="image_url">Image URL (optional)</Label>
                 <Input
                   id="image_url"
@@ -283,14 +304,15 @@ export default function PartOptionsPage() {
                 <TableRow>
                   <TableHead className="w-[250px]">Option Name</TableHead>
                   <TableHead className="w-[200px]">Part</TableHead>
-                  <TableHead className="w-[150px]">Default Price</TableHead>
+                  <TableHead className="w-[130px]">Default Price</TableHead>
+                  <TableHead className="w-[150px]">Min Payment %</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOptions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       No part options found.
                     </TableCell>
                   </TableRow>
@@ -300,6 +322,14 @@ export default function PartOptionsPage() {
                       <TableCell className="font-medium">{option.name}</TableCell>
                       <TableCell>{option.part_name || `Part #${option.part}`}</TableCell>
                       <TableCell>${Number(option.default_price).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{((option.minimum_payment_percentage || 0) * 100).toFixed(0)}%</span>
+                          <span className="text-xs text-muted-foreground">
+                            ${((option.default_price * (option.minimum_payment_percentage || 0))).toFixed(2)} min
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -371,6 +401,21 @@ export default function PartOptionsPage() {
                   value={editForm.default_price}
                   onChange={(e) => setEditForm({ ...editForm, default_price: parseFloat(e.target.value) || 0 })}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-minimum_payment_percentage">Minimum Payment Percentage (%)</Label>
+                <Input
+                  id="edit-minimum_payment_percentage"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="100"
+                  value={editForm.minimum_payment_percentage * 100}
+                  onChange={(e) => setEditForm({ ...editForm, minimum_payment_percentage: (parseFloat(e.target.value) || 0) / 100 })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimum upfront payment required (0-100%). Example: 70 = 70% required upfront, 0 = no upfront payment required
+                </p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-image_url">Image URL (optional)</Label>

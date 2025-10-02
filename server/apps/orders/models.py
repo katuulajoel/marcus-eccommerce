@@ -1,6 +1,31 @@
 from django.db import models
+from django.core.validators import RegexValidator
 from apps.customers.models import Customer
 from apps.preconfigured_products.models import PreConfiguredProduct
+
+
+class ShippingAddress(models.Model):
+    """Shipping address for an order - allows different addresses per order"""
+    id = models.AutoField(primary_key=True)
+    recipient_name = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=20, validators=[
+        RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    ])
+    address_line1 = models.CharField(max_length=255)
+    address_line2 = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=100)
+    state_province = models.CharField(max_length=100, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=100, default='Uganda')
+
+    def __str__(self):
+        return f"{self.recipient_name} - {self.address_line1}, {self.city}"
+
+    class Meta:
+        db_table = 'shippingaddress'
+        verbose_name = 'Shipping Address'
+        verbose_name_plural = 'Shipping Addresses'
+
 
 class Orders(models.Model):
     PAYMENT_STATUS_CHOICES = [
@@ -11,6 +36,7 @@ class Orders(models.Model):
 
     id = models.AutoField(primary_key=True)
     customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, db_column='customer_id')
+    shipping_address = models.ForeignKey(ShippingAddress, related_name='orders', on_delete=models.PROTECT, db_column='shipping_address_id', null=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     minimum_required_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)

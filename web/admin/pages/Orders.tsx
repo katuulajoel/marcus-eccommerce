@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { ArrowUpDown, Eye, MoreHorizontal, Search } from "lucide-react"
 import { Badge } from "@shared/components/ui/badge"
@@ -20,9 +20,11 @@ import { Label } from "@shared/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs"
+import { useToast } from "@shared/components/ui/use-toast"
+import { orderService, type Order } from "../services/order-service"
 
-// Sample data
-const orders = [
+// Sample data for reference (will be removed)
+const sampleOrders = [
   {
     id: "ORD-001",
     customerId: "1",
@@ -139,32 +141,92 @@ const orders = [
 ]
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isRecordPaymentDialogOpen, setIsRecordPaymentDialogOpen] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState<(typeof orders)[0] | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [paymentAmount, setPaymentAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("Credit Card")
-  const [paidBy, setPaidBy] = useState("customer")
+  const [paidBy, setPaidBy] = useState<"customer" | "delivery_person">("customer")
+  const { toast } = useToast()
+
+  useEffect(() => {
+    loadOrders()
+  }, [])
+
+  const loadOrders = async () => {
+    try {
+      setIsLoading(true)
+      const data = await orderService.getAll()
+      setOrders(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load orders",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const filteredOrders = orders.filter((order) => {
-    // Apply status filter
-    if (statusFilter !== "all" && order.status.toLowerCase() !== statusFilter.toLowerCase()) {
+    // Apply payment status filter
+    if (statusFilter !== "all" && order.payment_status.toLowerCase() !== statusFilter.toLowerCase()) {
       return false
     }
 
     // Apply search filter
+    const orderId = `ORD-${order.id.toString().padStart(3, "0")}`
     return (
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())
+      orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer_email?.toLowerCase().includes(searchQuery.toLowerCase())
     )
   })
 
-  const handleView = (order: (typeof orders)[0]) => {
+  const handleView = (order: Order) => {
     setSelectedOrder(order)
     setIsViewDialogOpen(true)
+  }
+
+  const handleRecordPayment = async () => {
+    if (!selectedOrder || !paymentAmount || parseFloat(paymentAmount) <= 0) return
+
+    try {
+      await orderService.recordPayment(selectedOrder.id, {
+        amount: parseFloat(paymentAmount),
+        payment_method: paymentMethod,
+        paid_by: paidBy,
+      })
+
+      toast({
+        title: "Success",
+        description: "Payment recorded successfully",
+      })
+
+      // Reload orders to get updated data
+      await loadOrders()
+
+      // Reload the selected order details
+      const updatedOrder = await orderService.getById(selectedOrder.id)
+      setSelectedOrder(updatedOrder)
+
+      // Close dialog and reset form
+      setIsRecordPaymentDialogOpen(false)
+      setPaymentAmount("")
+      setPaymentMethod("Credit Card")
+      setPaidBy("customer")
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to record payment",
+        variant: "destructive",
+      })
+    }
   }
 
   const getStatusBadgeVariant = (status: string) => {
@@ -228,8 +290,13 @@ export default function OrdersPage() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          {isLoading ? (
+            <div className="flex h-24 items-center justify-center">
+              <p className="text-muted-foreground">Loading orders...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
               <TableRow>
                 <TableHead className="w-[120px]">
                   <div className="flex items-center gap-1">
@@ -279,36 +346,36 @@ export default function OrdersPage() {
               ) : (
                 filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="font-medium">ORD-{order.id.toString().padStart(3, "0")}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span>{order.customerName}</span>
-                        <span className="text-sm text-muted-foreground">{order.customerEmail}</span>
+                        <span>{order.customer_name || "N/A"}</span>
+                        <span className="text-sm text-muted-foreground">{order.customer_email || "N/A"}</span>
                       </div>
                     </TableCell>
-                    <TableCell>${order.totalPrice.toFixed(2)}</TableCell>
+                    <TableCell>${Number(order.total_price).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span>${order.amountPaid.toFixed(2)}</span>
+                        <span>${Number(order.amount_paid).toFixed(2)}</span>
                         <span className="text-sm text-muted-foreground">
-                          of ${order.minimumRequiredAmount.toFixed(2)} min
+                          of ${Number(order.minimum_required_amount).toFixed(2)} min
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <Badge variant={getPaymentStatusBadgeVariant(order.paymentStatus) as any}>
-                          {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                        <Badge variant={getPaymentStatusBadgeVariant(order.payment_status) as any}>
+                          {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                         </Badge>
-                        {order.isFulfillable && (
+                        {order.is_fulfillable && (
                           <span className="text-xs text-green-600">✓ Fulfillable</span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(order.status) as any}>{order.status}</Badge>
+                      <Badge variant="secondary">In Progress</Badge>
                     </TableCell>
-                    <TableCell>{format(order.createdAt, "MMM d, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -330,6 +397,7 @@ export default function OrdersPage() {
               )}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -337,52 +405,17 @@ export default function OrdersPage() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
-            <DialogTitle>Order {selectedOrder?.id}</DialogTitle>
+            <DialogTitle>Order ORD-{selectedOrder?.id.toString().padStart(3, "0")}</DialogTitle>
             <DialogDescription>Order details and configuration</DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="grid gap-6 py-4">
-              <Tabs defaultValue="details">
+              <Tabs defaultValue="payment">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="details">Order Details</TabsTrigger>
                   <TabsTrigger value="payment">Payment Info</TabsTrigger>
+                  <TabsTrigger value="shipping">Shipping</TabsTrigger>
                   <TabsTrigger value="configuration">Configuration</TabsTrigger>
                 </TabsList>
-                <TabsContent value="details" className="grid gap-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Customer</Label>
-                      <div className="rounded-md border p-2">
-                        <div>{selectedOrder.customerName}</div>
-                        <div className="text-sm text-muted-foreground">{selectedOrder.customerEmail}</div>
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Status</Label>
-                      <div className="rounded-md border p-2">
-                        <Badge variant={getStatusBadgeVariant(selectedOrder.status) as any}>
-                          {selectedOrder.status}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Order Date</Label>
-                      <div className="rounded-md border p-2">{format(selectedOrder.createdAt, "MMMM d, yyyy")}</div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Total Price</Label>
-                      <div className="rounded-md border p-2 font-bold">${selectedOrder.totalPrice.toFixed(2)}</div>
-                    </div>
-                    <div className="col-span-2 grid gap-2">
-                      <Label>Shipping Address</Label>
-                      <div className="rounded-md border p-2">{selectedOrder.shippingAddress}</div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Payment Method</Label>
-                      <div className="rounded-md border p-2">{selectedOrder.paymentMethod}</div>
-                    </div>
-                  </div>
-                </TabsContent>
                 <TabsContent value="payment" className="grid gap-4 py-4">
                   <div className="grid gap-4">
                     {/* Payment Summary */}
@@ -391,32 +424,32 @@ export default function OrdersPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-muted-foreground">Total Price</Label>
-                          <div className="text-lg font-bold">${selectedOrder.totalPrice.toFixed(2)}</div>
+                          <div className="text-lg font-bold">${Number(selectedOrder.total_price).toFixed(2)}</div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Amount Paid</Label>
-                          <div className="text-lg font-bold text-green-600">${selectedOrder.amountPaid.toFixed(2)}</div>
+                          <div className="text-lg font-bold text-green-600">${Number(selectedOrder.amount_paid).toFixed(2)}</div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Minimum Required</Label>
-                          <div className="text-lg font-semibold">${selectedOrder.minimumRequiredAmount.toFixed(2)}</div>
+                          <div className="text-lg font-semibold">${Number(selectedOrder.minimum_required_amount).toFixed(2)}</div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Balance Due</Label>
                           <div className="text-lg font-semibold text-orange-600">
-                            ${(selectedOrder.totalPrice - selectedOrder.amountPaid).toFixed(2)}
+                            ${Number(selectedOrder.balance_due).toFixed(2)}
                           </div>
                         </div>
                         <div className="col-span-2">
                           <Label className="text-muted-foreground">Payment Status</Label>
                           <div className="mt-1 flex items-center gap-2">
-                            <Badge variant={getPaymentStatusBadgeVariant(selectedOrder.paymentStatus) as any}>
-                              {selectedOrder.paymentStatus.charAt(0).toUpperCase() + selectedOrder.paymentStatus.slice(1)}
+                            <Badge variant={getPaymentStatusBadgeVariant(selectedOrder.payment_status) as any}>
+                              {selectedOrder.payment_status.charAt(0).toUpperCase() + selectedOrder.payment_status.slice(1)}
                             </Badge>
-                            {selectedOrder.isFulfillable && (
+                            {selectedOrder.is_fulfillable && (
                               <span className="text-sm text-green-600">✓ Can be fulfilled</span>
                             )}
-                            {!selectedOrder.isFulfillable && (
+                            {!selectedOrder.is_fulfillable && (
                               <span className="text-sm text-orange-600">⚠ Cannot be fulfilled yet</span>
                             )}
                           </div>
@@ -432,7 +465,7 @@ export default function OrdersPage() {
                           size="sm"
                           variant="default"
                           onClick={() => setIsRecordPaymentDialogOpen(true)}
-                          disabled={selectedOrder.paymentStatus === "completed"}
+                          disabled={selectedOrder.payment_status === "completed"}
                         >
                           Record Payment
                         </Button>
@@ -450,10 +483,10 @@ export default function OrdersPage() {
                           <TableBody>
                             {selectedOrder.payments.map((payment) => (
                               <TableRow key={payment.id}>
-                                <TableCell>{format(payment.date, "MMM d, yyyy")}</TableCell>
-                                <TableCell className="font-semibold">${payment.amount.toFixed(2)}</TableCell>
-                                <TableCell>{payment.method}</TableCell>
-                                <TableCell className="capitalize">{payment.paidBy.replace('_', ' ')}</TableCell>
+                                <TableCell>{format(new Date(payment.payment_date), "MMM d, yyyy")}</TableCell>
+                                <TableCell className="font-semibold">${Number(payment.amount).toFixed(2)}</TableCell>
+                                <TableCell>{payment.payment_method}</TableCell>
+                                <TableCell className="capitalize">{payment.paid_by.replace('_', ' ')}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -466,25 +499,91 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </TabsContent>
+                <TabsContent value="shipping" className="grid gap-4 py-4">
+                  <div className="grid gap-4">
+                    {selectedOrder.shipping_address ? (
+                      <div className="rounded-lg border p-4">
+                        <h3 className="font-semibold mb-3">Shipping Address</h3>
+                        <div className="grid gap-3">
+                          <div>
+                            <Label className="text-muted-foreground">Recipient Name</Label>
+                            <div className="font-medium">{selectedOrder.shipping_address.recipient_name}</div>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Phone Number</Label>
+                            <div className="font-medium">{selectedOrder.shipping_address.phone_number}</div>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Address</Label>
+                            <div className="font-medium">
+                              {selectedOrder.shipping_address.address_line1}
+                              {selectedOrder.shipping_address.address_line2 && (
+                                <><br />{selectedOrder.shipping_address.address_line2}</>
+                              )}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-muted-foreground">City</Label>
+                              <div className="font-medium">{selectedOrder.shipping_address.city}</div>
+                            </div>
+                            {selectedOrder.shipping_address.state_province && (
+                              <div>
+                                <Label className="text-muted-foreground">State/Province</Label>
+                                <div className="font-medium">{selectedOrder.shipping_address.state_province}</div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {selectedOrder.shipping_address.postal_code && (
+                              <div>
+                                <Label className="text-muted-foreground">Postal Code</Label>
+                                <div className="font-medium">{selectedOrder.shipping_address.postal_code}</div>
+                              </div>
+                            )}
+                            <div>
+                              <Label className="text-muted-foreground">Country</Label>
+                              <div className="font-medium">{selectedOrder.shipping_address.country}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground border rounded-md">
+                        No shipping address provided
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
                 <TabsContent value="configuration" className="grid gap-4 py-4">
                   <div className="grid gap-4">
-                    <Label>Selected Options</Label>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Part</TableHead>
-                          <TableHead>Selected Option</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selectedOrder.selectedOptions.map((option, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{option.partName}</TableCell>
-                            <TableCell>{option.optionName}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {selectedOrder.products.map((product, productIndex) => (
+                      <div key={productIndex}>
+                        <Label className="mb-2 block">
+                          {product.custom_name || product.base_product_name}
+                        </Label>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Part</TableHead>
+                              <TableHead>Selected Option</TableHead>
+                              <TableHead className="text-right">Price</TableHead>
+                              <TableHead className="text-right">Min Payment</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {product.items.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell>{item.part_name}</TableCell>
+                                <TableCell>{item.option_name}</TableCell>
+                                <TableCell className="text-right">${Number(item.final_price).toFixed(2)}</TableCell>
+                                <TableCell className="text-right">${Number(item.minimum_payment_required).toFixed(2)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ))}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -504,7 +603,7 @@ export default function OrdersPage() {
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
             <DialogDescription>
-              Record a new payment for Order {selectedOrder?.id}
+              Record a new payment for Order ORD-{selectedOrder?.id.toString().padStart(3, "0")}
             </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
@@ -512,16 +611,16 @@ export default function OrdersPage() {
               <div className="rounded-lg border p-3 bg-muted/50">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Price:</span>
-                  <span className="font-semibold">${selectedOrder.totalPrice.toFixed(2)}</span>
+                  <span className="font-semibold">${Number(selectedOrder.total_price).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Already Paid:</span>
-                  <span className="font-semibold text-green-600">${selectedOrder.amountPaid.toFixed(2)}</span>
+                  <span className="font-semibold text-green-600">${Number(selectedOrder.amount_paid).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Remaining Balance:</span>
                   <span className="font-semibold text-orange-600">
-                    ${(selectedOrder.totalPrice - selectedOrder.amountPaid).toFixed(2)}
+                    ${Number(selectedOrder.balance_due).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -535,11 +634,11 @@ export default function OrdersPage() {
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   min="0"
-                  max={selectedOrder.totalPrice - selectedOrder.amountPaid}
+                  max={Number(selectedOrder.balance_due)}
                   step="0.01"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Maximum: ${(selectedOrder.totalPrice - selectedOrder.amountPaid).toFixed(2)}
+                  Maximum: ${Number(selectedOrder.balance_due).toFixed(2)}
                 </p>
               </div>
 
@@ -583,19 +682,7 @@ export default function OrdersPage() {
               Cancel
             </Button>
             <Button
-              onClick={() => {
-                // TODO: Implement payment recording logic
-                console.log("Recording payment:", {
-                  orderId: selectedOrder?.id,
-                  amount: paymentAmount,
-                  method: paymentMethod,
-                  paidBy: paidBy,
-                })
-                setIsRecordPaymentDialogOpen(false)
-                setPaymentAmount("")
-                setPaymentMethod("Credit Card")
-                setPaidBy("customer")
-              }}
+              onClick={handleRecordPayment}
               disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
             >
               Record Payment

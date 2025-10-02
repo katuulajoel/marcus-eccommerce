@@ -10,6 +10,7 @@ export interface PartOption {
   part: number;
   part_name?: string;
   default_price: number;
+  minimum_payment_percentage?: number;
   image_url?: string;
   description?: string;
 }
@@ -18,6 +19,7 @@ export interface PartOptionCreateInput {
   name: string;
   part: number;
   default_price: number;
+  minimum_payment_percentage?: number;
   image_url?: string;
   description?: string;
 }
@@ -26,6 +28,7 @@ export interface PartOptionUpdateInput {
   name?: string;
   part?: number;
   default_price?: number;
+  minimum_payment_percentage?: number;
   image_url?: string;
   description?: string;
 }

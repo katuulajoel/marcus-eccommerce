@@ -55,13 +55,14 @@ class OrdersViewSet(ModelViewSet):
             )
 
         try:
-            amount = float(amount)
+            from decimal import Decimal
+            amount = Decimal(str(amount))
             if amount <= 0:
                 return Response(
                     {'error': 'Amount must be greater than 0'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        except ValueError:
+        except (ValueError, TypeError):
             return Response(
                 {'error': 'Invalid amount'},
                 status=status.HTTP_400_BAD_REQUEST

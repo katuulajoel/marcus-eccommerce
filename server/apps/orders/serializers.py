@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import Orders, OrderProduct, OrderItem, Payment
+from .models import Orders, OrderProduct, OrderItem, Payment, ShippingAddress
+
+class ShippingAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShippingAddress
+        fields = '__all__'
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,7 +27,10 @@ class PaymentSerializer(serializers.ModelSerializer):
 class OrdersSerializer(serializers.ModelSerializer):
     products = OrderProductSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
+    shipping_address = ShippingAddressSerializer(read_only=True)
     balance_due = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    customer_email = serializers.CharField(source='customer.email', read_only=True)
 
     class Meta:
         model = Orders
