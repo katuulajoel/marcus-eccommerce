@@ -304,14 +304,88 @@ export default function PreconfiguredProductsPage() {
     }
   }
 
+  const handleUpdateConfiguration = async () => {
+    if (!selectedProduct) return
+
+    if (!configName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a configuration name",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!isConfigurationComplete()) {
+      toast({
+        title: "Validation Error",
+        description: "Please complete all configuration steps",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const partOptionIds = Object.values(selectedOptions)
+
+      await preconfiguredProductService.update(selectedProduct.id, {
+        name: configName,
+        description: configDescription.trim() || undefined,
+        base_price: totalPrice.toFixed(2),
+        part_options: partOptionIds,
+      })
+
+      toast({
+        title: "Success",
+        description: "Preconfigured product updated successfully",
+      })
+
+      setIsEditDialogOpen(false)
+      loadProducts()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update preconfigured product",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleView = (product: PreconfiguredProduct) => {
     setSelectedProduct(product)
     setIsViewDialogOpen(true)
   }
 
-  const handleEdit = (product: PreconfiguredProduct) => {
+  const handleEdit = async (product: PreconfiguredProduct) => {
     setSelectedProduct(product)
-    setIsEditDialogOpen(true)
+    setConfigName(product.name)
+    setConfigDescription(product.description || "")
+    setSelectedCategoryId(product.category)
+    setCurrentStep(0)
+
+    // Load parts for this category
+    try {
+      const categoryParts = await partService.getAll(product.category)
+      setParts(categoryParts)
+
+      // Build selectedOptions from product's parts
+      const options: Record<number, number> = {}
+      product.parts?.forEach((productPart) => {
+        const partOption = partOptions.find((po) => po.id === productPart.part_option)
+        if (partOption) {
+          options[partOption.part] = partOption.id
+        }
+      })
+      setSelectedOptions(options)
+
+      setIsEditDialogOpen(true)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load product configuration",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleDelete = async (id: number) => {
@@ -686,75 +760,131 @@ export default function PreconfiguredProductsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog - Similar to View but with editable fields */}
+      {/* Edit Dialog - Full configurator like Create */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Preconfigured Product</DialogTitle>
-            <DialogDescription>Update product name and description</DialogDescription>
+            <DialogDescription>Update product configuration, name, and description</DialogDescription>
           </DialogHeader>
-          {selectedProduct && (
-            <div className="grid gap-6 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Name</Label>
-                <Input
-                  id="edit-name"
-                  defaultValue={selectedProduct.name}
-                  onBlur={async (e) => {
-                    try {
-                      await preconfiguredProductService.update(selectedProduct.id, {
-                        name: e.target.value,
-                      })
-                      toast({ title: "Success", description: "Name updated" })
-                      loadProducts()
-                    } catch (error) {
-                      toast({ title: "Error", description: "Failed to update name", variant: "destructive" })
-                    }
-                  }}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  defaultValue={selectedProduct.description || ""}
-                  rows={4}
-                  onBlur={async (e) => {
-                    try {
-                      await preconfiguredProductService.update(selectedProduct.id, {
-                        description: e.target.value,
-                      })
-                      toast({ title: "Success", description: "Description updated" })
-                      loadProducts()
-                    } catch (error) {
-                      toast({
-                        title: "Error",
-                        description: "Failed to update description",
-                        variant: "destructive",
-                      })
-                    }
-                  }}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Category</Label>
-                <div className="rounded-md border p-2 bg-muted">
-                  {selectedProduct.category_details?.name || `Category ${selectedProduct.category}`}
+          <div className="grid gap-6 py-4">
+            {selectedProduct && selectedCategoryId && (
+              <div className="grid gap-6">
+                <div className="grid gap-2">
+                  <Label>Category</Label>
+                  <div className="rounded-md border p-2 bg-muted">
+                    {selectedProduct.category_details?.name || `Category ${selectedProduct.category}`}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">
+                    Step {currentStep + 1} of {categoryParts.length}: Select {currentPart?.name}
+                  </h3>
+                  <div className="text-lg font-bold">Total: ${totalPrice.toFixed(2)}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {currentPartOptions.map((option) => {
+                    const incompatibility = isOptionIncompatible(option.id)
+                    const isSelected = selectedOptions[currentPart?.id] === option.id
+                    const optionPrice = getOptionTotalPrice(option)
+                    const priceAdjustment = getAdjustedPrice(option.id)
+
+                    return (
+                      <Card
+                        key={option.id}
+                        className={`cursor-pointer transition-all ${
+                          incompatibility.incompatible
+                            ? "opacity-50 cursor-not-allowed"
+                            : isSelected
+                            ? "ring-2 ring-primary"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => {
+                          if (!incompatibility.incompatible) {
+                            handleOptionSelect(currentPart?.id, option.id)
+                          }
+                        }}
+                        title={incompatibility.incompatible ? incompatibility.message : ""}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex flex-col gap-2">
+                            <img
+                              src={option.image_url || "/placeholder.svg"}
+                              alt={option.name}
+                              className="mx-auto rounded-md object-cover w-full h-32"
+                            />
+                            <div className="text-center font-medium">{option.name}</div>
+                            <div className="text-center">
+                              <div className="text-muted-foreground">
+                                ${parseFloat(option.default_price).toFixed(2)}
+                                {priceAdjustment !== 0 && (
+                                  <span className="text-xs text-primary ml-1">
+                                    {priceAdjustment > 0 ? "+" : ""}${priceAdjustment.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                              {priceAdjustment !== 0 && (
+                                <div className="text-sm font-semibold">${optionPrice.toFixed(2)}</div>
+                              )}
+                            </div>
+                            {incompatibility.incompatible && (
+                              <div className="text-xs text-destructive text-center">
+                                Incompatible
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+
+                {currentStep === categoryParts.length - 1 && isConfigurationComplete() && (
+                  <div className="grid gap-4 pt-4 border-t">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-config-name">Configuration Name *</Label>
+                      <Input
+                        id="edit-config-name"
+                        placeholder={`${categories.find((c) => c.id === selectedCategoryId)?.name} - Custom`}
+                        value={configName}
+                        onChange={(e) => setConfigName(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-config-description">Description (Optional)</Label>
+                      <Textarea
+                        id="edit-config-description"
+                        placeholder="Enter a description for this configuration"
+                        value={configDescription}
+                        onChange={(e) => setConfigDescription(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
+                    Previous
+                  </Button>
+                  {currentStep < categoryParts.length - 1 ? (
+                    <Button onClick={nextStep} disabled={!isCurrentStepComplete()}>
+                      Next
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleUpdateConfiguration}
+                      disabled={!isConfigurationComplete() || !configName.trim()}
+                    >
+                      Update Configuration
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label>Base Price</Label>
-                <div className="rounded-md border p-2 bg-muted font-bold">
-                  ${parseFloat(selectedProduct.base_price).toFixed(2)}
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

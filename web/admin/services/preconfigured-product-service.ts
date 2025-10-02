@@ -53,6 +53,7 @@ export interface PreconfiguredProductUpdateInput {
   base_price?: number | string;
   image_url?: string;
   description?: string;
+  part_options?: number[]; // Array of part option IDs to update configuration
 }
 
 /**
