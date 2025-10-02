@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom"
 import DashboardLayout from "@admin/layouts/DashboardLayout"
-import Products from "@admin/pages/Products"
+import Categories from "@admin/pages/Categories"
 import Parts from "@admin/pages/Parts"
 import PartOptions from "@admin/pages/PartOptions"
 import PriceRules from "@admin/pages/PriceRules"
@@ -21,7 +21,7 @@ function App() {
         path="/"
         element={
           isAuthenticated ? (
-            <Navigate to="/dashboard/products" replace />
+            <Navigate to="/dashboard/categories" replace />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -36,7 +36,7 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="products" element={<Products />} />
+        <Route path="categories" element={<Categories />} />
         <Route path="parts" element={<Parts />} />
         <Route path="part-options" element={<PartOptions />} />
         <Route path="price-rules" element={<PriceRules />} />

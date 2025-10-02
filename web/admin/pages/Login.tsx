@@ -41,7 +41,7 @@ export default function Login() {
 
     try {
       await login({ username, password }, rememberMe)
-      navigate("/dashboard/products")
+      navigate("/dashboard/categories")
     } catch (err: any) {
       console.error("Login error:", err)
 

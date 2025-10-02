@@ -9,9 +9,19 @@ from .swagger import schema_view
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Import viewsets for top-level routes
+from rest_framework.routers import DefaultRouter
+from apps.products.views import PartViewSet, PartOptionViewSet, StockViewSet
+
+# Create router for top-level product-related resources
+products_router = DefaultRouter()
+products_router.register(r'parts', PartViewSet, basename='part')
+products_router.register(r'part-options', PartOptionViewSet, basename='part-option')
+products_router.register(r'stock', StockViewSet, basename='stock')
+
 # Define all API URL patterns
 api_patterns = [
-    path('categories/', include('apps.products.urls')),  
+    path('categories/', include('apps.products.urls')),
     path('orders/', include('apps.orders.urls')),
     path('customers/', include('apps.customers.urls')),
     path('configurator/', include('apps.configurator.urls')),
@@ -20,6 +30,8 @@ api_patterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Built-in Django REST framework auth views for login/logout
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
+    # Top-level product resources
+    path('', include(products_router.urls)),
 ]
 
 urlpatterns = [

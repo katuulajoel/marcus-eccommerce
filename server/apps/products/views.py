@@ -72,21 +72,29 @@ class PartViewSet(ModelViewSet):
 class PartOptionViewSet(ModelViewSet):
     """
     API endpoint for viewing and editing part options
-    
-    **Authentication required**: 
+
+    **Authentication required**:
     - GET: No (anyone can view part options)
     - POST, PUT, PATCH, DELETE: Yes (only authenticated users)
     """
     queryset = PartOption.objects.all()
     serializer_class = PartOptionSerializer
     permission_classes = [AllowGetAnonymously]
-    
+
     def get_queryset(self):
         queryset = super().get_queryset()
         part_id = self.request.query_params.get('part_id', None)
         if part_id:
             queryset = queryset.filter(part_id=part_id)
         return queryset
+
+    @action(detail=True, methods=['get'])
+    def stock(self, request, pk=None):
+        """Get stock information for this part option"""
+        part_option = self.get_object()
+        stocks = Stock.objects.filter(part_option=part_option)
+        serializer = StockSerializer(stocks, many=True)
+        return Response(serializer.data)
 
 class StockViewSet(ModelViewSet):
     """
