@@ -10,8 +10,8 @@ class PriceAdjustmentRuleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class IncompatibilityRuleSerializer(serializers.ModelSerializer):
-    option_a_name = serializers.CharField(source='option_a.name', read_only=True)
-    option_b_name = serializers.CharField(source='option_b.name', read_only=True)
+    option_a_name = serializers.CharField(source='part_option.name', read_only=True)
+    option_b_name = serializers.CharField(source='incompatible_with_option.name', read_only=True)
 
     class Meta:
         model = IncompatibilityRule

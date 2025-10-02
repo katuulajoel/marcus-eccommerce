@@ -285,7 +285,11 @@ export default function PriceRulesPage() {
                         {rule.condition_option_name || `Option #${rule.condition_option}`}
                       </TableCell>
                       <TableCell>{rule.affected_option_name || `Option #${rule.affected_option}`}</TableCell>
-                      <TableCell>${Number(rule.adjusted_price).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${Number(rule.adjusted_price) < 0 ? 'text-destructive' : 'text-green-600'}`}>
+                          ${Number(rule.adjusted_price).toFixed(2)}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
