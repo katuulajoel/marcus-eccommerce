@@ -78,13 +78,11 @@ class BestSellingProductView(APIView):
             if best_selling:
                 # Get the full preconfigured product details
                 product = PreConfiguredProduct.objects.get(id=best_selling.preconfigured_product_id)
-                serializer = PreConfiguredProductSerializer(product)
+                serializer = PreConfiguredProductSerializer(product, context={'request': request})
                 
                 # Include the analytics data
                 data = serializer.data
                 data['times_ordered'] = best_selling.times_ordered
-                data['image_url'] = product.image_url
-                data['description'] = product.description  # Include product description
                 
                 # Include part options with descriptions
                 parts = PreConfiguredProductParts.objects.filter(preconfigured_product=product)
@@ -161,10 +159,8 @@ class TopProductsPerCategoryViewSet(ViewSet):
         results = []
         for product in products:
             if product.id in category_data:
-                product_data = PreConfiguredProductSerializer(product).data
+                product_data = PreConfiguredProductSerializer(product, context={'request': request}).data
                 product_data['times_ordered'] = category_data[product.id]['times_ordered']
-                product_data['image_url'] = product.image_url
-                product_data['description'] = product.description
                 
                 # Add category details
                 cat_id = category_data[product.id]['category_id']

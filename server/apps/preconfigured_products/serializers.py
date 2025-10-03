@@ -89,9 +89,27 @@ class BestSellingPreconfiguredProductSerializer(serializers.ModelSerializer):
         model = BestSellingPreconfiguredProduct
         fields = '__all__'
 
+    def get_image_url(self, obj):
+        """Return full URL for image if it exists."""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
 class TopPreconfiguredProductsPerCategorySerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='preconfigured_name')
     
     class Meta:
         model = TopPreconfiguredProductsPerCategory
         fields = ['category_id', 'product_name', 'times_ordered', 'preconfigured_product_id']
+    
+    def get_image_url(self, obj):
+        """Return full URL for image if it exists."""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
