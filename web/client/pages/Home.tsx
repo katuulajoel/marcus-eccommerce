@@ -110,13 +110,22 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="order-1 md:order-2 relative">
-                  <div className="relative h-[300px] md:h-[500px] w-full">
+                  <div className="relative h-[200px] sm:h-[300px] md:h-[500px] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
                     <img
-                      src={bestSeller.image_url}
-                      alt={bestSeller.name}
-                      className="object-contain w-full h-full"
-                      onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
+                      src={bestSeller.image_url || "/placeholder.svg"}
+                      alt={`${bestSeller.name} - Featured product image`}
+                      className="object-contain w-full h-full p-4"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg"
+                        e.currentTarget.classList.add('opacity-50')
+                      }}
+                      loading="lazy"
                     />
+                    {!bestSeller.image_url && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <p className="text-gray-400 text-sm">Product image coming soon</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

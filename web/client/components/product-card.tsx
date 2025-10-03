@@ -48,12 +48,22 @@ export default function ProductCard({ product, onViewDetails }: ProductCardProps
 
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
-      <div className="relative h-48 sm:h-64 bg-gray-50">
+      <div className="relative h-48 sm:h-64 bg-gray-50 flex items-center justify-center">
         <img
           src={product.image || "/placeholder.svg"}
-          alt={product.name}
-          className="object-contain p-4 w-full h-full"
+          alt={`${product.name} product thumbnail`}
+          className="object-contain w-full h-full p-4 max-w-full max-h-full"
+          onError={(e) => {
+            e.currentTarget.src = "/placeholder.svg"
+            e.currentTarget.classList.add('opacity-40')
+          }}
+          loading="lazy"
         />
+        {!product.image && (
+          <div className="absolute bottom-2 right-2 bg-gray-200 rounded px-2 py-1">
+            <span className="text-xs text-gray-500">No image</span>
+          </div>
+        )}
       </div>
       <CardContent className="p-6">
         <h3 className="text-xl font-bold mb-1">{product.name}</h3>

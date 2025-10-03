@@ -24,7 +24,7 @@ class CategoryViewSet(ModelViewSet):
         """Get all parts for a specific category"""
         category = self.get_object()
         parts = Part.objects.filter(category=category)
-        serializer = PartSerializer(parts, many=True)
+        serializer = PartSerializer(parts, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'])
