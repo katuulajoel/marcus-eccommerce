@@ -25,6 +25,8 @@
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.2.15",
+    "@stripe/react-stripe-js": "^2.8.0",
+    "@stripe/stripe-js": "^4.8.0",
     "@tanstack/react-query": "^5.71.1",
     "@tanstack/react-query-devtools": "^5.71.1",
     "axios": "^1.8.4",

@@ -18,19 +18,25 @@ export default function Home() {
   })
 
   // Fetch top products for category sections
-  const { 
-    data: topProducts, 
-    isLoading: isLoadingTopProducts 
+  const {
+    data: topProducts,
+    isLoading: isLoadingTopProducts
   } = useQuery({
     queryKey: ["topProducts"],
     queryFn: fetchTopProducts,
   })
 
+  // Helper function to get features from parts
+  const getFeatures = (parts) => {
+    if (!parts) return [];
+    return parts.map(part => part.part_option_details?.name).filter(Boolean);
+  };
+
   // Group products by category using category_details.name from API
-  const productsByCategory = topProducts ? 
+  const productsByCategory = topProducts ?
     topProducts.reduce((acc, product) => {
         const categoryName = product.category_details.name;
-        
+
         if (!acc[categoryName]) {
             acc[categoryName] = [];
         }
@@ -38,22 +44,25 @@ export default function Home() {
         acc[categoryName].push({
             id: product.id,
             name: product.name,
+            tagline: product.description || '',
+            description: product.description || '',
             price: parseFloat(product.base_price),
             image: product.image_url,
-            description: product.description,
             parts: product.parts,
             category: categoryName,
             category_id: product.category_details.id,
+            features: getFeatures(product.parts),
+            configuration: {
+              frameType: '',
+              frameFinish: '',
+              wheels: '',
+              rimColor: '',
+              chain: ''
+            }
         });
-      
+
         return acc;
     }, {}) : {};
-
-  // Helper function to get features from parts
-  const getFeatures = (parts) => {
-    if (!parts) return [];
-    return parts.map(part => part.part_option_details.name);
-  };
   
   return (
     <div className="min-h-screen bg-white">

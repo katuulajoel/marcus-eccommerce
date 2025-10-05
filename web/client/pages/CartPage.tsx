@@ -155,7 +155,9 @@ export default function CartPage() {
                     <Input placeholder="Promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
                     <Button variant="outline">Apply</Button>
                   </div>
-                  <Button className="w-full bg-teal-600 hover:bg-teal-700">Proceed to Checkout</Button>
+                  <Button asChild className="w-full bg-teal-600 hover:bg-teal-700">
+                    <Link to="/checkout">Proceed to Checkout</Link>
+                  </Button>
                 </div>
               </div>
             </div>

@@ -2,3 +2,6 @@
 .vscode/settings.json
 .playwright-mcp/
 server/media/
+server/venv
+node_modules
+__pycache__/

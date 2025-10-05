@@ -10,3 +10,5 @@ drf-yasg
 Pillow
 django-storages
 boto3
+stripe
+requests

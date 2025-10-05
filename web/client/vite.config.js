@@ -14,11 +14,13 @@ export default defineConfig(({ mode }) => {
   
   return {
     root: path.resolve(__dirname),
+    plugins: [react()],
     resolve: {
       alias: {
         '@shared': path.resolve(__dirname, '../shared'),
         '@client': path.resolve(__dirname, './'),
       },
+      dedupe: ['react', 'react-dom']
     },
     server: {
       port: 3000,
@@ -26,6 +28,9 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.resolve(__dirname, '../../dist/client'),
     },
-    define: envDefine
+    define: envDefine,
+    optimizeDeps: {
+      include: ['react', 'react-dom', '@stripe/stripe-js', '@stripe/react-stripe-js']
+    }
   };
 });

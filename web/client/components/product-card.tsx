@@ -22,6 +22,18 @@ interface ProductCardProps {
       rimColor: string
       chain: string
     }
+    parts?: Array<{
+      id: number
+      part_option: number
+      part_option_details: {
+        id: number
+        part_name: string
+        name: string
+        default_price: string
+        image_url: string | null
+      }
+      preconfigured_product: number
+    }>
   }
   onViewDetails?: () => void
 }
@@ -31,6 +43,18 @@ export default function ProductCard({ product, onViewDetails }: ProductCardProps
   const { toast } = useToast()
 
   const handleAddToCart = () => {
+    // Build configDetails from parts data if available
+    const configDetails = product.parts?.reduce((acc, part) => {
+      if (part?.part_option_details?.part_name && part?.part_option_details?.name) {
+        const partKey = part.part_option_details.part_name.toLowerCase().replace(/\s+/g, '')
+        acc[partKey] = {
+          name: part.part_option_details.name,
+          price: parseFloat(part.part_option_details.default_price || '0')
+        }
+      }
+      return acc
+    }, {} as Record<string, { name: string; price: number }>)
+
     addItem({
       id: product.id,
       name: product.name,
@@ -38,6 +62,7 @@ export default function ProductCard({ product, onViewDetails }: ProductCardProps
       image: product.image,
       quantity: 1,
       configuration: product.configuration,
+      configDetails,
     })
 
     toast({

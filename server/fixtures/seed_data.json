@@ -1,11 +1,45 @@
 [
   {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "P@ssword123",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "alice.j",
+      "first_name": "Alice",
+      "last_name": "Johnson",
+      "email": "alice.j@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "P@ssword123",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "bob.smith",
+      "first_name": "Bob",
+      "last_name": "Smith",
+      "email": "bob.smith@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-02T22:00:00Z"
+    }
+  },
+  {
     "model": "customers.customer",
     "pk": 1,
     "fields": {
+      "user": 1,
       "name": "Alice Johnson",
       "email": "alice.j@example.com",
       "phone": "+256701234567",
+      "email_verified": true,
       "created_at": "2025-10-02T22:00:00Z"
     }
   },
@@ -13,9 +47,11 @@
     "model": "customers.customer",
     "pk": 2,
     "fields": {
+      "user": 2,
       "name": "Bob Smith",
       "email": "bob.smith@example.com",
       "phone": "+256712345678",
+      "email_verified": true,
       "created_at": "2025-10-02T22:00:00Z"
     }
   },

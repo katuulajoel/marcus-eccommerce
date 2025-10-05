@@ -26,8 +26,15 @@ services:
       - DJANGO_SUPERUSER_USERNAME=admin
       - DJANGO_SUPERUSER_EMAIL=admin@example.com
       - DJANGO_SUPERUSER_PASSWORD=admin123
+      - REDIS_URL=redis://redis:6379/0
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST=mailhog
+      - EMAIL_PORT=1025
+      - FRONTEND_URL=http://localhost:3000
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - app-network
@@ -48,13 +55,36 @@ services:
       - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce_db"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    logging:
+      driver: 'none'
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    name: marcus-eccommerce-postgres-data
 
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  postgres_data:

@@ -3,9 +3,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Orders, OrderProduct, OrderItem, Payment
+from decimal import Decimal
+from .models import Orders, OrderProduct, OrderItem, Payment, ShippingAddress
 from .serializers import OrdersSerializer, OrderProductSerializer, OrderItemSerializer, PaymentSerializer
 from .permissions import AllowPostAnonymously
+from apps.customers.models import Customer
 
 class OrdersViewSet(ModelViewSet):
     """
@@ -32,6 +34,102 @@ class OrdersViewSet(ModelViewSet):
             # If a regular user is logged in, only show their orders
             queryset = queryset.filter(customer__user=self.request.user)
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new order with products and shipping address.
+
+        Expected request data:
+        {
+            "shipping_address": {...},
+            "products": [
+                {
+                    "name": "Product Name",
+                    "price": 450,
+                    "quantity": 1,
+                    "configuration": {
+                        "frame": {"name": "Full-Suspension Frame", "price": 130},
+                        ...
+                    }
+                }
+            ]
+        }
+        """
+        # Get the authenticated user's customer record
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required to create an order'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            customer = Customer.objects.get(user=request.user)
+        except Customer.DoesNotExist:
+            return Response(
+                {'error': 'Customer profile not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Extract data from request
+        shipping_address_data = request.data.get('shipping_address')
+        products_data = request.data.get('products', [])
+
+        if not products_data:
+            return Response(
+                {'error': 'At least one product is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create shipping address
+        shipping_address = None
+        if shipping_address_data:
+            shipping_address = ShippingAddress.objects.create(**shipping_address_data)
+
+        # Calculate total price from products
+        total_price = Decimal('0.00')
+        for product in products_data:
+            price = Decimal(str(product.get('price', 0)))
+            quantity = int(product.get('quantity', 1))
+            total_price += price * quantity
+
+        # Create order
+        order = Orders.objects.create(
+            customer=customer,
+            shipping_address=shipping_address,
+            total_price=total_price
+        )
+
+        # Create order products and items
+        for product_data in products_data:
+            product_name = product_data.get('name', 'Custom Product')
+            product_price = Decimal(str(product_data.get('price', 0)))
+            quantity = int(product_data.get('quantity', 1))
+            configuration = product_data.get('configuration', {})
+
+            # Create OrderProduct for each product (respecting quantity)
+            for _ in range(quantity):
+                order_product = OrderProduct.objects.create(
+                    order=order,
+                    base_product_name=product_name
+                )
+
+                # Create OrderItems for each configuration part
+                for part_key, part_data in configuration.items():
+                    if isinstance(part_data, dict):
+                        OrderItem.objects.create(
+                            order_product=order_product,
+                            part_name=part_key.capitalize(),
+                            option_name=part_data.get('name', ''),
+                            final_price=Decimal(str(part_data.get('price', 0)))
+                        )
+
+        # Calculate minimum required amount
+        order.minimum_required_amount = order.calculate_minimum_required_amount()
+        order.save()
+
+        # Serialize and return
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def record_payment(self, request, pk=None):

@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from decimal import Decimal
 from apps.customers.models import Customer
 from apps.preconfigured_products.models import PreConfiguredProduct
 
@@ -46,8 +47,8 @@ class Orders(models.Model):
     customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, db_column='customer_id')
     shipping_address = models.ForeignKey(ShippingAddress, related_name='orders', on_delete=models.PROTECT, db_column='shipping_address_id', null=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    minimum_required_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    minimum_required_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     fulfillment_status = models.CharField(max_length=20, choices=FULFILLMENT_STATUS_CHOICES, default='pending')
     is_fulfillable = models.BooleanField(default=False)
@@ -80,7 +81,8 @@ class Orders(models.Model):
     @property
     def balance_due(self):
         """Calculate remaining balance"""
-        return max(0, self.total_price - self.amount_paid)
+        from decimal import Decimal
+        return max(Decimal('0'), self.total_price - self.amount_paid)
 
     class Meta:
         db_table = 'orders'
@@ -106,7 +108,7 @@ class OrderItem(models.Model):
     part_name = models.CharField(max_length=255)
     option_name = models.CharField(max_length=255)
     final_price = models.DecimalField(max_digits=10, decimal_places=2)
-    minimum_payment_required = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    minimum_payment_required = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
 
     def __str__(self):
         return f"{self.part_name}: {self.option_name}"

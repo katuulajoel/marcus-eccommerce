@@ -26,10 +26,12 @@ api_patterns = [
     path('customers/', include('apps.customers.urls')),
     path('configurator/', include('apps.configurator.urls')),
     path('preconfigured-products/', include('apps.preconfigured_products.urls')),
+    path('auth/', include('apps.authentication.urls')),
+    path('payments/', include('apps.payments.urls')),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Built-in Django REST framework auth views for login/logout
-    path('auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('drf-auth/', include('rest_framework.urls', namespace='rest_framework')),
     # Top-level product resources
     path('', include(products_router.urls)),
 ]
