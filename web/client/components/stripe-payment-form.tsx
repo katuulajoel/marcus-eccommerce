@@ -9,7 +9,7 @@ import {
 import { Button } from "@shared/components/ui/button"
 
 interface StripePaymentFormProps {
-  onSuccess: () => void
+  onSuccess: (paymentIntentId: string) => void
   onError: (error: string) => void
   totalAmount: number
 }
@@ -33,7 +33,7 @@ export default function StripePaymentForm({
     setIsProcessing(true)
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/orders`,
@@ -43,8 +43,10 @@ export default function StripePaymentForm({
 
       if (error) {
         onError(error.message || "Payment failed")
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
+        onSuccess(paymentIntent.id)
       } else {
-        onSuccess()
+        onError("Payment was not successful")
       }
     } catch (err: any) {
       onError(err.message || "An unexpected error occurred")

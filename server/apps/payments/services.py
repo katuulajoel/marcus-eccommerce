@@ -179,7 +179,7 @@ class PaymentService:
             transaction.save()
 
             # Create Payment record if successful and not already created
-            if result.success and not hasattr(transaction, 'payment'):
+            if result.success and transaction.payment is None:
                 cls._create_payment_record(transaction)
 
             return result
@@ -241,7 +241,7 @@ class PaymentService:
                     transaction.save()
 
                     # Create Payment record if successful
-                    if result.success and not hasattr(transaction, 'payment'):
+                    if result.success and transaction.payment is None:
                         cls._create_payment_record(transaction)
 
                 except PaymentTransaction.DoesNotExist:

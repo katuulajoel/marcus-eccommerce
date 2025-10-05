@@ -61,6 +61,7 @@ function OrderDetailContent() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const [selectedGateway, setSelectedGateway] = useState("stripe")
   const [paymentLoading, setPaymentLoading] = useState(false)
+  const [transactionId, setTransactionId] = useState<number | null>(null)
   const [stripeDialogOpen, setStripeDialogOpen] = useState(false)
   const [stripePromise, setStripePromise] = useState<any>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
@@ -81,11 +82,24 @@ function OrderDetailContent() {
     }
   }
 
-  const handleStripeSuccess = () => {
-    setStripeDialogOpen(false)
-    setClientSecret(null)
-    setStripePromise(null)
-    fetchOrder() // Refresh order to show updated payment status
+  const handleStripeSuccess = async (paymentIntentId: string) => {
+    try {
+      // Verify payment on backend to record it in the database
+      await axiosInstance.post("/payments/verify/", {
+        transaction_id: transactionId,
+      })
+
+      setStripeDialogOpen(false)
+      setClientSecret(null)
+      setStripePromise(null)
+      setTransactionId(null)
+      fetchOrder() // Refresh order to show updated payment status
+    } catch (err: any) {
+      console.error("Payment verification error:", err)
+      alert("Payment succeeded but verification failed. Refreshing order status...")
+      setStripeDialogOpen(false)
+      fetchOrder()
+    }
   }
 
   const handleStripeError = (errorMessage: string) => {
@@ -110,6 +124,9 @@ function OrderDetailContent() {
         const { action_data } = response.data
 
         if (selectedGateway === "stripe") {
+          // Store transaction ID for verification later
+          setTransactionId(response.data.id)
+
           // Load Stripe and show payment form
           const stripe = await loadStripe(action_data.publishable_key)
           setStripePromise(stripe)

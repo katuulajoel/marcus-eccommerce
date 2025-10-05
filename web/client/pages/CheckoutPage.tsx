@@ -47,6 +47,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [orderId, setOrderId] = useState<number | null>(null)
+  const [transactionId, setTransactionId] = useState<number | null>(null)
   const [stripePromise, setStripePromise] = useState<any>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
 
@@ -90,6 +91,9 @@ function CheckoutContent() {
         const { action_data } = paymentResponse.data
 
         if (paymentGateway === "stripe") {
+          // Store transaction ID for verification later
+          setTransactionId(paymentResponse.data.id)
+
           // Load Stripe with publishable key and show payment form
           const stripe = await loadStripe(action_data.publishable_key)
           setStripePromise(stripe)
@@ -114,9 +118,22 @@ function CheckoutContent() {
     }
   }
 
-  const handleStripeSuccess = () => {
-    clearCart()
-    navigate(`/orders/${orderId}`)
+  const handleStripeSuccess = async (paymentIntentId: string) => {
+    try {
+      // Verify payment on backend to record it in the database
+      await axiosInstance.post("/payments/verify/", {
+        transaction_id: transactionId,
+      })
+
+      clearCart()
+      navigate(`/orders/${orderId}`)
+    } catch (err: any) {
+      console.error("Payment verification error:", err)
+      setError("Payment succeeded but verification failed. Please check your order.")
+      // Still navigate to order page even if verification fails
+      clearCart()
+      navigate(`/orders/${orderId}`)
+    }
   }
 
   const handleStripeError = (errorMessage: string) => {
