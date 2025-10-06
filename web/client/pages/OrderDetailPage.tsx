@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { ArrowLeft, Package, CreditCard, Smartphone, ChevronDown } from "lucide-react"
+import { ArrowLeft, Package, CreditCard, Smartphone, ChevronDown, Info } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { Button } from "@shared/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/components/ui/dialog"
 import { Label } from "@shared/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@shared/components/ui/radio-group"
+import { Input } from "@shared/components/ui/input"
+import { Separator } from "@shared/components/ui/separator"
 import { axiosInstance } from "@client/context/auth-context"
 import SiteHeader from "@client/components/site-header"
 import Footer from "@client/components/footer"
@@ -68,7 +70,9 @@ function OrderDetailContent() {
   const [mtnMomoDialogOpen, setMtnMomoDialogOpen] = useState(false)
   const [mtnPhoneNumber, setMtnPhoneNumber] = useState("")
   const [selectedCountry, setSelectedCountry] = useState("Ghana")
-  
+  const [paymentAmount, setPaymentAmount] = useState<string>("")
+  const [paymentAmountError, setPaymentAmountError] = useState<string>("")
+
   const countryCodes = [
     { name: "Ghana", code: "233", prefixes: ["24", "25", "26", "27", "50", "54", "55"] },
     { name: "Uganda", code: "256", prefixes: ["70", "71", "72", "73", "74", "75", "76", "77", "78", "79"] },
@@ -83,6 +87,13 @@ function OrderDetailContent() {
     fetchOrder()
   }, [id])
 
+  // Initialize payment amount when order is loaded
+  useEffect(() => {
+    if (order && Number(order.balance_due) > 0) {
+      setPaymentAmount(order.balance_due)
+    }
+  }, [order])
+
   const fetchOrder = async () => {
     try {
       const response = await axiosInstance.get(`/orders/${id}/`)
@@ -92,6 +103,41 @@ function OrderDetailContent() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const validatePaymentAmount = (amount: string): boolean => {
+    if (!order) return false
+
+    const numAmount = parseFloat(amount)
+    const min = Number(order.minimum_required_amount)
+    const max = Number(order.balance_due)
+
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setPaymentAmountError("Please enter a valid amount")
+      return false
+    }
+
+    if (numAmount < min) {
+      setPaymentAmountError(`Payment must be at least $${min.toLocaleString()} (minimum required)`)
+      return false
+    }
+
+    if (numAmount > max) {
+      setPaymentAmountError(`Payment cannot exceed $${max.toLocaleString()} (balance due)`)
+      return false
+    }
+
+    setPaymentAmountError("")
+    return true
+  }
+
+  const handlePaymentAmountChange = (value: string) => {
+    setPaymentAmount(value)
+    if (value) {
+      validatePaymentAmount(value)
+    } else {
+      setPaymentAmountError("")
     }
   }
 
@@ -123,6 +169,11 @@ function OrderDetailContent() {
   const handlePayment = async () => {
     if (!order) return
 
+    // Validate payment amount first
+    if (!validatePaymentAmount(paymentAmount)) {
+      return
+    }
+
     // For MTN MoMo, show phone collection dialog first
     if (selectedGateway === "mtn_momo" || selectedGateway === "airtel_money") {
       setPaymentDialogOpen(false)
@@ -145,7 +196,7 @@ function OrderDetailContent() {
       const response = await axiosInstance.post("/payments/initiate/", {
         order_id: order.id,
         gateway: selectedGateway,
-        amount: order.balance_due,
+        amount: paymentAmount,
         currency: currency,
         customer_phone: phoneNumber, // Include phone for MTN MoMo
       })
@@ -397,25 +448,44 @@ function OrderDetailContent() {
         <div className="bg-white rounded-lg border shadow-sm h-fit p-6 space-y-4">
           <h3 className="text-lg font-semibold">Order Summary</h3>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600">Total Amount</span>
               <span className="font-medium">${Number(order.total_price).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600">Amount Paid</span>
               <span className="font-medium text-green-600">${Number(order.amount_paid).toLocaleString()}</span>
             </div>
+
             {Number(order.balance_due) > 0 && (
               <>
-                <div className="border-t pt-2 flex justify-between">
-                  <span className="text-gray-900 font-medium">Balance Due</span>
-                  <span className="font-bold text-red-600">${Number(order.balance_due).toLocaleString()}</span>
+                <Separator />
+
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-900 font-semibold">Balance Due</span>
+                  <span className="text-2xl font-bold text-red-600">
+                    ${Number(order.balance_due).toLocaleString()}
+                  </span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Minimum Required</span>
-                  <span>${Number(order.minimum_required_amount).toLocaleString()}</span>
-                </div>
+
+                {Number(order.minimum_required_amount) > 0 && (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <Info className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <p className="text-sm font-medium text-blue-900">
+                          Minimum payment: ${Number(order.minimum_required_amount).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-blue-700 mt-1">
+                          Pay at least this amount to begin production
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -437,9 +507,73 @@ function OrderDetailContent() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Amount to pay: <span className="font-bold text-lg">${Number(order.balance_due).toLocaleString()}</span>
-            </p>
+            {/* Custom Payment Amount Input */}
+            <div className="bg-gray-50 rounded-lg p-4 border space-y-3">
+              <Label htmlFor="payment-amount" className="text-sm font-medium">
+                Payment Amount
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                <Input
+                  id="payment-amount"
+                  type="number"
+                  min={order.minimum_required_amount}
+                  max={order.balance_due}
+                  step="0.01"
+                  value={paymentAmount}
+                  onChange={(e) => handlePaymentAmountChange(e.target.value)}
+                  className="pl-8 text-lg font-semibold"
+                  aria-describedby="payment-amount-help payment-amount-error"
+                  aria-invalid={!!paymentAmountError}
+                  aria-required="true"
+                />
+              </div>
+
+              {paymentAmountError && (
+                <p id="payment-amount-error" role="alert" className="text-sm text-red-600">
+                  {paymentAmountError}
+                </p>
+              )}
+
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>Min: ${Number(order.minimum_required_amount).toLocaleString()}</span>
+                <span>Max: ${Number(order.balance_due).toLocaleString()}</span>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePaymentAmountChange(order.minimum_required_amount)}
+                  className="text-xs flex-1"
+                >
+                  Minimum
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePaymentAmountChange((Number(order.balance_due) / 2).toFixed(2))}
+                  className="text-xs flex-1"
+                >
+                  50%
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePaymentAmountChange(order.balance_due)}
+                  className="text-xs flex-1"
+                >
+                  Full Balance
+                </Button>
+              </div>
+
+              <p id="payment-amount-help" className="text-xs text-gray-600">
+                Enter any amount between the minimum required and your full balance
+              </p>
+            </div>
 
             <RadioGroup value={selectedGateway} onValueChange={setSelectedGateway}>
               <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
@@ -503,7 +637,7 @@ function OrderDetailContent() {
 
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Amount to pay: <span className="font-bold text-lg">${Number(order?.balance_due || 0).toLocaleString()}</span>
+              Amount to pay: <span className="font-bold text-lg">${Number(paymentAmount || 0).toLocaleString()}</span>
             </p>
 
             {clientSecret && stripePromise && (
@@ -522,7 +656,7 @@ function OrderDetailContent() {
                 <StripePaymentForm
                   onSuccess={handleStripeSuccess}
                   onError={handleStripeError}
-                  totalAmount={Number(order?.balance_due || 0)}
+                  totalAmount={Number(paymentAmount || 0)}
                 />
               </Elements>
             )}
@@ -539,7 +673,7 @@ function OrderDetailContent() {
 
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Amount to pay: <span className="font-bold text-lg">${Number(order?.balance_due || 0).toLocaleString()}</span>
+              Amount to pay: <span className="font-bold text-lg">${Number(paymentAmount || 0).toLocaleString()}</span>
             </p>
 
             <div className="space-y-2">

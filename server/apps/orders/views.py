@@ -8,6 +8,7 @@ from .models import Orders, OrderProduct, OrderItem, Payment, ShippingAddress
 from .serializers import OrdersSerializer, OrderProductSerializer, OrderItemSerializer, PaymentSerializer
 from .permissions import AllowPostAnonymously
 from apps.customers.models import Customer
+from apps.products.models import PartOption
 
 class OrdersViewSet(ModelViewSet):
     """
@@ -116,11 +117,26 @@ class OrdersViewSet(ModelViewSet):
                 # Create OrderItems for each configuration part
                 for part_key, part_data in configuration.items():
                     if isinstance(part_data, dict):
+                        option_name = part_data.get('name', '')
+                        final_price = Decimal(str(part_data.get('price', 0)))
+
+                        # Calculate minimum payment required based on part option percentage
+                        # Note: minimum_payment_percentage is stored as decimal (0.25 = 25%, 1.00 = 100%)
+                        minimum_payment_required = Decimal('0.00')
+                        try:
+                            part_option = PartOption.objects.get(name=option_name)
+                            minimum_payment_percentage = part_option.minimum_payment_percentage
+                            minimum_payment_required = (final_price * minimum_payment_percentage).quantize(Decimal('0.01'))
+                        except PartOption.DoesNotExist:
+                            # If part option not found, default to 0
+                            pass
+
                         OrderItem.objects.create(
                             order_product=order_product,
                             part_name=part_key.capitalize(),
-                            option_name=part_data.get('name', ''),
-                            final_price=Decimal(str(part_data.get('price', 0)))
+                            option_name=option_name,
+                            final_price=final_price,
+                            minimum_payment_required=minimum_payment_required
                         )
 
         # Calculate minimum required amount
