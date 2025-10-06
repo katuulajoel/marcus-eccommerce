@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { ArrowLeft, Package, CreditCard, Smartphone } from "lucide-react"
+import { ArrowLeft, Package, CreditCard, Smartphone, ChevronDown } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { Button } from "@shared/components/ui/button"
@@ -67,6 +67,15 @@ function OrderDetailContent() {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [mtnMomoDialogOpen, setMtnMomoDialogOpen] = useState(false)
   const [mtnPhoneNumber, setMtnPhoneNumber] = useState("")
+  const [selectedCountry, setSelectedCountry] = useState("Ghana")
+  
+  const countryCodes = [
+    { name: "Ghana", code: "233", prefixes: ["24", "25", "26", "27", "50", "54", "55"] },
+    { name: "Uganda", code: "256", prefixes: ["70", "71", "72", "73", "74", "75", "76", "77", "78", "79"] },
+    { name: "Nigeria", code: "234", prefixes: ["70", "80", "81", "90", "91"] },
+    { name: "Cote d'Ivoire", code: "225", prefixes: ["05", "07", "01"] },
+    { name: "Cameroon", code: "237", prefixes: ["65", "66", "67", "68", "69"] },
+  ]
   const [mtnWaitingDialogOpen, setMtnWaitingDialogOpen] = useState(false)
   const [pollingAttempts, setPollingAttempts] = useState(0)
 
@@ -204,13 +213,37 @@ function OrderDetailContent() {
       return
     }
 
-    // Basic phone validation (adjust pattern as needed)
-    if (!/^[0-9]{10,15}$/.test(mtnPhoneNumber.replace(/[\s\-\+]/g, ''))) {
+    // Remove any non-digit characters
+    const cleanedNumber = mtnPhoneNumber.replace(/\D/g, '')
+    
+    // Get the selected country
+    const country = countryCodes.find(c => c.name === selectedCountry)
+    if (!country) {
+      alert("Please select a valid country")
+      return
+    }
+
+    // Check if the number already has a country code
+    let phoneToSend = cleanedNumber
+    
+    // If the number starts with the country code, use it as is
+    if (!phoneToSend.startsWith(country.code)) {
+      // If the number starts with 0, remove it and add country code
+      if (phoneToSend.startsWith('0')) {
+        phoneToSend = country.code + phoneToSend.substring(1)
+      } else {
+        // If the number doesn't start with 0, add the country code
+        phoneToSend = country.code + phoneToSend
+      }
+    }
+
+    // Basic phone validation
+    if (!/^\d{10,15}$/.test(phoneToSend)) {
       alert("Please enter a valid phone number")
       return
     }
 
-    await initiatePayment(mtnPhoneNumber)
+    await initiatePayment(phoneToSend)
   }
 
   const startPaymentPolling = async (transactionId: number) => {
@@ -510,18 +543,48 @@ function OrderDetailContent() {
             </p>
 
             <div className="space-y-2">
-              <Label htmlFor="mtn-phone">Phone Number</Label>
-              <input
-                id="mtn-phone"
-                type="tel"
-                placeholder="0248888736"
-                value={mtnPhoneNumber}
-                onChange={(e) => setMtnPhoneNumber(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-              <p className="text-xs text-gray-500">
-                Enter your MTN Mobile Money number (e.g., 024XXXXXXX for Ghana)
-              </p>
+              <Label htmlFor="mtn-country">Country</Label>
+              <div className="relative">
+                <select
+                  id="mtn-country"
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none pr-8 bg-white"
+                >
+                  {countryCodes.map((country) => (
+                    <option key={country.code} value={country.name}>
+                      {country.name} (+{country.code})
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mtn-phone">Phone Number</Label>
+                <input
+                  id="mtn-phone"
+                  type="tel"
+                  placeholder={
+                    selectedCountry === 'Ghana' 
+                      ? '0248888736' 
+                      : selectedCountry === 'Uganda'
+                      ? '0701234567'
+                      : 'Enter your phone number'
+                  }
+                  value={mtnPhoneNumber}
+                  onChange={(e) => setMtnPhoneNumber(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <p className="text-xs text-gray-500">
+                  {selectedCountry === 'Ghana' 
+                    ? 'Enter your MTN Mobile Money number (e.g., 024XXXXXXX)'
+                    : selectedCountry === 'Uganda'
+                    ? 'Enter your MTN Mobile Money number (e.g., 070XXXXXXX)'
+                    : `Enter your MTN Mobile Money number for ${selectedCountry}`}
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-2 pt-4">

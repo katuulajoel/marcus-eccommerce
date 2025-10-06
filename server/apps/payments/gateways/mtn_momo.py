@@ -163,23 +163,10 @@ class MTNMoMoGateway(AbstractPaymentGateway):
                     error='Phone number is required for MTN MoMo payments'
                 )
 
-            # Clean phone number (remove + and spaces)
-            phone = phone.replace('+', '').replace(' ', '').replace('-', '')
-
-            # If phone starts with 0, replace with country code
-            if phone.startswith('0'):
-                # Detect country by prefix
-                if phone.startswith(('024', '025', '026', '027', '050', '054', '055')):
-                    # Ghana number
-                    phone = '233' + phone[1:]
-                elif phone.startswith(('070', '071', '072', '073', '074', '075', '076', '077', '078', '079')):
-                    # Uganda number
-                    phone = '256' + phone[1:]
-                else:
-                    # Default to Uganda
-                    phone = '256' + phone[1:]
-
-            # Validate phone number format
+            # Clean phone number (remove all non-digit characters)
+            phone = ''.join(filter(str.isdigit, phone))
+            
+            # Validate phone number format (should start with country code and be at least 10 digits)
             if not phone.isdigit() or len(phone) < 10:
                 return PaymentResult(
                     success=False,
