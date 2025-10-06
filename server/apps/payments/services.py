@@ -48,12 +48,18 @@ class PaymentService:
 
             # Create gateway instance with configuration
             gateway_config = {
-                'api_key': config.api_key,
                 'api_secret': config.api_secret,
                 'environment': config.environment,
-                'webhook_secret': config.webhook_secret,
-                **config.additional_config
             }
+
+            # Only add optional standard fields if they're not empty
+            if config.api_key:
+                gateway_config['api_key'] = config.api_key
+            if config.webhook_secret:
+                gateway_config['webhook_secret'] = config.webhook_secret
+
+            # Merge additional_config last (allows gateway-specific configs to override)
+            gateway_config = {**gateway_config, **config.additional_config}
 
             return gateway_class(gateway_config)
 

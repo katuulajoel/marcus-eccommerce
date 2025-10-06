@@ -65,6 +65,10 @@ function OrderDetailContent() {
   const [stripeDialogOpen, setStripeDialogOpen] = useState(false)
   const [stripePromise, setStripePromise] = useState<any>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [mtnMomoDialogOpen, setMtnMomoDialogOpen] = useState(false)
+  const [mtnPhoneNumber, setMtnPhoneNumber] = useState("")
+  const [mtnWaitingDialogOpen, setMtnWaitingDialogOpen] = useState(false)
+  const [pollingAttempts, setPollingAttempts] = useState(0)
 
   useEffect(() => {
     fetchOrder()
@@ -110,14 +114,46 @@ function OrderDetailContent() {
   const handlePayment = async () => {
     if (!order) return
 
+    // For MTN MoMo, show phone collection dialog first
+    if (selectedGateway === "mtn_momo" || selectedGateway === "airtel_money") {
+      setPaymentDialogOpen(false)
+      setMtnMomoDialogOpen(true)
+      return
+    }
+
+    // For other gateways (Stripe), proceed with payment
+    await initiatePayment()
+  }
+
+  const initiatePayment = async (phoneNumber?: string) => {
+    if (!order) return
+
     setPaymentLoading(true)
     try {
+      // MTN MoMo and Airtel Money require EUR for sandbox testing
+      const currency = (selectedGateway === "mtn_momo" || selectedGateway === "airtel_money") ? "EUR" : "USD"
+
       const response = await axiosInstance.post("/payments/initiate/", {
         order_id: order.id,
         gateway: selectedGateway,
         amount: order.balance_due,
-        currency: "USD",
+        currency: currency,
+        customer_phone: phoneNumber, // Include phone for MTN MoMo
       })
+
+      console.log("Payment initiation response:", response.data)
+      console.log("action_required:", response.data.action_required)
+      console.log("selectedGateway:", selectedGateway)
+
+      // Check if payment failed immediately
+      if (response.data.status === "failed") {
+        const errorMessage = response.data.error_message || "Payment failed"
+        alert(errorMessage)
+        setMtnMomoDialogOpen(false)
+        setPaymentDialogOpen(false)
+        setPaymentLoading(false)
+        return
+      }
 
       // Handle different gateway responses
       if (response.data.action_required) {
@@ -136,20 +172,45 @@ function OrderDetailContent() {
           setPaymentLoading(false)
           return
         } else if (selectedGateway === "mtn_momo" || selectedGateway === "airtel_money") {
-          // Show mobile money instructions
-          alert(`${action_data.instructions}\n\nTransaction ID: ${action_data.transaction_id || action_data.reference_id}`)
+          console.log("MTN MoMo payment initiated, showing waiting dialog")
+          // Close phone dialog and show waiting dialog
+          setMtnMomoDialogOpen(false)
+          setMtnWaitingDialogOpen(true)
+          setTransactionId(response.data.id)
+          setPollingAttempts(0)
+          setPaymentLoading(false)
 
           // Poll for payment status
           startPaymentPolling(response.data.id)
+          return
         }
       }
 
       setPaymentDialogOpen(false)
     } catch (err: any) {
-      alert(err.response?.data?.error || "Payment initiation failed")
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || "Payment initiation failed"
+      console.error("Payment initiation error:", err)
+      alert(errorMessage)
+      setMtnMomoDialogOpen(false)
+      setMtnWaitingDialogOpen(false)
     } finally {
       setPaymentLoading(false)
     }
+  }
+
+  const handleMtnMomoSubmit = async () => {
+    if (!mtnPhoneNumber) {
+      alert("Please enter your phone number")
+      return
+    }
+
+    // Basic phone validation (adjust pattern as needed)
+    if (!/^[0-9]{10,15}$/.test(mtnPhoneNumber.replace(/[\s\-\+]/g, ''))) {
+      alert("Please enter a valid phone number")
+      return
+    }
+
+    await initiatePayment(mtnPhoneNumber)
   }
 
   const startPaymentPolling = async (transactionId: number) => {
@@ -158,6 +219,7 @@ function OrderDetailContent() {
 
     const poll = setInterval(async () => {
       attempts++
+      setPollingAttempts(attempts)
 
       try {
         const response = await axiosInstance.post("/payments/verify/", {
@@ -168,11 +230,15 @@ function OrderDetailContent() {
 
         if (verification_result.success) {
           clearInterval(poll)
+          setMtnWaitingDialogOpen(false)
           alert("Payment successful!")
           fetchOrder() // Refresh order data
+          setMtnPhoneNumber("") // Reset phone number
         } else if (verification_result.status === "failed") {
           clearInterval(poll)
+          setMtnWaitingDialogOpen(false)
           alert(`Payment failed: ${verification_result.error}`)
+          setMtnPhoneNumber("") // Reset phone number
         }
       } catch (err) {
         console.error("Polling error:", err)
@@ -180,7 +246,9 @@ function OrderDetailContent() {
 
       if (attempts >= maxAttempts) {
         clearInterval(poll)
+        setMtnWaitingDialogOpen(false)
         alert("Payment verification timed out. Please check your order status.")
+        setMtnPhoneNumber("") // Reset phone number
       }
     }, 3000) // Poll every 3 seconds
   }
@@ -425,6 +493,86 @@ function OrderDetailContent() {
                 />
               </Elements>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MTN MoMo Phone Collection Dialog */}
+      <Dialog open={mtnMomoDialogOpen} onOpenChange={setMtnMomoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter Your MTN Mobile Money Number</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Amount to pay: <span className="font-bold text-lg">${Number(order?.balance_due || 0).toLocaleString()}</span>
+            </p>
+
+            <div className="space-y-2">
+              <Label htmlFor="mtn-phone">Phone Number</Label>
+              <input
+                id="mtn-phone"
+                type="tel"
+                placeholder="0248888736"
+                value={mtnPhoneNumber}
+                onChange={(e) => setMtnPhoneNumber(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              <p className="text-xs text-gray-500">
+                Enter your MTN Mobile Money number (e.g., 024XXXXXXX for Ghana)
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMtnMomoDialogOpen(false)
+                  setMtnPhoneNumber("")
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleMtnMomoSubmit}
+                disabled={paymentLoading}
+                className="flex-1 bg-teal-600 hover:bg-teal-700"
+              >
+                {paymentLoading ? "Processing..." : "Submit"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MTN MoMo Waiting Dialog */}
+      <Dialog open={mtnWaitingDialogOpen} onOpenChange={(open) => !open && setMtnWaitingDialogOpen(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Waiting for Payment Approval</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex flex-col items-center justify-center py-6">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mb-4"></div>
+              <p className="text-center text-gray-700 font-medium mb-2">
+                A payment request has been sent to your phone
+              </p>
+              <p className="text-center text-sm text-gray-600 mb-4">
+                Please check your phone and enter your PIN to authorize the payment
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
+                <p className="text-xs text-blue-800 text-center">
+                  Checking payment status... ({pollingAttempts}/30)
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center">
+              This may take up to 90 seconds. Please do not close this window.
+            </p>
           </div>
         </DialogContent>
       </Dialog>
