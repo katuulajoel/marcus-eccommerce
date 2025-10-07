@@ -46,6 +46,8 @@ class Orders(models.Model):
     id = models.AutoField(primary_key=True)
     customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, db_column='customer_id')
     shipping_address = models.ForeignKey(ShippingAddress, related_name='orders', on_delete=models.PROTECT, db_column='shipping_address_id', null=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Products subtotal before shipping")
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Shipping cost in UGX")
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     minimum_required_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))

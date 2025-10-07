@@ -4,11 +4,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
+from datetime import timedelta
+from django.utils import timezone
 from .models import Orders, OrderProduct, OrderItem, Payment, ShippingAddress
 from .serializers import OrdersSerializer, OrderProductSerializer, OrderItemSerializer, PaymentSerializer
 from .permissions import AllowPostAnonymously
 from apps.customers.models import Customer
-from apps.products.models import PartOption
+from apps.products.models import PartOption, Category
+from apps.shipping.models import ShippingZone, ShippingRate, OrderShippingMethod
+from apps.shipping.services import get_shipping_options
 
 class OrdersViewSet(ModelViewSet):
     """
@@ -38,14 +42,17 @@ class OrdersViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Create a new order with products and shipping address.
+        Create a new order with products, shipping address, and shipping method.
 
         Expected request data:
         {
             "shipping_address": {...},
+            "shipping_zone_id": 1,
+            "shipping_rate_id": 2,  // Optional - will recalculate if not provided
             "products": [
                 {
                     "name": "Product Name",
+                    "category_id": 1,
                     "price": 450,
                     "quantity": 1,
                     "configuration": {
@@ -74,10 +81,27 @@ class OrdersViewSet(ModelViewSet):
         # Extract data from request
         shipping_address_data = request.data.get('shipping_address')
         products_data = request.data.get('products', [])
+        shipping_zone_id = request.data.get('shipping_zone_id')
+        shipping_rate_id = request.data.get('shipping_rate_id')
 
         if not products_data:
             return Response(
                 {'error': 'At least one product is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not shipping_zone_id:
+            return Response(
+                {'error': 'Shipping zone is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate shipping zone
+        try:
+            shipping_zone = ShippingZone.objects.get(id=shipping_zone_id, is_active=True)
+        except ShippingZone.DoesNotExist:
+            return Response(
+                {'error': 'Invalid or inactive shipping zone'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -86,19 +110,101 @@ class OrdersViewSet(ModelViewSet):
         if shipping_address_data:
             shipping_address = ShippingAddress.objects.create(**shipping_address_data)
 
-        # Calculate total price from products
-        total_price = Decimal('0.00')
+        # Calculate products subtotal and build cart items for shipping calculation
+        subtotal = Decimal('0.00')
+        cart_items = []
+
         for product in products_data:
             price = Decimal(str(product.get('price', 0)))
             quantity = int(product.get('quantity', 1))
-            total_price += price * quantity
+            subtotal += price * quantity
+
+            # Build cart item for shipping calculation
+            category_id = product.get('category_id')
+            if category_id:
+                try:
+                    category = Category.objects.get(id=category_id)
+                    cart_items.append({
+                        'category': category,
+                        'quantity': quantity
+                    })
+                except Category.DoesNotExist:
+                    pass
+
+        # Calculate shipping options
+        shipping_cost = Decimal('0.00')
+        shipping_details = None
+
+        if cart_items:
+            try:
+                shipping_options = get_shipping_options(cart_items, shipping_zone)
+
+                if not shipping_options:
+                    return Response(
+                        {'error': 'No shipping options available for this zone and cart'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Find the selected rate or use first option
+                if shipping_rate_id:
+                    selected_option = next(
+                        (opt for opt in shipping_options if opt['rate_id'] == shipping_rate_id),
+                        None
+                    )
+                    if not selected_option:
+                        return Response(
+                            {'error': 'Invalid shipping rate selected'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                else:
+                    # Default to first (usually cheapest/standard) option
+                    selected_option = shipping_options[0]
+
+                shipping_cost = Decimal(str(selected_option['total_cost_ugx']))
+                shipping_details = selected_option
+
+            except Exception as e:
+                return Response(
+                    {'error': f'Shipping calculation failed: {str(e)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Calculate total price (subtotal + shipping)
+        total_price = subtotal + shipping_cost
 
         # Create order
         order = Orders.objects.create(
             customer=customer,
             shipping_address=shipping_address,
+            subtotal=subtotal,
+            shipping_cost=shipping_cost,
             total_price=total_price
         )
+
+        # Create shipping method record
+        if shipping_details:
+            estimated_delivery_date = None
+            if 'estimated_delivery_date' in shipping_details:
+                estimated_delivery_date = shipping_details['estimated_delivery_date']
+
+            OrderShippingMethod.objects.create(
+                order=order,
+                zone=shipping_zone,
+                rate_id=shipping_details.get('rate_id'),
+                delivery_method=shipping_details['delivery_method'],
+                service_level=shipping_details['service_level'],
+                base_shipping_cost_ugx=Decimal(str(shipping_details['base_cost_ugx'])),
+                helper_fee_ugx=Decimal(str(shipping_details['helper_fee_ugx'])),
+                extra_care_fee_ugx=Decimal(str(shipping_details['extra_care_fee_ugx'])),
+                total_weight_kg=Decimal(str(shipping_details['total_weight_kg'])),
+                total_volume_m3=Decimal(str(shipping_details['total_volume_m3'])),
+                calculation_notes={
+                    'reasons': shipping_details['reasons'],
+                    'requires_helper': shipping_details['requires_helper'],
+                    'requires_extra_care': shipping_details['requires_extra_care'],
+                },
+                estimated_delivery_date=estimated_delivery_date
+            )
 
         # Create order products and items
         for product_data in products_data:

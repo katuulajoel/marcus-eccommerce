@@ -28,6 +28,7 @@ api_patterns = [
     path('preconfigured-products/', include('apps.preconfigured_products.urls')),
     path('auth/', include('apps.authentication.urls')),
     path('payments/', include('apps.payments.urls')),
+    path('shipping/', include('apps.shipping.urls')),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Built-in Django REST framework auth views for login/logout

@@ -8,6 +8,7 @@ export type CartItem = {
   price: number
   image: string
   quantity: number
+  categoryId?: number
   configuration?: {
     frameType: string
     frameFinish: string

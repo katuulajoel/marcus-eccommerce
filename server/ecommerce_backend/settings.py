@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.preconfigured_products',
     'apps.authentication',
     'apps.payments',
+    'apps.shipping',
 ]
 
 # Middleware
