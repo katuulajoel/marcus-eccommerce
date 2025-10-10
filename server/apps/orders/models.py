@@ -47,13 +47,31 @@ class Orders(models.Model):
     customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, db_column='customer_id')
     shipping_address = models.ForeignKey(ShippingAddress, related_name='orders', on_delete=models.PROTECT, db_column='shipping_address_id', null=True)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Products subtotal before shipping")
-    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Shipping cost in UGX")
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Shipping cost")
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     minimum_required_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     fulfillment_status = models.CharField(max_length=20, choices=FULFILLMENT_STATUS_CHOICES, default='pending')
     is_fulfillable = models.BooleanField(default=False)
+    order_currency = models.CharField(
+        max_length=3,
+        default='UGX',
+        help_text="Currency in which the order was placed (ISO 4217 code)"
+    )
+    exchange_rate_snapshot = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        default=Decimal('1.0000'),
+        help_text="Exchange rate at time of order (1 order_currency = X UGX)"
+    )
+    base_currency_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Total price in base currency (UGX) for reporting"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

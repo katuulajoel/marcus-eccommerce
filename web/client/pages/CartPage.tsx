@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag } from "lucide-react"
 import { Button } from "@shared/components/ui/button"
 import { useCart } from "@client/context/cart-context"
+import { useConvertedPrice } from "@shared/hooks/use-converted-price"
 import SiteHeader from "@client/components/site-header"
 import { Separator } from "@shared/components/ui/separator"
 import { Input } from "@shared/components/ui/input"
@@ -14,7 +15,6 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart()
   const [promoCode, setPromoCode] = useState("")
 
-  // Handle quantity changes
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity > 0) {
       updateQuantity(id, newQuantity)
@@ -59,69 +59,75 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {items.map((item) => (
-                  <div key={item.id} className="p-6 border-b">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="relative h-40 w-full md:w-40 bg-gray-50 rounded-md">
-                        <img
-                          src={item.image || "/placeholder.svg"}
-                          alt={item.name}
-                          className="object-contain p-2 h-full w-full"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <h3 className="text-lg font-semibold">{item.name}</h3>
-                          <p className="text-lg font-bold text-teal-600">${item.price.toLocaleString()}</p>
+                {items.map((item) => {
+                  const { formattedPrice: itemPrice, isConverting: isItemPriceLoading } = useConvertedPrice({ amount: item.price })
+                  
+                  return (
+                    <div key={item.id} className="p-6 border-b">
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <div className="relative h-40 w-full md:w-40 bg-gray-50 rounded-md">
+                          <img
+                            src={item.image || "/placeholder.svg"}
+                            alt={item.name}
+                            className="object-contain p-2 h-full w-full"
+                          />
                         </div>
-
-                        {item.configDetails && (
-                          <div className="mt-2 space-y-1">
-                            {Object.entries(item.configDetails).map(([category, details]) => (
-                              <div key={category} className="flex justify-between text-sm">
-                                <span className="text-gray-600">
-                                  {category.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}:
-                                </span>
-                                <span>{details.name}</span>
-                              </div>
-                            ))}
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <h3 className="text-lg font-semibold">{item.name}</h3>
+                            <p className="text-lg font-bold text-teal-600">
+                              {isItemPriceLoading ? 'Loading...' : itemPrice}
+                            </p>
                           </div>
-                        )}
 
-                        <div className="mt-4 flex items-center justify-between">
-                          <div className="flex items-center">
+                          {item.configDetails && (
+                            <div className="mt-2 space-y-1">
+                              {Object.entries(item.configDetails).map(([category, details]) => (
+                                <div key={category} className="flex justify-between text-sm">
+                                  <span className="text-gray-600">
+                                    {category.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}:
+                                  </span>
+                                  <span>{details.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 rounded-r-none"
+                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <div className="h-8 px-3 flex items-center justify-center border-y">{item.quantity}</div>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 rounded-l-none"
+                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
                             <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8 rounded-r-none"
-                              onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeItem(item.id)}
+                              className="text-red-500 hover:text-red-700"
                             >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <div className="h-8 px-3 flex items-center justify-center border-y">{item.quantity}</div>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8 rounded-l-none"
-                              onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                            >
-                              <Plus className="h-3 w-3" />
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remove
                             </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(item.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Remove
-                          </Button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
@@ -132,7 +138,12 @@ export default function CartPage() {
               <div className="p-6 space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>${totalPrice.toLocaleString()}</span>
+                  <span>
+                    {(() => {
+                      const { formattedPrice, isConverting } = useConvertedPrice({ amount: totalPrice })
+                      return isConverting ? 'Loading...' : formattedPrice
+                    })()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
@@ -147,12 +158,21 @@ export default function CartPage() {
 
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
-                  <span className="text-xl text-teal-600">${totalPrice.toLocaleString()}</span>
+                  <span className="text-xl text-teal-600">
+                    {(() => {
+                      const { formattedPrice, isConverting } = useConvertedPrice({ amount: totalPrice })
+                      return isConverting ? 'Loading...' : formattedPrice
+                    })()}
+                  </span>
                 </div>
 
                 <div className="pt-4">
                   <div className="flex gap-2 mb-4">
-                    <Input placeholder="Promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
+                    <Input 
+                      placeholder="Promo code" 
+                      value={promoCode} 
+                      onChange={(e) => setPromoCode(e.target.value)} 
+                    />
                     <Button variant="outline">Apply</Button>
                   </div>
                   <Button asChild className="w-full bg-teal-600 hover:bg-teal-700">

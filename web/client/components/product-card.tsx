@@ -6,6 +6,7 @@ import { Card, CardContent } from "@shared/components/ui/card"
 import { Badge } from "@shared/components/ui/badge"
 import { useCart } from "@client/context/cart-context"
 import { useToast } from "@shared/components/ui/use-toast"
+import { useConvertedPrice } from "@shared/hooks/use-converted-price"
 
 interface ProductCardProps {
   product: {
@@ -41,6 +42,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onViewDetails }: ProductCardProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
+  const { formattedPrice, isConverting } = useConvertedPrice({ amount: product.price })
 
   const handleAddToCart = () => {
     // Build configDetails from parts data if available
@@ -93,7 +95,13 @@ export default function ProductCard({ product, onViewDetails }: ProductCardProps
       <CardContent className="p-6">
         <h3 className="text-xl font-bold mb-1">{product.name}</h3>
         <p className="text-sm text-gray-500 mb-2">{product.tagline}</p>
-        <p className="text-lg font-bold mb-4">${product.price}</p>
+        <p className="text-lg font-bold mb-4">
+          {isConverting ? (
+            <span className="text-gray-400">Converting...</span>
+          ) : (
+            formattedPrice
+          )}
+        </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={onViewDetails}>
             View Details

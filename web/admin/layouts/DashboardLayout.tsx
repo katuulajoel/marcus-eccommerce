@@ -6,6 +6,7 @@ import { useState } from "react"
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom"
 import { Bike, Box, DollarSign, Layers, LogOut, PanelLeft, Puzzle, ShoppingCart, User, Users, X } from "lucide-react"
 import { useAuth } from "@admin/context/auth-context"
+import { CurrencySelector } from "@shared/components/currency-selector"
 import { cn } from "@shared/lib/utils"
 import { Button } from "@shared/components/ui/button"
 import { ScrollArea } from "@shared/components/ui/scroll-area"
@@ -92,6 +93,7 @@ export default function DashboardLayout() {
           <span className="font-bold">Bike Configurator Admin</span>
         </div>
         <div className="ml-auto flex items-center gap-3">
+          <CurrencySelector variant="compact" />
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted">
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{user?.username || "Admin"}</span>

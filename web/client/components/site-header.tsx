@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu"
 import CartIcon from "@client/components/cart-icon"
+import { CurrencySelector } from "@shared/components/currency-selector"
 import { useAuth } from "@client/context/auth-context"
 
 export default function SiteHeader() {
@@ -53,6 +54,9 @@ export default function SiteHeader() {
             </li>
             <li className="font-medium text-gray-700 hover:text-teal-600 transition-colors">
               <Link to="/customize">Customize</Link>
+            </li>
+            <li>
+              <CurrencySelector variant="compact" />
             </li>
             <li>
               <CartIcon />

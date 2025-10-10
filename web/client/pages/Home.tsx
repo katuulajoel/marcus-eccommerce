@@ -6,6 +6,7 @@ import SiteHeader from "@client/components/site-header"
 import Footer from "@client/components/footer"
 import { useQuery } from "@tanstack/react-query"
 import { fetchBestSellingProduct, fetchTopProducts } from "@client/services/api"
+import { useConvertedPrice } from "@shared/hooks/use-converted-price"
 
 export default function Home() {
   // Fetch the best-selling product for the hero section
@@ -16,6 +17,8 @@ export default function Home() {
     queryKey: ["bestSellingProduct"],
     queryFn: fetchBestSellingProduct,
   })
+
+  const { formattedPrice, isConverting } = useConvertedPrice({ amount: parseInt(bestSeller?.base_price) || parseInt('0') })
 
   // Fetch top products for category sections
   const {
@@ -94,7 +97,13 @@ export default function Home() {
                     </Button>
                   </div>
                   <div className="mt-8">
-                    <p className="text-2xl font-bold mb-2">From ${parseFloat(bestSeller.base_price).toFixed(2)}</p>
+                    <p className="text-2xl font-bold mb-2">
+                    {isConverting ? (
+                        <span className="text-gray-400">Converting...</span>
+                      ) : (
+                        `From ${formattedPrice}`
+                      )}
+                    </p>
                     <ul className="space-y-2">
                       {getFeatures(bestSeller.parts).slice(0, 4).map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">

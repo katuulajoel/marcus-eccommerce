@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'apps.authentication',
     'apps.payments',
     'apps.shipping',
+    'apps.currency',
 ]
 
 # Middleware
@@ -187,3 +188,7 @@ EMAIL_HOST_PASSWORD = ''
 
 DEFAULT_FROM_EMAIL = 'noreply@marcuscustomcycles.com'
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
+# Exchange Rate API configuration
+EXCHANGE_RATE_API_KEY = os.environ.get('EXCHANGE_RATE_API_KEY', '9a031034afd525277581a134')
+EXCHANGE_RATE_API_BASE_URL = 'https://v6.exchangerate-api.com/v6'
