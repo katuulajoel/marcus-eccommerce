@@ -4,21 +4,30 @@ import ProductCarousel from "@client/components/product-carousel"
 import { Button } from "@shared/components/ui/button"
 import SiteHeader from "@client/components/site-header"
 import Footer from "@client/components/footer"
+import HeroSlider from "@client/components/hero-slider"
+import AnimatedCategoryCard from "@client/components/animated-category-card"
+import HowItWorks from "@client/components/how-it-works"
+import TestimonialCarousel from "@client/components/testimonial-carousel"
+import SocialGallery from "@client/components/social-gallery"
 import { useQuery } from "@tanstack/react-query"
-import { fetchBestSellingProduct, fetchTopProducts } from "@client/services/api"
-import { useConvertedPrice } from "@shared/hooks/use-converted-price"
+import { fetchBestSellingProduct, fetchTopProducts, fetchCategories } from "@client/services/api"
+import {
+  getMockHeroSlides,
+  getTestimonials,
+  getSocialPosts,
+  getCustomizationSteps,
+  type HeroSlide,
+} from "@client/services/mock-data"
 
 export default function Home() {
   // Fetch the best-selling product for the hero section
-  const { 
-    data: bestSeller, 
-    isLoading: isLoadingBestSeller 
+  const {
+    data: bestSeller,
+    isLoading: isLoadingBestSeller
   } = useQuery({
     queryKey: ["bestSellingProduct"],
     queryFn: fetchBestSellingProduct,
   })
-
-  const { formattedPrice, isConverting } = useConvertedPrice({ amount: parseInt(bestSeller?.base_price) || parseInt('0') })
 
   // Fetch top products for category sections
   const {
@@ -27,6 +36,15 @@ export default function Home() {
   } = useQuery({
     queryKey: ["topProducts"],
     queryFn: fetchTopProducts,
+  })
+
+  // Fetch categories for the animated cards section
+  const {
+    data: categories,
+    isLoading: isLoadingCategories
+  } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
   })
 
   // Helper function to get features from parts
@@ -66,108 +84,104 @@ export default function Home() {
 
         return acc;
     }, {}) : {};
-  
+
+  // Create hero slides from best-selling product + mock slides
+  const heroSlides: HeroSlide[] = bestSeller ? [
+    {
+      id: "bestseller",
+      title: bestSeller.name,
+      subtitle: "Best Selling Product",
+      description: bestSeller.description || "A custom-built bike with premium components designed for optimal performance and comfort.",
+      image: bestSeller.image_url || "/placeholder.svg",
+      cta: {
+        primary: {
+          text: "Customize This Bike",
+          link: `/customize?product=${bestSeller.id}&category=${bestSeller.category_details.name.toLowerCase()}`,
+        },
+        secondary: {
+          text: "View Details",
+          link: `/category/${bestSeller.category_details.id}`,
+        },
+      },
+    },
+    ...getMockHeroSlides(),
+  ] : getMockHeroSlides();
+
+  // Assign color schemes to categories
+  const categoriesWithColors = categories?.map((category: any, index: number) => {
+    const colorSchemes = ['purple', 'teal', 'pink', 'blue', 'orange', 'green'];
+    return {
+      ...category,
+      colorScheme: colorSchemes[index % colorSchemes.length],
+    };
+  }) || [];
+
+  // Get mock data for new sections
+  const testimonials = getTestimonials();
+  const socialPosts = getSocialPosts();
+  const customizationSteps = getCustomizationSteps();
+
   return (
     <div className="min-h-screen bg-white">
       <SiteHeader />
 
       <main>
-        {/* Hero Section */}
+        {/* Hero Slider Section */}
         {isLoadingBestSeller ? (
-          <section className="relative bg-gray-50 overflow-hidden">
+          <section className="relative bg-gradient-to-b from-pink-50 to-white overflow-hidden">
             <div className="container mx-auto px-4 py-20 md:py-32 text-center">
-              <p>Loading best seller...</p>
+              <p>Loading...</p>
             </div>
           </section>
-        ) : bestSeller && (
-          <section className="relative bg-gray-50 overflow-hidden">
-            <div className="container mx-auto px-4 py-20 md:py-32">
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="order-2 md:order-1">
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">{bestSeller.name}</h1>
-                  <p className="text-xl md:text-2xl text-gray-500 mb-4">Best selling product</p>
-                  <p className="text-gray-600 mb-8 max-w-md">
-                    {bestSeller.description || "A custom-built bike with premium components designed for optimal performance and comfort."}
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
-                      <Link to={`/customize?product=${bestSeller.id}&category=${bestSeller.category_details.name.toLowerCase()}`}>
-                        Customize This Bike
-                      </Link>
-                    </Button>
-                  </div>
-                  <div className="mt-8">
-                    <p className="text-2xl font-bold mb-2">
-                    {isConverting ? (
-                        <span className="text-gray-400">Converting...</span>
-                      ) : (
-                        `From ${formattedPrice}`
-                      )}
-                    </p>
-                    <ul className="space-y-2">
-                      {getFeatures(bestSeller.parts).slice(0, 4).map((feature, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-teal-600"
-                          >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <div className="order-1 md:order-2 relative">
-                  <div className="relative h-[200px] sm:h-[300px] md:h-[500px] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                    <img
-                      src={bestSeller.image_url || "/placeholder.svg"}
-                      alt={`${bestSeller.name} - Featured product image`}
-                      className="object-contain w-full h-full p-4"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder.svg"
-                        e.currentTarget.classList.add('opacity-50')
-                      }}
-                      loading="lazy"
-                    />
-                    {!bestSeller.image_url && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <p className="text-gray-400 text-sm">Product image coming soon</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        ) : (
+          <HeroSlider slides={heroSlides} />
+        )}
+
+        {/* Animated Category Cards Section */}
+        {!isLoadingCategories && categoriesWithColors.length > 0 && (
+          <section className="py-16 md:py-24 bg-gray-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Explore our collection of custom bikes designed for every riding style and terrain.
+                </p>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {categoriesWithColors.map((category: any, index: number) => (
+                  <AnimatedCategoryCard key={category.id} category={category} index={index} />
+                ))}
               </div>
             </div>
           </section>
         )}
-        
-        {/* Dynamic Category Sections */}
+
+        {/* Top Products by Category Sections (KEPT FROM ORIGINAL) */}
         {isLoadingTopProducts ? (
           <section className="py-16 md:py-24">
             <div className="container mx-auto px-4 text-center">
-              <p>Loading categories...</p>
+              <p>Loading products...</p>
             </div>
           </section>
         ) : (
-          Object.entries(productsByCategory).map(([category, products], index) => (
-            <section 
-              key={category} 
-              className={`py-16 md:py-24 ${index % 2 === 1 ? 'bg-gray-50' : ''}`}
+          Object.entries(productsByCategory).map(([category, products]: [string, any], index: number) => (
+            <section
+              key={category}
+              className={`py-16 md:py-24 ${
+                index % 2 === 0
+                  ? 'bg-gradient-to-b from-white to-pink-50/30'
+                  : 'bg-gradient-to-b from-pink-50/30 to-purple-50/20'
+              }`}
             >
               <div className="container mx-auto px-4">
-                <div className="flex justify-between items-end mb-8">
+                <div className="flex justify-between items-end mb-12">
                   <div>
-                    <h2 className="text-3xl font-bold mb-2">{category}</h2>
+                    <div className="inline-block bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                      Collection
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                      {category} Bikes
+                    </h2>
                     <p className="text-gray-600 max-w-2xl">
                       {category === "Mountain" && "Designed for off-road cycling with features like rugged tires and durable frames."}
                       {category === "Road" && "Optimized for riding on paved roads with speed and efficiency."}
@@ -176,17 +190,20 @@ export default function Home() {
                   </div>
                   <Link
                     to={`/category/${products[0]?.category_id}`}
-                    className="hidden md:flex items-center text-teal-600 hover:text-teal-700 font-medium"
+                    className="hidden md:flex items-center gap-1 text-pink-600 hover:text-pink-700 font-medium transition-all hover:gap-2"
                   >
-                    View all <ChevronRight className="h-4 w-4 ml-1" />
+                    View all <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
 
                 <ProductCarousel products={products} />
 
-                <div className="mt-6 md:hidden">
-                  <Link to={`/category/${products[0]?.category_id}`} className="flex items-center text-teal-600 hover:text-teal-700 font-medium">
-                    View all {category.toLowerCase()} bikes <ChevronRight className="h-4 w-4 ml-1" />
+                <div className="mt-8 md:hidden text-center">
+                  <Link
+                    to={`/category/${products[0]?.category_id}`}
+                    className="inline-flex items-center gap-1 text-pink-600 hover:text-pink-700 font-medium transition-all hover:gap-2"
+                  >
+                    View all {category.toLowerCase()} bikes <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
               </div>
@@ -194,15 +211,54 @@ export default function Home() {
           ))
         )}
 
-        {/* Custom Build CTA Section */}
-        <section className="py-16 md:py-24 bg-gray-900 text-white">
+        {/* How It Works Section */}
+        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-pink-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Building your custom bike is easy. Just follow these three simple steps.
+              </p>
+            </div>
+            <HowItWorks steps={customizationSteps} />
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="py-16 md:py-24 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Customers Say</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Don't just take our word for it. Here's what our satisfied customers have to say.
+              </p>
+            </div>
+            <TestimonialCarousel testimonials={testimonials} />
+          </div>
+        </section>
+
+        {/* Social Gallery Section */}
+        <section className="py-16 md:py-24 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Share Your Ride</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Join our community and share your custom bike adventures with #MarcusBikes
+              </p>
+            </div>
+            <SocialGallery posts={socialPosts} />
+          </div>
+        </section>
+
+        {/* Custom Build CTA Section (KEPT FROM ORIGINAL) */}
+        <section className="py-16 md:py-24 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Build Your Dream Bike</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto mb-8">
+            <p className="text-pink-100 max-w-2xl mx-auto mb-8">
               Create a custom bike that's perfectly tailored to your style, needs, and preferences. Our bike
               configurator makes it easy to build the bike of your dreams.
             </p>
-            <Button asChild size="lg" className="bg-teal-600 hover:bg-teal-700">
+            <Button asChild size="lg" className="bg-white text-pink-600 hover:bg-gray-100">
               <Link to="/customize">
                 Start Customizing <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

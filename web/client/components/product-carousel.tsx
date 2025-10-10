@@ -161,7 +161,7 @@ export default function ProductCarousel({ products, category }: ProductCarouselP
           <button
             key={index}
             className={`h-2 w-2 rounded-full transition-all ${
-              index === Math.floor(currentIndex / visibleCount) ? "bg-teal-600 w-4" : "bg-gray-300"
+              index === Math.floor(currentIndex / visibleCount) ? "bg-pink-600 w-4" : "bg-gray-300"
             }`}
             onClick={() => setCurrentIndex(index * visibleCount)}
             aria-label={`Go to slide ${index + 1}`}

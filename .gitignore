@@ -5,3 +5,4 @@ server/media/
 server/venv
 node_modules
 __pycache__/
+custom-cycles

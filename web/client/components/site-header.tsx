@@ -21,8 +21,9 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="container mx-auto py-6 px-4">
-      <div className="flex justify-between items-center">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div className="container mx-auto py-6 px-4">
+        <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +35,7 @@ export default function SiteHeader() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-teal-600"
+            className="text-pink-600"
           >
             <circle cx="5.5" cy="17.5" r="3.5" />
             <circle cx="18.5" cy="17.5" r="3.5" />
@@ -46,13 +47,13 @@ export default function SiteHeader() {
         </div>
         <nav className="hidden md:block">
           <ul className="flex gap-6 items-center">
-            <li className="font-medium text-gray-700 hover:text-teal-600 transition-colors">
+            <li className="font-medium text-gray-700 hover:text-pink-600 transition-colors">
               <Link to="/">Home</Link>
             </li>
-            <li className="font-medium text-gray-700 hover:text-teal-600 transition-colors">
+            <li className="font-medium text-gray-700 hover:text-pink-600 transition-colors">
               <Link to="/category/mountain">Shop</Link>
             </li>
-            <li className="font-medium text-gray-700 hover:text-teal-600 transition-colors">
+            <li className="font-medium text-gray-700 hover:text-pink-600 transition-colors">
               <Link to="/customize">Customize</Link>
             </li>
             <li>
@@ -109,6 +110,7 @@ export default function SiteHeader() {
             </Button>
           )}
         </div>
+      </div>
       </div>
     </header>
   )
