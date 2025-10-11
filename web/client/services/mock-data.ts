@@ -47,35 +47,35 @@ export const getMockHeroSlides = (): HeroSlide[] => {
   return [
     {
       id: "slide2",
-      title: "Ride Your Custom Dream",
-      subtitle: "Personalized Bikes",
-      description: "Build a bike that's uniquely yours with our advanced customization tools.",
-      image: "/placeholder.svg?height=600&width=600&text=Custom+Bike",
+      title: "Make Every Moment Unforgettable",
+      subtitle: "Gifts That Show You Care",
+      description: "From birthdays to anniversaries, Valentine's Day to graduations—create personalized gifts that make hearts smile.",
+      image: "/placeholder.svg?height=600&width=600&text=Special+Moments",
       cta: {
         primary: {
-          text: "Start Building",
+          text: "Browse All Gifts",
           link: "/customize",
         },
         secondary: {
-          text: "View Gallery",
-          link: "/gallery",
+          text: "Gift Ideas",
+          link: "/categories",
         },
       },
     },
     {
       id: "slide3",
-      title: "Performance Meets Style",
-      subtitle: "Premium Components",
-      description: "Choose from top-tier components to create the perfect ride for any terrain.",
-      image: "/placeholder.svg?height=600&width=600&text=Premium+Parts",
+      title: "Same-Day Delivery in Kampala",
+      subtitle: "Order Today, Surprise Today",
+      description: "Forgot a special occasion? No worries! We offer same-day delivery across Kampala. Make magic happen in hours, not days.",
+      image: "/placeholder.svg?height=600&width=600&text=Fast+Delivery",
       cta: {
         primary: {
-          text: "Explore Options",
+          text: "Order Now",
           link: "/customize",
         },
         secondary: {
-          text: "See Reviews",
-          link: "#testimonials",
+          text: "Delivery Info",
+          link: "#footer",
         },
       },
     },

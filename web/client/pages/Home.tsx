@@ -139,15 +139,15 @@ export default function Home() {
 
         {/* Animated Category Cards Section */}
         {!isLoadingCategories && categoriesWithColors.length > 0 && (
-          <section className="py-16 md:py-24 bg-gray-50">
+          <section className="py-12 md:py-16 lg:py-24 bg-gray-50">
             <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
-                <p className="text-gray-600 max-w-2xl mx-auto">
+              <div className="text-center mb-8 md:mb-12">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">Shop by Category</h2>
+                <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto px-4">
                   Explore our collection of custom bikes designed for every riding style and terrain.
                 </p>
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
                 {categoriesWithColors.map((category: any, index: number) => (
                   <AnimatedCategoryCard key={category.id} category={category} index={index} />
                 ))}
@@ -167,22 +167,22 @@ export default function Home() {
           Object.entries(productsByCategory).map(([category, products]: [string, any], index: number) => (
             <section
               key={category}
-              className={`py-16 md:py-24 ${
+              className={`py-12 md:py-16 lg:py-24 ${
                 index % 2 === 0
                   ? 'bg-gradient-to-b from-white to-pink-50/30'
                   : 'bg-gradient-to-b from-pink-50/30 to-purple-50/20'
               }`}
             >
               <div className="container mx-auto px-4">
-                <div className="flex justify-between items-end mb-12">
+                <div className="flex flex-col md:flex-row justify-between md:items-end mb-8 md:mb-12 gap-4">
                   <div>
-                    <div className="inline-block bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                    <div className="inline-block bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-4">
                       Collection
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-3 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
                       {category} Bikes
                     </h2>
-                    <p className="text-gray-600 max-w-2xl">
+                    <p className="text-sm md:text-base text-gray-600 max-w-2xl">
                       {category === "Mountain" && "Designed for off-road cycling with features like rugged tires and durable frames."}
                       {category === "Road" && "Optimized for riding on paved roads with speed and efficiency."}
                       {category === "Hybrid" && "Versatile bikes that combine features of both road and mountain bikes."}
@@ -190,7 +190,7 @@ export default function Home() {
                   </div>
                   <Link
                     to={`/category/${products[0]?.category_id}`}
-                    className="hidden md:flex items-center gap-1 text-pink-600 hover:text-pink-700 font-medium transition-all hover:gap-2"
+                    className="hidden md:flex items-center gap-1 text-pink-600 hover:text-pink-700 font-medium transition-all hover:gap-2 whitespace-nowrap"
                   >
                     View all <ChevronRight className="h-4 w-4" />
                   </Link>
@@ -198,10 +198,10 @@ export default function Home() {
 
                 <ProductCarousel products={products} />
 
-                <div className="mt-8 md:hidden text-center">
+                <div className="mt-6 md:mt-8 text-center md:hidden">
                   <Link
                     to={`/category/${products[0]?.category_id}`}
-                    className="inline-flex items-center gap-1 text-pink-600 hover:text-pink-700 font-medium transition-all hover:gap-2"
+                    className="inline-flex items-center gap-1 text-pink-600 hover:text-pink-700 font-medium transition-all hover:gap-2 text-sm"
                   >
                     View all {category.toLowerCase()} bikes <ChevronRight className="h-4 w-4" />
                   </Link>
@@ -212,11 +212,11 @@ export default function Home() {
         )}
 
         {/* How It Works Section */}
-        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-pink-50">
+        <section className="py-12 md:py-16 lg:py-24 bg-gradient-to-b from-white to-pink-50">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
+            <div className="text-center mb-10 md:mb-16">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">How It Works</h2>
+              <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto px-4">
                 Building your custom bike is easy. Just follow these three simple steps.
               </p>
             </div>
@@ -225,11 +225,11 @@ export default function Home() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-16 md:py-24 bg-white">
+        <section className="py-12 md:py-16 lg:py-24 bg-white">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Customers Say</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
+            <div className="text-center mb-10 md:mb-16">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">What Our Customers Say</h2>
+              <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto px-4">
                 Don't just take our word for it. Here's what our satisfied customers have to say.
               </p>
             </div>
@@ -238,11 +238,11 @@ export default function Home() {
         </section>
 
         {/* Social Gallery Section */}
-        <section className="py-16 md:py-24 bg-gray-50">
+        <section className="py-12 md:py-16 lg:py-24 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Share Your Ride</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">Share Your Ride</h2>
+              <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto px-4">
                 Join our community and share your custom bike adventures with #MarcusBikes
               </p>
             </div>
@@ -251,16 +251,16 @@ export default function Home() {
         </section>
 
         {/* Custom Build CTA Section (KEPT FROM ORIGINAL) */}
-        <section className="py-16 md:py-24 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
+        <section className="py-12 md:py-16 lg:py-24 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Build Your Dream Bike</h2>
-            <p className="text-pink-100 max-w-2xl mx-auto mb-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">Build Your Dream Bike</h2>
+            <p className="text-sm md:text-base text-pink-100 max-w-2xl mx-auto mb-6 md:mb-8 px-4">
               Create a custom bike that's perfectly tailored to your style, needs, and preferences. Our bike
               configurator makes it easy to build the bike of your dreams.
             </p>
             <Button asChild size="lg" className="bg-white text-pink-600 hover:bg-gray-100">
               <Link to="/customize">
-                Start Customizing <ArrowRight className="ml-2 h-5 w-5" />
+                Start Customizing <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Link>
             </Button>
           </div>
