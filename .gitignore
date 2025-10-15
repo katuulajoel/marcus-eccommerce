@@ -6,3 +6,7 @@ server/venv
 node_modules
 __pycache__/
 custom-cycles
+.env
+.env.local
+server/.env
+server/.env.local

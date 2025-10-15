@@ -1,10 +1,13 @@
 import axios from "axios";
 import { API_BASE_URL } from "@shared/utils/env";
 
-const apiClient = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
 });
+
+// Legacy alias for backward compatibility
+const apiClient = api;
 
 // Fetch the best-selling product
 export const fetchBestSellingProduct = async () => {
@@ -69,5 +72,25 @@ export const fetchCategoryStock = async (categoryId: number) => {
 // Fetch product details by ID
 export const fetchProductById = async (productId: number) => {
     const response = await apiClient.get(`/api/preconfigured-products/products/${productId}/`);
+    return response.data;
+};
+
+// AI Assistant API endpoints
+export const sendAIChatMessage = async (sessionId: string, message: string, context?: any) => {
+    const response = await apiClient.post("/api/ai-assistant/chat/", {
+        session_id: sessionId,
+        message,
+        context
+    });
+    return response.data;
+};
+
+export const getAIChatSession = async (sessionId: string) => {
+    const response = await apiClient.get(`/api/ai-assistant/session/${sessionId}/`);
+    return response.data;
+};
+
+export const clearAIChatSession = async (sessionId: string) => {
+    const response = await apiClient.delete(`/api/ai-assistant/session/${sessionId}/clear/`);
     return response.data;
 };

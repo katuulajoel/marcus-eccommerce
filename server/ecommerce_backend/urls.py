@@ -30,6 +30,7 @@ api_patterns = [
     path('payments/', include('apps.payments.urls')),
     path('shipping/', include('apps.shipping.urls')),
     path('currency/', include('apps.currency.urls')),
+    path('ai-assistant/', include('apps.ai_assistant.urls')),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Built-in Django REST framework auth views for login/logout

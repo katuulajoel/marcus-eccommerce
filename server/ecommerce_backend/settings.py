@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'apps.payments',
     'apps.shipping',
     'apps.currency',
+    'apps.ai_assistant',
 ]
 
 # Middleware

@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { CartProvider } from '@client/context/cart-context';
 import { AuthProvider } from '@client/context/auth-context';
 import { CurrencyProvider } from '@shared/contexts/currency-context';
+import { AIAssistantProvider } from '@client/context/ai-assistant-context';
 import App from './App';
 import './index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <CurrencyProvider>
           <AuthProvider>
             <CartProvider>
-              <App />
+              <AIAssistantProvider>
+                <App />
+              </AIAssistantProvider>
             </CartProvider>
           </AuthProvider>
         </CurrencyProvider>
