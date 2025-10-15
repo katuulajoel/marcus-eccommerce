@@ -32,3 +32,7 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# ChromaDB vector database (managed by Docker volume)
+chroma_db/
+*.chroma

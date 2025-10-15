@@ -13,9 +13,11 @@ services:
              python scripts/create_superuser.py &&
              python manage.py seed_db &&
              python manage.py refresh_views &&
+             python manage.py build_ai_index &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
+      - chromadb_data:/app/chroma_db
     ports:
       - "8000:8000"
     environment:
@@ -76,6 +78,49 @@ services:
     networks:
       - app-network
 
+  celery:
+    build: .
+    command: celery -A ecommerce_backend worker -l info
+    volumes:
+      - .:/app
+      - chromadb_data:/app/chroma_db
+    environment:
+      - DJANGO_SETTINGS_MODULE=ecommerce_backend.settings
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=ecommerce_password
+      - POSTGRES_DB=ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  celery-beat:
+    build: .
+    command: celery -A ecommerce_backend beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=ecommerce_backend.settings
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=ecommerce_password
+      - POSTGRES_DB=ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
   mailhog:
     image: mailhog/mailhog:latest
     ports:
@@ -89,6 +134,8 @@ services:
 volumes:
   postgres_data:
     name: marcus-eccommerce-postgres-data
+  chromadb_data:
+    name: marcus-eccommerce-chromadb-data
 
 networks:
   app-network:

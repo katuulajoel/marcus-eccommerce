@@ -10,9 +10,9 @@ from .serializers import (
     ChatRequestSerializer,
     ChatResponseSerializer
 )
-from .services.llm_service import llm_service
+from .services.agent_service import get_agent_service
 from .services.context_builder import context_builder
-from .services.rag_service import rag_service
+from .services.rag_service_new import get_rag_service
 
 
 @api_view(['POST'])
@@ -66,7 +66,8 @@ def chat(request):
     # Build enriched context with database information
     enriched_context = context_builder.build_enriched_context(context)
 
-    # Retrieve relevant information using RAG
+    # Retrieve relevant information using RAG (LlamaIndex-based)
+    rag_service = get_rag_service()
     rag_context = rag_service.retrieve_context_for_query(user_message, context)
 
     # Get conversation history for context (last 10 messages)
@@ -78,8 +79,9 @@ def chat(request):
     else:
         conversation_history = list(all_messages)
 
-    # Generate AI response using LLM service
-    ai_response = llm_service.generate_response(
+    # Generate AI response using LangChain Agent service
+    agent_service = get_agent_service()
+    ai_response = agent_service.generate_response(
         user_message=user_message,
         context={**enriched_context, **rag_context},
         conversation_history=conversation_history
@@ -90,7 +92,7 @@ def chat(request):
     intent = rag_context.get('intent', 'general')
 
     # Only include products if the intent requires recommendations
-    if rag_service.should_include_products(intent) and rag_context.get('products'):
+    if rag_context.get('products'):
         enhanced_metadata['products'] = rag_context['products'][:3]  # Top 3 products
         enhanced_metadata['intent'] = intent
 
@@ -167,22 +169,9 @@ def recommend_products(request):
             'error': 'Query is required'
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Search for matching products
-    products = rag_service.search_products(query, category_id)
-
-    # Filter by price if specified
-    if price_max:
-        products = [p for p in products if p['base_price'] <= float(price_max)]
-
-    # Get top products
-    top_products = context_builder.get_top_products(category_id, limit=5)
-
-    # Combine with search results (deduplicate)
-    product_ids = set(p['id'] for p in products)
-    for top_p in top_products:
-        if top_p['id'] not in product_ids and len(products) < 5:
-            products.append(top_p)
-            product_ids.add(top_p['id'])
+    # Search for matching products using RAG service
+    rag_service = get_rag_service()
+    products = rag_service.search_products(query, category_id, price_max)
 
     return Response({
         'recommended_products': products,

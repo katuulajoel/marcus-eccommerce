@@ -10,3 +10,8 @@ custom-cycles
 .env.local
 server/.env
 server/.env.local
+
+# AI Assistant - ChromaDB Vector Store
+server/chroma_db/
+*.chroma
+.chromadb/
