@@ -147,12 +147,40 @@
   },
   {
     "model": "products.category",
+    "pk": 1,
+    "fields": {
+      "name": "Gift Hampers",
+      "description": "Curated gift baskets featuring premium treats, chocolates, and beverages.",
+      "image": null,
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "4.50",
+      "unit_length_cm": "50.00",
+      "unit_width_cm": "40.00",
+      "unit_height_cm": "30.00",
+      "stackable": true,
+      "max_boda_quantity": 2,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "Contains food items and beverages. Keep upright during transport. Handle with care to prevent crushing."
+    }
+  },
+  {
+    "model": "products.category",
     "pk": 2,
     "fields": {
       "name": "Explosion Boxes",
       "description": "Customizable tiered boxes that 'explode' with messages and treats upon opening.",
       "image": null,
-      "created_at": "2025-10-11T09:00:00Z"
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "2.50",
+      "unit_length_cm": "35.00",
+      "unit_width_cm": "35.00",
+      "unit_height_cm": "25.00",
+      "stackable": true,
+      "max_boda_quantity": 3,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "Fragile contents - handle with care. Contains chocolates and decorative elements that can shift during transport."
     }
   },
   {
@@ -162,7 +190,16 @@
       "name": "Balloon Bouquets",
       "description": "Large balloon arrangements often including chocolates or gifts in the base.",
       "image": null,
-      "created_at": "2025-10-11T09:00:00Z"
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "1.80",
+      "unit_length_cm": "50.00",
+      "unit_width_cm": "50.00",
+      "unit_height_cm": "120.00",
+      "stackable": false,
+      "max_boda_quantity": 1,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "Very fragile - balloons can pop. Must be kept upright. Cannot be compressed. Best delivered same-day to avoid deflation."
     }
   },
   {
@@ -172,7 +209,16 @@
       "name": "Personalized Sets",
       "description": "High-end gift sets featuring custom-engraved items.",
       "image": null,
-      "created_at": "2025-10-11T09:00:00Z"
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "3.20",
+      "unit_length_cm": "45.00",
+      "unit_width_cm": "35.00",
+      "unit_height_cm": "15.00",
+      "stackable": true,
+      "max_boda_quantity": 2,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "High-value items with personalized engraving - requires extra care. Premium packaging included."
     }
   },
   {
@@ -680,6 +726,498 @@
       "paid_by": "customer",
       "transaction_reference": "BT-2025-001",
       "payment_date": "2025-10-08T10:15:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingconstants",
+    "pk": 1,
+    "fields": {
+      "boda_max_weight_kg": "15.00",
+      "boda_max_length_cm": "60.00",
+      "boda_max_width_cm": "40.00",
+      "boda_max_height_cm": "40.00",
+      "van_max_weight_kg": "500.00",
+      "van_max_length_cm": "200.00",
+      "van_max_width_cm": "150.00",
+      "van_max_height_cm": "150.00",
+      "truck_max_weight_kg": "2000.00",
+      "helper_fee_ugx": "15000.00",
+      "extra_care_fee_ugx": "5000.00"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 1,
+    "fields": {
+      "zone_code": "KLA-CENTRAL",
+      "zone_name": "Kampala Central",
+      "distance_range_min_km": "0.00",
+      "distance_range_max_km": "5.00",
+      "standard_delivery_days": 1,
+      "express_delivery_days": 0,
+      "description": "Central Kampala business district and immediate surroundings",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 2,
+    "fields": {
+      "zone_code": "KLA-INNER",
+      "zone_name": "Inner Kampala",
+      "distance_range_min_km": "5.00",
+      "distance_range_max_km": "10.00",
+      "standard_delivery_days": 1,
+      "express_delivery_days": 0,
+      "description": "Residential areas within greater Kampala",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 3,
+    "fields": {
+      "zone_code": "KLA-OUTER",
+      "zone_name": "Outer Kampala",
+      "distance_range_min_km": "10.00",
+      "distance_range_max_km": "20.00",
+      "standard_delivery_days": 2,
+      "express_delivery_days": 1,
+      "description": "Outer Kampala suburbs and surrounding areas",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 4,
+    "fields": {
+      "zone_code": "WAKISO",
+      "zone_name": "Wakiso District",
+      "distance_range_min_km": "20.00",
+      "distance_range_max_km": "50.00",
+      "standard_delivery_days": 3,
+      "express_delivery_days": 1,
+      "description": "Wakiso District including Entebbe",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 1,
+    "fields": {
+      "zone": 1,
+      "area_name": "Kampala Road",
+      "keywords": ["kampala road", "city centre", "kampala cbd"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 2,
+    "fields": {
+      "zone": 1,
+      "area_name": "Garden City",
+      "keywords": ["garden city", "garden city mall"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 3,
+    "fields": {
+      "zone": 1,
+      "area_name": "Acacia Mall",
+      "keywords": ["acacia", "acacia mall", "kisementi"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 4,
+    "fields": {
+      "zone": 2,
+      "area_name": "Kololo",
+      "keywords": ["kololo", "kolollo"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 5,
+    "fields": {
+      "zone": 2,
+      "area_name": "Nakasero",
+      "keywords": ["nakasero", "nakassero"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 6,
+    "fields": {
+      "zone": 2,
+      "area_name": "Ntinda",
+      "keywords": ["ntinda", "ntindda"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 7,
+    "fields": {
+      "zone": 2,
+      "area_name": "Bugolobi",
+      "keywords": ["bugolobi", "bugoloobi"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 8,
+    "fields": {
+      "zone": 3,
+      "area_name": "Najjera",
+      "keywords": ["najjera", "najera"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 9,
+    "fields": {
+      "zone": 3,
+      "area_name": "Kira",
+      "keywords": ["kira", "kyra"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 10,
+    "fields": {
+      "zone": 3,
+      "area_name": "Naalya",
+      "keywords": ["naalya", "nalya"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 11,
+    "fields": {
+      "zone": 4,
+      "area_name": "Entebbe",
+      "keywords": ["entebbe", "entebe"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 12,
+    "fields": {
+      "zone": 4,
+      "area_name": "Mukono",
+      "keywords": ["mukono", "mukono town"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 1,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "boda",
+      "service_level": "standard",
+      "base_price_ugx": "5000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 2,
+      "max_delivery_hours": 6,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 2,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_price_ugx": "10000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 1,
+      "max_delivery_hours": 2,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 3,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "25000.00",
+      "per_km_price_ugx": "1000.00",
+      "min_delivery_hours": 3,
+      "max_delivery_hours": 8,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 4,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "40000.00",
+      "per_km_price_ugx": "1500.00",
+      "min_delivery_hours": 1,
+      "max_delivery_hours": 3,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 5,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "boda",
+      "service_level": "standard",
+      "base_price_ugx": "8000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 3,
+      "max_delivery_hours": 8,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 6,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_price_ugx": "15000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 1,
+      "max_delivery_hours": 3,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 7,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "30000.00",
+      "per_km_price_ugx": "1200.00",
+      "min_delivery_hours": 4,
+      "max_delivery_hours": 10,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 8,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "50000.00",
+      "per_km_price_ugx": "2000.00",
+      "min_delivery_hours": 2,
+      "max_delivery_hours": 4,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 9,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "boda",
+      "service_level": "standard",
+      "base_price_ugx": "12000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 24,
+      "max_delivery_hours": 48,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 10,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_price_ugx": "20000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 3,
+      "max_delivery_hours": 6,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 11,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "40000.00",
+      "per_km_price_ugx": "1500.00",
+      "min_delivery_hours": 24,
+      "max_delivery_hours": 48,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 12,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "65000.00",
+      "per_km_price_ugx": "2500.00",
+      "min_delivery_hours": 4,
+      "max_delivery_hours": 8,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 13,
+    "fields": {
+      "zone": 4,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "60000.00",
+      "per_km_price_ugx": "2000.00",
+      "min_delivery_hours": 48,
+      "max_delivery_hours": 72,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 14,
+    "fields": {
+      "zone": 4,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "90000.00",
+      "per_km_price_ugx": "3000.00",
+      "min_delivery_hours": 6,
+      "max_delivery_hours": 12,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.ordershippingmethod",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "zone": 1,
+      "rate": 2,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_shipping_cost_ugx": "10000.00",
+      "helper_fee_ugx": "0.00",
+      "extra_care_fee_ugx": "5000.00",
+      "total_shipping_cost_ugx": "15000.00",
+      "total_weight_kg": "2.50",
+      "total_volume_m3": "0.0306",
+      "calculation_notes": {
+        "reason": "Single explosion box fits boda limits",
+        "items_analyzed": 1,
+        "max_dimension_cm": 35,
+        "fits_boda": true,
+        "requires_extra_care": true
+      },
+      "estimated_delivery_date": "2025-10-05",
+      "created_at": "2025-10-05T14:30:00Z",
+      "updated_at": "2025-10-05T14:30:00Z"
+    }
+  },
+  {
+    "model": "shipping.ordershippingmethod",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "zone": 2,
+      "rate": 7,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_shipping_cost_ugx": "30000.00",
+      "helper_fee_ugx": "0.00",
+      "extra_care_fee_ugx": "5000.00",
+      "total_shipping_cost_ugx": "35000.00",
+      "total_weight_kg": "3.20",
+      "total_volume_m3": "0.0236",
+      "calculation_notes": {
+        "reason": "Personalized set with premium items requires van for safety",
+        "items_analyzed": 1,
+        "max_dimension_cm": 45,
+        "fits_boda": true,
+        "requires_extra_care": true,
+        "customer_preference": "van for security"
+      },
+      "estimated_delivery_date": "2025-10-09",
+      "created_at": "2025-10-08T10:15:00Z",
+      "updated_at": "2025-10-08T10:15:00Z"
     }
   }
 ]

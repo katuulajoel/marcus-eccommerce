@@ -77,10 +77,13 @@ export const fetchProductById = async (productId: number) => {
 
 // AI Assistant API endpoints
 export const sendAIChatMessage = async (sessionId: string, message: string, context?: any) => {
+    // AI chat can take longer due to agent reasoning and tool calls, so use a longer timeout
     const response = await apiClient.post("/api/ai-assistant/chat/", {
         session_id: sessionId,
         message,
         context
+    }, {
+        timeout: 60000 // 60 seconds timeout for AI chat
     });
     return response.data;
 };

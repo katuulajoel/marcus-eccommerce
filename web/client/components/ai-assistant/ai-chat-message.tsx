@@ -2,6 +2,8 @@ import { type AIMessage } from "@client/context/ai-assistant-context"
 import { cn } from "@shared/lib/utils"
 import { Bot, User } from "lucide-react"
 import AIProductCard from "./ai-product-card"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface AIChatMessageProps {
   message: AIMessage
@@ -40,7 +42,43 @@ export default function AIChatMessage({ message }: AIChatMessageProps) {
                 : "bg-gray-100 text-gray-900"
             )}
           >
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            {isUser ? (
+              // User messages: plain text
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            ) : (
+              // AI messages: markdown support with custom styling
+              <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    // Headings
+                    h1: ({node, ...props}) => <h1 className="text-lg font-bold mt-3 mb-2 first:mt-0" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-base font-bold mt-3 mb-2 first:mt-0" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-sm font-bold mt-2 mb-1 first:mt-0" {...props} />,
+                    // Lists
+                    ul: ({node, ...props}) => <ul className="list-disc list-inside my-2 space-y-1" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal list-inside my-2 space-y-1" {...props} />,
+                    li: ({node, ...props}) => <li className="ml-2" {...props} />,
+                    // Text formatting
+                    strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
+                    em: ({node, ...props}) => <em className="italic" {...props} />,
+                    // Paragraphs
+                    p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                    // Code
+                    code: ({node, inline, ...props}: any) =>
+                      inline ? (
+                        <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono" {...props} />
+                      ) : (
+                        <code className="block bg-gray-200 p-2 rounded text-xs font-mono my-2 overflow-x-auto" {...props} />
+                      ),
+                    // Links
+                    a: ({node, ...props}) => <a className="text-purple-600 hover:text-purple-700 underline" {...props} />,
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+            )}
 
             {/* Timestamp */}
             <p
