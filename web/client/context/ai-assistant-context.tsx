@@ -19,6 +19,23 @@ export type AIMessage = {
     }>
     configurationSuggestion?: { [key: string]: string }
     actionType?: "recommend" | "configure" | "info"
+    // NEW: Action metadata for cart operations
+    action?: {
+      type: 'item_added' | 'cart_updated' | 'checkout_initiated' | 'payment_pending'
+      cart_items?: Array<{
+        item_id: string
+        product_id: number
+        name: string
+        price: number
+        quantity: number
+        line_total: number
+      }>
+      cart_total?: number
+      item_count?: number
+      message?: string
+      order_id?: string
+      payment_link?: string
+    }
   }
 }
 
@@ -42,6 +59,7 @@ interface AIAssistantContextType {
   sendMessage: (content: string) => Promise<void>
   updateSessionContext: (context: Partial<AISessionContext>) => void
   clearMessages: () => void
+  onCartAction?: () => void  // NEW: Callback when AI performs cart action
 }
 
 const AIAssistantContext = createContext<AIAssistantContextType | undefined>(undefined)
@@ -52,6 +70,7 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionContext, setSessionContext] = useState<AISessionContext>({})
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [onCartAction, setOnCartAction] = useState<(() => void) | undefined>()
 
   // Generate or retrieve session ID from localStorage
   useEffect(() => {
@@ -123,6 +142,11 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
       }
 
       setMessages(prev => [...prev, aiMessage])
+
+      // Trigger cart refresh if AI performed cart action
+      if (response.metadata?.action && onCartAction) {
+        onCartAction()
+      }
     } catch (error) {
       console.error("Failed to send message:", error)
 
@@ -164,7 +188,8 @@ export function AIAssistantProvider({ children }: { children: ReactNode }) {
         togglePanel,
         sendMessage,
         updateSessionContext,
-        clearMessages
+        clearMessages,
+        onCartAction
       }}
     >
       {children}

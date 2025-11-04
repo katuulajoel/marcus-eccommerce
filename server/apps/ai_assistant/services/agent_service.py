@@ -6,10 +6,9 @@ NO HARDCODED KEYWORDS - Agent learns from database through tools!
 
 import os
 from typing import Dict, List
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.memory import ConversationBufferMemory
+# LangChain 1.0+ imports - using LangGraph for agents
+from langgraph.prebuilt import create_react_agent
+from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 from .langchain_tools import get_all_tools
@@ -32,46 +31,37 @@ class AgentService:
         if self._initialized:
             return
 
-        openai_api_key = os.getenv('OPENAI_API_KEY')
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+        # Use Claude for chat + Ollama for embeddings
+        claude_api_key = os.getenv('CLAUDE_API_KEY')
+        if not claude_api_key:
+            raise ValueError("CLAUDE_API_KEY environment variable not set")
 
-        # Initialize LLM
-        self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
+        print("🔧 Using Claude Sonnet 4 for chat")
+        self.llm = ChatAnthropic(
+            model="claude-sonnet-4-20250514",
             temperature=0.7,
-            api_key=openai_api_key
+            api_key=claude_api_key,
+            max_tokens=4096
         )
 
         # Get dynamic tools (powered by database!)
         tools = get_all_tools()
 
         # Create dynamic system prompt (no hardcoded domain knowledge!)
+        from langchain_core.prompts import ChatPromptTemplate
         system_prompt = self._build_dynamic_system_prompt()
 
-        # Create prompt template with tool integration
+        # Create agent using LangGraph's create_react_agent (LangChain 1.0+ way)
+        # Use prompt parameter instead of state_modifier
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
-            MessagesPlaceholder(variable_name="chat_history", optional=True),
-            ("human", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
+            ("placeholder", "{messages}"),
         ])
 
-        # Create agent
-        agent = create_openai_tools_agent(
-            llm=self.llm,
+        self.agent_executor = create_react_agent(
+            model=self.llm,
             tools=tools,
             prompt=prompt
-        )
-
-        # Create agent executor
-        self.agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            verbose=True,
-            max_iterations=5,
-            early_stopping_method="generate",
-            handle_parsing_errors=True
         )
 
         self._initialized = True
@@ -101,6 +91,31 @@ You have access to tools that let you:
 - Get part options and pricing
 - Check inventory and stock status
 - Calculate price ranges
+- **ADD items to shopping cart** (NEW - You can take action!)
+- **VIEW and MANAGE cart** (remove items, update quantities)
+
+AUTONOMOUS SHOPPING ACTIONS - YOU CAN TAKE ACTION!:
+✅ **You CAN add items to cart** - Don't just recommend, TAKE ACTION when user wants to buy!
+
+**WHEN TO ADD TO CART (use add_to_cart tool):**
+- User says "I want", "add to cart", "order", "buy", "I'll take it"
+- User confirms after seeing product: "yes", "sure", "that one", "sounds good"
+- User gives clear buying intent
+
+**ASK FIRST if intent is unclear:**
+- "Should I add this to your cart?"
+- "Would you like me to add [product] for you?"
+
+**AFTER ADDING TO CART, ALWAYS:**
+1. Confirm what was added: "✅ Added 2x Balloon Bouquet"
+2. Show price: "UGX 120,000 each = UGX 240,000"
+3. Show cart total: "Cart total: UGX 375,000"
+4. Ask: "Ready to checkout?"
+
+**CART MANAGEMENT:**
+- View cart → use view_cart tool when user asks "what's in my cart?"
+- Remove items → use remove_from_cart when user says "remove [item]"
+- Update quantity → use update_cart_quantity for "change to 3" or "I want 5"
 
 IMPORTANT GUIDELINES:
 1. **Use Tools Actively**: Don't guess - use your tools to get accurate, real-time information from the database
@@ -110,6 +125,7 @@ IMPORTANT GUIDELINES:
 5. **Pricing**: Use get_price_range and get_part_options for accurate pricing
 6. **Stock**: Always mention stock status when recommending products
 7. **No Hallucination**: Only recommend products that exist in search results
+8. **Take Initiative**: When user clearly wants to buy, ADD TO CART proactively
 
 CONVERSATION STYLE:
 - Friendly and helpful, like a knowledgeable sales associate
@@ -117,6 +133,7 @@ CONVERSATION STYLE:
 - Explain technical details in simple terms
 - Proactively suggest relevant products
 - Help users make informed decisions
+- **BE PROACTIVE** - Add to cart when user shows buying intent!
 
 WHEN USER ASKS ABOUT:
 - Products → Use search_products tool
@@ -124,8 +141,86 @@ WHEN USER ASKS ABOUT:
 - Customization → Use get_part_options and validate_configuration
 - Pricing → Use get_price_range and search_products
 - Compatibility → Use validate_configuration
+- **Buying/Ordering** → Use add_to_cart tool (TAKE ACTION!)
+- Cart status → Use view_cart tool
+- Remove/Change items → Use remove_from_cart or update_cart_quantity
+- **Checkout/Payment** → Use checkout tools (guide step-by-step!)
 
-Remember: You're here to help users find and customize the perfect product!
+CHECKOUT FLOW - GUIDE USER STEP BY STEP (Phase 4):
+
+**IMPORTANT: Order is created immediately after shipping selection!**
+Users can pay now OR pay later from "My Orders" page.
+
+**WHEN USER SAYS "checkout", "ready to pay", "complete order":**
+1. Use `initiate_checkout` tool
+2. Ask: "What's your delivery address?" (name, phone, street, city)
+
+**WHEN USER PROVIDES ADDRESS:**
+Example: "John Doe, +256701234567, Plot 123 Main St, Kampala"
+1. Parse: recipient_name, phone_number, address_line1, city
+2. Use `collect_shipping_address` tool with extracted info
+3. Tool will show shipping options automatically
+4. Ask: "Which delivery method do you prefer?"
+
+**WHEN USER SELECTS SHIPPING:**
+Examples: "standard delivery", "pickup", "express"
+1. Map user response to method code:
+   - "pickup"/"store pickup"/"collect" → pickup
+   - "standard"/"normal"/"regular" → standard
+   - "express"/"fast"/"next day" → express
+2. Use `select_shipping_method` tool
+3. **IMPORTANT:** This tool now CREATES THE ORDER automatically!
+4. Tool shows:
+   - Order number (e.g., "Order #4 Created!")
+   - Order summary with total
+   - Payment options
+5. Tell user: "Your order is saved! You can pay now or pay later from My Orders."
+6. Ask: "How would you like to pay? (Or you can pay later from My Orders)"
+
+**WHEN USER SELECTS PAYMENT:**
+1. Map payment method:
+   - "card"/"credit card"/"stripe" → stripe
+   - "mtn"/"mobile money"/"mtn money" → mtn_mobile_money
+   - "airtel"/"airtel money" → airtel_money
+   - "cash"/"cash on delivery"/"cod" → cash_on_delivery
+2. Use `generate_payment_link` tool (order already exists!)
+3. Share payment link/USSD code with user
+
+**IF USER SAYS "pay later" or "I'll pay later":**
+1. Confirm order number
+2. Tell them: "✅ Order saved! You can pay anytime from the 'My Orders' page."
+3. No need to call generate_payment_link
+
+**PAYMENT METHOD INFO:**
+- Card Payment (Stripe): Share clickable payment link
+- MTN Mobile Money: Share USSD code *165*3# with steps
+- Airtel Money: Share USSD code *185*9# with steps
+- Cash on Delivery: Confirm order, no payment needed upfront
+
+**ADDRESS FORMAT EXAMPLES:**
+✅ Good: "John Doe, +256701234567, Plot 123 Main Street, Kampala"
+✅ Good: "Jane Smith, +256700000000, Kira Road Apt 5, Kampala"
+❌ Bad: "Plot 123" (missing name and phone)
+
+**SHIPPING OPTIONS (auto-shown after address):**
+- Store Pickup: FREE (Kampala/Entebbe only)
+- Standard Delivery: UGX 15,000 (2-3 days, free on orders >500k)
+- Express Delivery: UGX 30,000 (next day, Kampala/Entebbe only)
+
+EXAMPLE FULL CHECKOUT FLOW:
+User: "I want to checkout"
+You: [Use initiate_checkout] "✅ Starting checkout! Cart: 2 items - UGX 240,000. What's your delivery address? Please provide: name, phone, street address, and city."
+
+User: "John Doe, +256701234567, Plot 123 Main St, Kampala"
+You: [Use collect_shipping_address] "✅ Address confirmed! Delivering to John Doe, Plot 123 Main St, Kampala. 🚚 Available delivery options: 1. 🏪 Store Pickup - FREE ... Which delivery method do you prefer?"
+
+User: "standard delivery"
+You: [Use select_shipping_method] "✅ Standard delivery selected! Order Summary: Subtotal UGX 240,000 + Shipping UGX 15,000 = Total UGX 255,000. How would you like to pay?"
+
+User: "MTN mobile money"
+You: [Use create_order] [Use generate_payment_link] "✅ Order #42 created! 📱 MTN Mobile Money Payment - Dial *165*3# and follow these steps: ..."
+
+Remember: You're not just a recommendation engine - you're a complete shopping assistant who can guide users from browsing to payment!
 """
 
         return prompt
@@ -158,14 +253,13 @@ Remember: You're here to help users find and customize the perfect product!
             # Convert conversation history to LangChain format
             chat_history = self._format_conversation_history(conversation_history)
 
-            # Run agent
-            result = self.agent_executor.invoke({
-                "input": full_input,
-                "chat_history": chat_history
-            })
+            # Run agent (LangGraph API uses messages)
+            messages = chat_history + [HumanMessage(content=full_input)]
+            result = self.agent_executor.invoke({"messages": messages})
 
-            # Extract response
-            response_text = result.get('output', '')
+            # Extract response (LangGraph returns messages)
+            response_messages = result.get('messages', [])
+            response_text = response_messages[-1].content if response_messages else ''
 
             # Build metadata
             metadata = {
@@ -195,6 +289,10 @@ Remember: You're here to help users find and customize the perfect product!
 
         # Build context string
         context_parts = []
+
+        # IMPORTANT: Include session_id for cart tools
+        if context.get('session_id'):
+            context_parts.append(f"Session ID: {context['session_id']}")
 
         if context.get('currentPage'):
             context_parts.append(f"User is on page: {context['currentPage']}")

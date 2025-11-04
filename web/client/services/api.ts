@@ -97,3 +97,61 @@ export const clearAIChatSession = async (sessionId: string) => {
     const response = await apiClient.delete(`/api/ai-assistant/session/${sessionId}/clear/`);
     return response.data;
 };
+
+// ============================================================================
+// CART API - Redis-based shopping cart
+// ============================================================================
+
+export const addToCart = async (
+    sessionId: string,
+    productId: number,
+    name: string,
+    price: number,
+    quantity: number = 1,
+    configuration?: any,
+    imageUrl?: string,
+    categoryId?: number,
+    configDetails?: any
+) => {
+    const response = await apiClient.post('/api/ai-assistant/cart/add/', {
+        session_id: sessionId,
+        product_id: productId,
+        name,
+        price,
+        quantity,
+        configuration,
+        image_url: imageUrl,
+        category_id: categoryId,
+        config_details: configDetails
+    });
+    return response.data;
+};
+
+export const getCart = async (sessionId: string) => {
+    const response = await apiClient.get(`/api/ai-assistant/cart/${sessionId}/`);
+    return response.data;
+};
+
+export const removeFromCart = async (sessionId: string, itemId: string) => {
+    const response = await apiClient.post('/api/ai-assistant/cart/remove/', {
+        session_id: sessionId,
+        item_id: itemId
+    });
+    return response.data;
+};
+
+export const updateCartQuantity = async (sessionId: string, itemId: string, quantity: number) => {
+    const response = await apiClient.post('/api/ai-assistant/cart/update-quantity/', {
+        session_id: sessionId,
+        item_id: itemId,
+        quantity
+    });
+    return response.data;
+};
+
+export const clearCart = async (sessionId: string) => {
+    const response = await apiClient.post('/api/ai-assistant/cart/clear/', {
+        session_id: sessionId
+    });
+    return response.data;
+};

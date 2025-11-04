@@ -2,6 +2,7 @@ import { type AIMessage } from "@client/context/ai-assistant-context"
 import { cn } from "@shared/lib/utils"
 import { Bot, User } from "lucide-react"
 import AIProductCard from "./ai-product-card"
+import AIActionCard from "./ai-action-card"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -12,6 +13,7 @@ interface AIChatMessageProps {
 export default function AIChatMessage({ message }: AIChatMessageProps) {
   const isUser = message.role === "user"
   const hasProducts = message.metadata?.products && message.metadata.products.length > 0
+  const hasAction = message.metadata?.action
 
   return (
     <div className={cn("flex gap-3 mb-4", isUser && "flex-row-reverse")}>
@@ -93,6 +95,11 @@ export default function AIChatMessage({ message }: AIChatMessageProps) {
               })}
             </p>
           </div>
+
+          {/* Action Card (Cart Updates, Checkout, Payment) */}
+          {!isUser && hasAction && (
+            <AIActionCard action={message.metadata.action} />
+          )}
 
           {/* Product Recommendations */}
           {!isUser && hasProducts && (

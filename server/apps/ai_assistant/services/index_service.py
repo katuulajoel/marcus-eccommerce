@@ -4,16 +4,76 @@ Manages vector index, embeddings, and semantic search
 """
 
 import os
+import requests
 from typing import List, Dict, Optional
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.llms.openai import OpenAI
+from llama_index.core.embeddings import BaseEmbedding
+from llama_index.llms.anthropic import Anthropic
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
 
 from .document_loaders import MasterDocumentLoader
+
+
+class OllamaEmbedding(BaseEmbedding):
+    """
+    Custom embedding class that uses local Ollama API for embeddings.
+    This allows us to use free, local embeddings instead of OpenAI.
+    """
+
+    model_name: str = "nomic-embed-text"
+    _base_url: str = "http://host.docker.internal:11434"
+    _embed_dim: int = 768  # nomic-embed-text dimension
+
+    def __init__(
+        self,
+        model_name: str = "nomic-embed-text",
+        base_url: str = "http://host.docker.internal:11434",
+        **kwargs
+    ):
+        super().__init__(model_name=model_name, **kwargs)
+        self._base_url = base_url
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "OllamaEmbedding"
+
+    def _get_query_embedding(self, query: str) -> List[float]:
+        """Get embedding for a query."""
+        return self._get_embedding(query)
+
+    def _get_text_embedding(self, text: str) -> List[float]:
+        """Get embedding for a text."""
+        return self._get_embedding(text)
+
+    def _get_embedding(self, text: str) -> List[float]:
+        """Call Ollama API to get embedding."""
+        try:
+            response = requests.post(
+                f"{self._base_url}/api/embeddings",
+                json={
+                    "model": self.model_name,
+                    "prompt": text
+                },
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result["embedding"]
+        except Exception as e:
+            print(f"⚠️ Ollama embedding failed: {str(e)[:100]}")
+            # Return zero vector as fallback
+            return [0.0] * self._embed_dim
+
+    async def _aget_query_embedding(self, query: str) -> List[float]:
+        """Async version - falls back to sync for now."""
+        return self._get_query_embedding(query)
+
+    async def _aget_text_embedding(self, text: str) -> List[float]:
+        """Async version - falls back to sync for now."""
+        return self._get_text_embedding(text)
 
 
 class IndexService:
@@ -42,23 +102,25 @@ class IndexService:
         if self._settings_initialized:
             return
 
-        # Set OpenAI API key from environment
-        openai_api_key = os.getenv('OPENAI_API_KEY')
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
-
-        # Configure embedding model
-        Settings.embed_model = OpenAIEmbedding(
-            model="text-embedding-3-small",
-            api_key=openai_api_key
+        # Use Ollama for embeddings (free, local, working!)
+        print("🔧 Using Ollama for embeddings (host.docker.internal:11434)")
+        Settings.embed_model = OllamaEmbedding(
+            model_name="nomic-embed-text",
+            base_url="http://host.docker.internal:11434"
         )
 
-        # Configure LLM (for query synthesis if needed)
-        Settings.llm = OpenAI(
-            model="gpt-4o-mini",
-            api_key=openai_api_key,
-            temperature=0.7
-        )
+        # Use Claude for LLM (for RAG query engine)
+        claude_api_key = os.getenv('CLAUDE_API_KEY')
+        if claude_api_key:
+            print("🔧 Using Claude Sonnet 4 for LLM (RAG query engine)")
+            Settings.llm = Anthropic(
+                model="claude-sonnet-4-20250514",
+                api_key=claude_api_key,
+                temperature=0.7,
+                max_tokens=4096
+            )
+        else:
+            print("⚠️ CLAUDE_API_KEY not set - LLM features disabled")
 
         # Set chunk size for text splitting
         Settings.chunk_size = 512
@@ -343,7 +405,8 @@ class IndexService:
             "status": "Index ready",
             "index_type": "VectorStoreIndex",
             "vector_store": "ChromaDB",
-            "embedding_model": "text-embedding-3-small"
+            "embedding_model": "nomic-embed-text (Ollama)",
+            "embedding_cost": "FREE (local)"
         }
 
 

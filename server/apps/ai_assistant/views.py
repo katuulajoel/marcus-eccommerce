@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from decimal import Decimal
 from .models import AIChatSession, AIChatMessage, AIRecommendation
 from .serializers import (
     AIChatSessionSerializer,
@@ -13,6 +14,10 @@ from .serializers import (
 from .services.agent_service import get_agent_service
 from .services.context_builder import context_builder
 from .services.rag_service_new import get_rag_service
+from .services.cart_service import get_cart_service
+from .services.checkout_service import get_checkout_service
+from .services.shipping_service import get_shipping_service
+from .services.payment_service import get_payment_service
 
 
 @api_view(['POST'])
@@ -67,8 +72,14 @@ def chat(request):
     enriched_context = context_builder.build_enriched_context(context)
 
     # Retrieve relevant information using RAG (LlamaIndex-based)
-    rag_service = get_rag_service()
-    rag_context = rag_service.retrieve_context_for_query(user_message, context)
+    # Gracefully handle OpenAI quota errors - RAG is optional for checkout flow
+    rag_context = {}
+    try:
+        rag_service = get_rag_service()
+        rag_context = rag_service.retrieve_context_for_query(user_message, context)
+    except Exception as e:
+        # Log but don't fail - agent can work without RAG for checkout
+        print(f"⚠️ RAG unavailable (likely OpenAI quota): {str(e)[:100]}")
 
     # Get conversation history for context (last 10 messages)
     all_messages = session.messages.order_by('created_at').values('role', 'content')
@@ -83,7 +94,11 @@ def chat(request):
     agent_service = get_agent_service()
     ai_response = agent_service.generate_response(
         user_message=user_message,
-        context={**enriched_context, **rag_context},
+        context={
+            **enriched_context,
+            **rag_context,
+            'session_id': session_id  # Add session_id for cart operations
+        },
         conversation_history=conversation_history
     )
 
@@ -95,6 +110,23 @@ def chat(request):
     if rag_context.get('products'):
         enhanced_metadata['products'] = rag_context['products'][:3]  # Top 3 products
         enhanced_metadata['intent'] = intent
+
+    # Check if AI used cart tools and add action metadata
+    tools_used = enhanced_metadata.get('tools_used', [])
+
+    if 'add_to_cart' in tools_used or 'view_cart' in tools_used:
+        # Fetch current cart state
+        cart_service = get_cart_service()
+        cart = cart_service.get_cart(session_id)
+
+        action_type = 'item_added' if 'add_to_cart' in tools_used else 'cart_updated'
+
+        enhanced_metadata['action'] = {
+            'type': action_type,
+            'cart_items': cart.get('items', []),
+            'cart_total': cart.get('subtotal', 0),
+            'item_count': cart.get('item_count', 0)
+        }
 
     # Save AI response
     ai_msg = AIChatMessage.objects.create(
@@ -209,3 +241,196 @@ def validate_configuration(request):
     )
 
     return Response(validation_result, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# CART MANAGEMENT ENDPOINTS - Redis-based Shopping Cart
+# ============================================================================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def add_to_cart(request):
+    """
+    Add item to shopping cart.
+
+    Request body:
+    {
+        "session_id": "session-xxx" or "wa_256701618576",
+        "product_id": 123,
+        "name": "Product Name",
+        "price": 120000,
+        "quantity": 2,
+        "configuration": {...},  // optional
+        "image_url": "https://...",  // optional
+        "category_id": 1  // optional
+    }
+
+    Returns: Updated cart
+    """
+    session_id = request.data.get('session_id')
+    product_id = request.data.get('product_id')
+    name = request.data.get('name')
+    price = request.data.get('price')
+    quantity = request.data.get('quantity', 1)
+    configuration = request.data.get('configuration')
+    image_url = request.data.get('image_url')
+    category_id = request.data.get('category_id')
+    config_details = request.data.get('config_details')
+
+    # Validation
+    if not all([session_id, product_id, name, price]):
+        return Response({
+            'error': 'session_id, product_id, name, and price are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        cart_service = get_cart_service()
+        cart_service.add_item(
+            session_id=session_id,
+            product_id=product_id,
+            name=name,
+            price=Decimal(str(price)),
+            quantity=quantity,
+            configuration=configuration,
+            image_url=image_url,
+            category_id=category_id,
+            config_details=config_details
+        )
+
+        # Return updated cart
+        cart = cart_service.get_cart(session_id)
+        return Response(cart, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_cart(request, session_id):
+    """
+    Get cart contents for a session.
+
+    GET /api/ai-assistant/cart/{session_id}/
+
+    Returns: Cart with items, subtotal, item_count
+    """
+    try:
+        cart_service = get_cart_service()
+        cart = cart_service.get_cart(session_id)
+        return Response(cart, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def remove_from_cart(request):
+    """
+    Remove item from cart.
+
+    Request body:
+    {
+        "session_id": "session-xxx",
+        "item_id": "123_hash"
+    }
+
+    Returns: Updated cart
+    """
+    session_id = request.data.get('session_id')
+    item_id = request.data.get('item_id')
+
+    if not all([session_id, item_id]):
+        return Response({
+            'error': 'session_id and item_id are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        cart_service = get_cart_service()
+        cart_service.remove_item(session_id, item_id)
+
+        # Return updated cart
+        cart = cart_service.get_cart(session_id)
+        return Response(cart, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def update_cart_quantity(request):
+    """
+    Update item quantity in cart.
+
+    Request body:
+    {
+        "session_id": "session-xxx",
+        "item_id": "123_hash",
+        "quantity": 3
+    }
+
+    Returns: Updated cart
+    """
+    session_id = request.data.get('session_id')
+    item_id = request.data.get('item_id')
+    quantity = request.data.get('quantity')
+
+    if not all([session_id, item_id]) or quantity is None:
+        return Response({
+            'error': 'session_id, item_id, and quantity are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        cart_service = get_cart_service()
+        cart_service.update_quantity(session_id, item_id, int(quantity))
+
+        # Return updated cart
+        cart = cart_service.get_cart(session_id)
+        return Response(cart, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def clear_cart(request):
+    """
+    Clear all items from cart.
+
+    Request body:
+    {
+        "session_id": "session-xxx"
+    }
+
+    Returns: Success message
+    """
+    session_id = request.data.get('session_id')
+
+    if not session_id:
+        return Response({
+            'error': 'session_id is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        cart_service = get_cart_service()
+        cart_service.clear_cart(session_id)
+
+        return Response({
+            'message': 'Cart cleared successfully'
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

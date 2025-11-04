@@ -18,11 +18,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <CurrencyProvider>
           <AuthProvider>
-            <CartProvider>
-              <AIAssistantProvider>
+            <AIAssistantProvider>
+              <CartProvider>
                 <App />
-              </AIAssistantProvider>
-            </CartProvider>
+              </CartProvider>
+            </AIAssistantProvider>
           </AuthProvider>
         </CurrencyProvider>
       </BrowserRouter>
