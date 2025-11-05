@@ -3,6 +3,7 @@ djangorestframework
 djangorestframework-simplejwt
 psycopg2-binary
 redis
+django-redis
 celery
 django-celery-results
 django-cors-headers
@@ -12,3 +13,19 @@ django-storages
 boto3
 stripe
 requests
+openai
+
+# RAG/LLM Framework
+llama-index
+llama-index-core
+llama-index-embeddings-openai
+llama-index-llms-openai
+llama-index-llms-anthropic
+llama-index-vector-stores-chroma
+langchain
+langchain-openai
+langchain-anthropic
+langchain-community
+langgraph
+chromadb
+tiktoken

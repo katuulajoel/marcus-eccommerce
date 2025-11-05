@@ -10,8 +10,9 @@ services:
              python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py setup_views &&
-             python scripts/create_superuser.py &&
              python manage.py seed_db &&
+             python scripts/create_superuser.py &&
+             python manage.py seed_payment_configs &&
              python manage.py refresh_views &&
              python manage.py build_ai_index &&
              python manage.py runserver 0.0.0.0:8000"
@@ -34,10 +35,25 @@ services:
       - EMAIL_PORT=1025
       - FRONTEND_URL=http://localhost:3000
       # AI Assistant Configuration (Optional)
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
       - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
       - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+      # Payment Gateway Configuration
+      - PAYMENT_ENVIRONMENT=${PAYMENT_ENVIRONMENT:-sandbox}
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-}
+      - STRIPE_API_SECRET=${STRIPE_API_SECRET:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - MTN_API_KEY=${MTN_API_KEY:-}
+      - MTN_API_SECRET=${MTN_API_SECRET:-}
+      - MTN_WEBHOOK_SECRET=${MTN_WEBHOOK_SECRET:-}
+      - MTN_CALLBACK_URL=${MTN_CALLBACK_URL:-}
+      - MTN_SUBSCRIPTION_KEY=${MTN_SUBSCRIPTION_KEY:-}
+      - AIRTEL_API_KEY=${AIRTEL_API_KEY:-}
+      - AIRTEL_API_SECRET=${AIRTEL_API_SECRET:-}
+      - AIRTEL_WEBHOOK_SECRET=${AIRTEL_WEBHOOK_SECRET:-}
+      - AIRTEL_CALLBACK_URL=${AIRTEL_CALLBACK_URL:-}
     depends_on:
       db:
         condition: service_healthy
@@ -93,6 +109,7 @@ services:
       - POSTGRES_PASSWORD=ecommerce_password
       - POSTGRES_DB=ecommerce_db
       - REDIS_URL=redis://redis:6379/0
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
       - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}

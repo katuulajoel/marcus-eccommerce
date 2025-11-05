@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@shared/components/ui/toaster";
+import { AIAssistant } from "@client/components/ai-assistant";
 import Home from "@client/pages/Home";
 import CartPage from "@client/pages/CartPage";
 import CustomizePage from "@client/pages/CustomizePage";
@@ -32,6 +33,7 @@ function App() {
         <Route path="/orders/:id" element={<OrderDetailPage />} />
       </Routes>
       <Toaster />
+      <AIAssistant />
     </>
   );
 }

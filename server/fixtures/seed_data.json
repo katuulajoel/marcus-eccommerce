@@ -56,405 +56,519 @@
     }
   },
   {
+    "model": "currency.exchangerate",
+    "pk": 1,
+    "fields": {
+      "currency_code": "USD",
+      "currency_name": "US Dollar",
+      "rate_to_ugx": "3750.0000",
+      "symbol": "$",
+      "decimal_places": 2,
+      "is_active": true,
+      "rate_source": "manual",
+      "last_updated": "2025-10-11T09:00:00Z",
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "currency.exchangerate",
+    "pk": 2,
+    "fields": {
+      "currency_code": "KES",
+      "currency_name": "Kenyan Shilling",
+      "rate_to_ugx": "29.0000",
+      "symbol": "KSh",
+      "decimal_places": 2,
+      "is_active": true,
+      "rate_source": "manual",
+      "last_updated": "2025-10-11T09:00:00Z",
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "currency.exchangerate",
+    "pk": 3,
+    "fields": {
+      "currency_code": "TZS",
+      "currency_name": "Tanzanian Shilling",
+      "rate_to_ugx": "1.5800",
+      "symbol": "TSh",
+      "decimal_places": 2,
+      "is_active": true,
+      "rate_source": "manual",
+      "last_updated": "2025-10-11T09:00:00Z",
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "currency.exchangerate",
+    "pk": 4,
+    "fields": {
+      "currency_code": "RWF",
+      "currency_name": "Rwandan Franc",
+      "rate_to_ugx": "2.9500",
+      "symbol": "FRw",
+      "decimal_places": 0,
+      "is_active": true,
+      "rate_source": "manual",
+      "last_updated": "2025-10-11T09:00:00Z",
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "currency.exchangerate",
+    "pk": 5,
+    "fields": {
+      "currency_code": "EUR",
+      "currency_name": "Euro",
+      "rate_to_ugx": "4100.0000",
+      "symbol": "€",
+      "decimal_places": 2,
+      "is_active": true,
+      "rate_source": "manual",
+      "last_updated": "2025-10-11T09:00:00Z",
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "currency.exchangerate",
+    "pk": 6,
+    "fields": {
+      "currency_code": "GBP",
+      "currency_name": "British Pound",
+      "rate_to_ugx": "4850.0000",
+      "symbol": "£",
+      "decimal_places": 2,
+      "is_active": true,
+      "rate_source": "manual",
+      "last_updated": "2025-10-11T09:00:00Z",
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
     "model": "products.category",
     "pk": 1,
     "fields": {
-      "name": "Bicycles",
-      "description": "A wide range of customizable bicycles designed for various terrains and purposes. Includes options for mountain biking, city commuting, and road cycling.",
+      "name": "Gift Hampers",
+      "description": "Curated gift baskets featuring premium treats, chocolates, and beverages.",
       "image": null,
-      "created_at": "2025-10-02T22:00:00Z"
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "4.50",
+      "unit_length_cm": "50.00",
+      "unit_width_cm": "40.00",
+      "unit_height_cm": "30.00",
+      "stackable": true,
+      "max_boda_quantity": 2,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "Contains food items and beverages. Keep upright during transport. Handle with care to prevent crushing."
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 2,
+    "fields": {
+      "name": "Explosion Boxes",
+      "description": "Customizable tiered boxes that 'explode' with messages and treats upon opening.",
+      "image": null,
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "2.50",
+      "unit_length_cm": "35.00",
+      "unit_width_cm": "35.00",
+      "unit_height_cm": "25.00",
+      "stackable": true,
+      "max_boda_quantity": 3,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "Fragile contents - handle with care. Contains chocolates and decorative elements that can shift during transport."
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 3,
+    "fields": {
+      "name": "Balloon Bouquets",
+      "description": "Large balloon arrangements often including chocolates or gifts in the base.",
+      "image": null,
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "1.80",
+      "unit_length_cm": "50.00",
+      "unit_width_cm": "50.00",
+      "unit_height_cm": "120.00",
+      "stackable": false,
+      "max_boda_quantity": 1,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "Very fragile - balloons can pop. Must be kept upright. Cannot be compressed. Best delivered same-day to avoid deflation."
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 4,
+    "fields": {
+      "name": "Personalized Sets",
+      "description": "High-end gift sets featuring custom-engraved items.",
+      "image": null,
+      "created_at": "2025-10-11T09:00:00Z",
+      "unit_weight_kg": "3.20",
+      "unit_length_cm": "45.00",
+      "unit_width_cm": "35.00",
+      "unit_height_cm": "15.00",
+      "stackable": true,
+      "max_boda_quantity": 2,
+      "requires_helper": false,
+      "requires_extra_care": true,
+      "shipping_notes": "High-value items with personalized engraving - requires extra care. Premium packaging included."
     }
   },
   {
     "model": "products.part",
-    "pk": 1,
+    "pk": 6,
     "fields": {
-      "name": "Frame",
-      "category": 1,
+      "name": "Box Design",
+      "category": 2,
       "step": 1
     }
   },
   {
     "model": "products.part",
-    "pk": 2,
+    "pk": 7,
     "fields": {
-      "name": "Finish",
-      "category": 1,
+      "name": "Box Filler",
+      "category": 2,
       "step": 2
     }
   },
   {
     "model": "products.part",
-    "pk": 3,
+    "pk": 8,
     "fields": {
-      "name": "Wheels",
-      "category": 1,
+      "name": "Money Volume",
+      "category": 2,
       "step": 3
     }
   },
   {
     "model": "products.part",
-    "pk": 4,
+    "pk": 9,
     "fields": {
-      "name": "Rims",
-      "category": 1,
-      "step": 4
+      "name": "Balloon Style",
+      "category": 3,
+      "step": 1
     }
   },
   {
     "model": "products.part",
-    "pk": 5,
-    "fields": {
-      "name": "Chain",
-      "category": 1,
-      "step": 5
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 1,
-    "fields": {
-      "part": 1,
-      "name": "Full-Suspension Frame",
-      "default_price": "130.00",
-      "image": null,
-      "description": "A durable and lightweight frame designed for rugged mountain trails. Provides excellent shock absorption and stability.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 2,
-    "fields": {
-      "part": 1,
-      "name": "Diamond Frame",
-      "default_price": "100.00",
-      "image": null,
-      "description": "A classic frame design known for its strength and simplicity. Ideal for city and road biking.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 3,
-    "fields": {
-      "part": 2,
-      "name": "Matte Finish",
-      "default_price": "50.00",
-      "image": null,
-      "description": "A sleek and modern matte finish that resists scratches and fingerprints. Perfect for a stylish look.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 4,
-    "fields": {
-      "part": 2,
-      "name": "Shiny Finish",
-      "default_price": "30.00",
-      "image": null,
-      "description": "A glossy finish that enhances the bike's appearance with a reflective shine. Easy to clean and maintain.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 5,
-    "fields": {
-      "part": 3,
-      "name": "Mountain Wheels",
-      "default_price": "90.00",
-      "image": null,
-      "description": "Sturdy wheels designed for off-road biking. Provides excellent grip and durability on uneven terrain.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 6,
-    "fields": {
-      "part": 3,
-      "name": "Road Wheels",
-      "default_price": "80.00",
-      "image": null,
-      "description": "Lightweight wheels optimized for speed and efficiency on paved roads. Ideal for long-distance rides.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 7,
-    "fields": {
-      "part": 4,
-      "name": "Red Rims",
-      "default_price": "20.00",
-      "image": null,
-      "description": "Vibrant red rims that add a bold and sporty look to your bike. Made from high-quality materials for durability.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 8,
-    "fields": {
-      "part": 4,
-      "name": "White Rims",
-      "default_price": "20.00",
-      "image": null,
-      "description": "Elegant white rims that complement any bike design. Provides a clean and modern aesthetic.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
-    "pk": 9,
-    "fields": {
-      "part": 5,
-      "name": "8-Speed Chain",
-      "default_price": "45.00",
-      "image": null,
-      "description": "A high-performance chain designed for smooth and reliable shifting across 8-speed gears.",
-      "minimum_payment_percentage": "0.00"
-    }
-  },
-  {
-    "model": "products.partoption",
     "pk": 10,
     "fields": {
-      "part": 5,
-      "name": "Single-Speed Chain",
-      "default_price": "40.00",
+      "name": "Base Filler",
+      "category": 3,
+      "step": 2
+    }
+  },
+  {
+    "model": "products.part",
+    "pk": 11,
+    "fields": {
+      "name": "Personalized Item",
+      "category": 4,
+      "step": 1
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 11,
+    "fields": {
+      "part": 6,
+      "name": "Blue 'Happy Place' Box",
+      "default_price": "50000.00",
       "image": null,
-      "description": "A durable chain built for single-speed bikes. Offers low maintenance and long-lasting performance.",
-      "minimum_payment_percentage": "0.00"
+      "description": "A blue themed, multi-layered explosion box. Includes 4 side pockets for notes/photos.",
+      "minimum_payment_percentage": "0.30"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 12,
+    "fields": {
+      "part": 7,
+      "name": "KitKat & Chocolates",
+      "default_price": "35000.00",
+      "image": null,
+      "description": "Assorted KitKat and chocolate bars.",
+      "minimum_payment_percentage": "0.20"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 13,
+    "fields": {
+      "part": 7,
+      "name": "Mixed Sweets",
+      "default_price": "25000.00",
+      "image": null,
+      "description": "Assortment of candies and small treats.",
+      "minimum_payment_percentage": "0.20"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 14,
+    "fields": {
+      "part": 8,
+      "name": "100k UGX Display (5k notes)",
+      "default_price": "100000.00",
+      "image": null,
+      "description": "The cost for the paper folding and presentation of the money (actual money not included in price).",
+      "minimum_payment_percentage": "0.50"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 15,
+    "fields": {
+      "part": 9,
+      "name": "Large Bubble Balloon",
+      "default_price": "45000.00",
+      "image": null,
+      "description": "Clear balloon customizable with 'Happy Birthday'.",
+      "minimum_payment_percentage": "0.30"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 16,
+    "fields": {
+      "part": 9,
+      "name": "Heart Foil Bouquet",
+      "default_price": "60000.00",
+      "image": null,
+      "description": "Red heart-shaped foil balloons bouquet.",
+      "minimum_payment_percentage": "0.30"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 17,
+    "fields": {
+      "part": 10,
+      "name": "Snickers & Mars Mix",
+      "default_price": "40000.00",
+      "image": null,
+      "description": "Premium chocolate mix for the basket base.",
+      "minimum_payment_percentage": "0.25"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 18,
+    "fields": {
+      "part": 11,
+      "name": "Custom Engraved Water Bottle",
+      "default_price": "85000.00",
+      "image": null,
+      "description": "Matte black thermal bottle with name/title engraving.",
+      "minimum_payment_percentage": "0.40"
+    }
+  },
+  {
+    "model": "products.partoption",
+    "pk": 19,
+    "fields": {
+      "part": 11,
+      "name": "Premium Leather Wallet",
+      "default_price": "95000.00",
+      "image": null,
+      "description": "Black leather wallet, includes debossed initials.",
+      "minimum_payment_percentage": "0.40"
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproduct",
-    "pk": 1,
+    "pk": 3,
     "fields": {
-      "category": 1,
-      "name": "Mountain Bike",
-      "base_price": "450.00",
+      "category": 2,
+      "name": "The Boyfriend Kit",
+      "base_price": "135000.00",
       "image": null,
-      "description": "A rugged mountain bike equipped with top-quality components for off-road adventures. Designed for durability and performance on challenging trails."
+      "description": "A complete, blue-themed explosion box for a partner. Includes personalized notes pockets and sweet treats."
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproduct",
-    "pk": 2,
-    "fields": {
-      "category": 1,
-      "name": "City Bike",
-      "base_price": "300.00",
-      "image": null,
-      "description": "A versatile city bike perfect for commuting and leisure rides. Combines comfort, style, and practicality for urban environments."
-    }
-  },
-  {
-    "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 1,
-    "fields": {
-      "preconfigured_product": 1,
-      "part_option": 1
-    }
-  },
-  {
-    "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 2,
-    "fields": {
-      "preconfigured_product": 1,
-      "part_option": 3
-    }
-  },
-  {
-    "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 3,
-    "fields": {
-      "preconfigured_product": 1,
-      "part_option": 5
-    }
-  },
-  {
-    "model": "preconfigured_products.preconfiguredproductparts",
     "pk": 4,
     "fields": {
-      "preconfigured_product": 1,
-      "part_option": 7
+      "category": 3,
+      "name": "My Man Hot Air Balloon",
+      "base_price": "120000.00",
+      "image": null,
+      "description": "A large hot air balloon-style arrangement with a chocolate base. Perfect for romantic surprises."
     }
   },
   {
-    "model": "preconfigured_products.preconfiguredproductparts",
+    "model": "preconfigured_products.preconfiguredproduct",
     "pk": 5,
     "fields": {
-      "preconfigured_product": 1,
-      "part_option": 9
+      "category": 4,
+      "name": "The Executive Set",
+      "base_price": "180000.00",
+      "image": null,
+      "description": "A high-end set including a personalized bottle, wallet, and belt. Perfect for corporate gifts or special occasions."
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 6,
+    "pk": 11,
     "fields": {
-      "preconfigured_product": 2,
-      "part_option": 2
+      "preconfigured_product": 3,
+      "part_option": 11
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 7,
+    "pk": 12,
     "fields": {
-      "preconfigured_product": 2,
-      "part_option": 4
+      "preconfigured_product": 3,
+      "part_option": 12
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 8,
+    "pk": 13,
     "fields": {
-      "preconfigured_product": 2,
-      "part_option": 6
+      "preconfigured_product": 3,
+      "part_option": 14
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 9,
+    "pk": 14,
     "fields": {
-      "preconfigured_product": 2,
-      "part_option": 8
+      "preconfigured_product": 4,
+      "part_option": 15
     }
   },
   {
     "model": "preconfigured_products.preconfiguredproductparts",
-    "pk": 10,
+    "pk": 15,
     "fields": {
-      "preconfigured_product": 2,
-      "part_option": 10
+      "preconfigured_product": 4,
+      "part_option": 17
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 16,
+    "fields": {
+      "preconfigured_product": 5,
+      "part_option": 18
+    }
+  },
+  {
+    "model": "preconfigured_products.preconfiguredproductparts",
+    "pk": 17,
+    "fields": {
+      "preconfigured_product": 5,
+      "part_option": 19
     }
   },
   {
     "model": "configurator.priceadjustmentrule",
-    "pk": 1,
-    "fields": {
-      "affected_option": 3,
-      "condition_option": 1,
-      "adjusted_price": "50.00"
-    }
-  },
-  {
-    "model": "configurator.priceadjustmentrule",
-    "pk": 2,
-    "fields": {
-      "affected_option": 3,
-      "condition_option": 2,
-      "adjusted_price": "35.00"
-    }
-  },
-  {
-    "model": "configurator.priceadjustmentrule",
-    "pk": 3,
-    "fields": {
-      "affected_option": 9,
-      "condition_option": 6,
-      "adjusted_price": "10.00"
-    }
-  },
-  {
-    "model": "configurator.incompatibilityrule",
-    "pk": 1,
-    "fields": {
-      "part_option": 5,
-      "incompatible_with_option": 2,
-      "message": "Mountain wheels can only be used with a Full-Suspension Frame."
-    }
-  },
-  {
-    "model": "configurator.incompatibilityrule",
-    "pk": 2,
-    "fields": {
-      "part_option": 8,
-      "incompatible_with_option": 5,
-      "message": "White rims are incompatible with Mountain Wheels."
-    }
-  },
-  {
-    "model": "products.stock",
-    "pk": 1,
-    "fields": {
-      "part_option": 1,
-      "quantity": 15
-    }
-  },
-  {
-    "model": "products.stock",
-    "pk": 2,
-    "fields": {
-      "part_option": 2,
-      "quantity": 20
-    }
-  },
-  {
-    "model": "products.stock",
-    "pk": 3,
-    "fields": {
-      "part_option": 3,
-      "quantity": 25
-    }
-  },
-  {
-    "model": "products.stock",
     "pk": 4,
     "fields": {
-      "part_option": 4,
+      "affected_option": 18,
+      "condition_option": 19,
+      "adjusted_price": "75000.00"
+    }
+  },
+  {
+    "model": "configurator.priceadjustmentrule",
+    "pk": 5,
+    "fields": {
+      "affected_option": 19,
+      "condition_option": 18,
+      "adjusted_price": "85000.00"
+    }
+  },
+  {
+    "model": "configurator.incompatibilityrule",
+    "pk": 3,
+    "fields": {
+      "part_option": 16,
+      "incompatible_with_option": 17,
+      "message": "The heart foil bouquet is too dense to sit on the chocolate base. Please select a different filler."
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 11,
+    "fields": {
+      "part_option": 11,
       "quantity": 30
     }
   },
   {
     "model": "products.stock",
-    "pk": 5,
+    "pk": 12,
     "fields": {
-      "part_option": 5,
-      "quantity": 10
+      "part_option": 12,
+      "quantity": 50
     }
   },
   {
     "model": "products.stock",
-    "pk": 6,
+    "pk": 13,
     "fields": {
-      "part_option": 6,
+      "part_option": 13,
+      "quantity": 60
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 14,
+    "fields": {
+      "part_option": 14,
+      "quantity": 25
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 15,
+    "fields": {
+      "part_option": 15,
+      "quantity": 40
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 16,
+    "fields": {
+      "part_option": 16,
+      "quantity": 35
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 17,
+    "fields": {
+      "part_option": 17,
+      "quantity": 55
+    }
+  },
+  {
+    "model": "products.stock",
+    "pk": 18,
+    "fields": {
+      "part_option": 18,
       "quantity": 20
     }
   },
   {
     "model": "products.stock",
-    "pk": 7,
+    "pk": 19,
     "fields": {
-      "part_option": 7,
-      "quantity": 18
-    }
-  },
-  {
-    "model": "products.stock",
-    "pk": 8,
-    "fields": {
-      "part_option": 8,
-      "quantity": 12
-    }
-  },
-  {
-    "model": "products.stock",
-    "pk": 9,
-    "fields": {
-      "part_option": 9,
+      "part_option": 19,
       "quantity": 15
-    }
-  },
-  {
-    "model": "products.stock",
-    "pk": 10,
-    "fields": {
-      "part_option": 10,
-      "quantity": 20
     }
   },
   {
@@ -491,13 +605,13 @@
     "fields": {
       "customer": 1,
       "shipping_address": 1,
-      "total_price": "335.00",
-      "minimum_required_amount": "0.00",
-      "amount_paid": "335.00",
+      "total_price": "185000.00",
+      "minimum_required_amount": "51500.00",
+      "amount_paid": "185000.00",
       "payment_status": "completed",
       "fulfillment_status": "delivered",
       "is_fulfillable": true,
-      "created_at": "2025-10-02T22:00:00Z"
+      "created_at": "2025-10-05T14:30:00Z"
     }
   },
   {
@@ -506,13 +620,13 @@
     "fields": {
       "customer": 2,
       "shipping_address": 2,
-      "total_price": "490.00",
-      "minimum_required_amount": "0.00",
-      "amount_paid": "245.00",
+      "total_price": "160000.00",
+      "minimum_required_amount": "61000.00",
+      "amount_paid": "80000.00",
       "payment_status": "partial",
-      "fulfillment_status": "in_production",
+      "fulfillment_status": "pending",
       "is_fulfillable": true,
-      "created_at": "2025-10-02T22:00:00Z"
+      "created_at": "2025-10-08T10:15:00Z"
     }
   },
   {
@@ -520,9 +634,9 @@
     "pk": 1,
     "fields": {
       "order": 1,
-      "preconfigured_product": 2,
-      "custom_name": "City Cruiser",
-      "base_product_name": "City Bike"
+      "preconfigured_product": 3,
+      "custom_name": "Love Notes Box",
+      "base_product_name": "The Boyfriend Kit"
     }
   },
   {
@@ -530,9 +644,9 @@
     "pk": 2,
     "fields": {
       "order": 2,
-      "preconfigured_product": 1,
-      "custom_name": "Trail Blazer",
-      "base_product_name": "Mountain Bike"
+      "preconfigured_product": 5,
+      "custom_name": "Boss Gift",
+      "base_product_name": "The Executive Set"
     }
   },
   {
@@ -540,10 +654,10 @@
     "pk": 1,
     "fields": {
       "order_product": 1,
-      "part_name": "Frame",
-      "option_name": "Diamond Frame",
-      "final_price": "100.00",
-      "minimum_payment_required": "0.00"
+      "part_name": "Box Design",
+      "option_name": "Blue 'Happy Place' Box",
+      "final_price": "50000.00",
+      "minimum_payment_required": "15000.00"
     }
   },
   {
@@ -551,10 +665,10 @@
     "pk": 2,
     "fields": {
       "order_product": 1,
-      "part_name": "Finish",
-      "option_name": "Shiny Finish",
-      "final_price": "30.00",
-      "minimum_payment_required": "0.00"
+      "part_name": "Box Filler",
+      "option_name": "KitKat & Chocolates",
+      "final_price": "35000.00",
+      "minimum_payment_required": "7000.00"
     }
   },
   {
@@ -562,87 +676,32 @@
     "pk": 3,
     "fields": {
       "order_product": 1,
-      "part_name": "Wheels",
-      "option_name": "Road Wheels",
-      "final_price": "80.00",
-      "minimum_payment_required": "0.00"
+      "part_name": "Money Volume",
+      "option_name": "100k UGX Display (5k notes)",
+      "final_price": "100000.00",
+      "minimum_payment_required": "50000.00"
     }
   },
   {
     "model": "orders.orderitem",
     "pk": 4,
     "fields": {
-      "order_product": 1,
-      "part_name": "Rims",
-      "option_name": "White Rims",
-      "final_price": "20.00",
-      "minimum_payment_required": "0.00"
+      "order_product": 2,
+      "part_name": "Personalized Item",
+      "option_name": "Custom Engraved Water Bottle",
+      "final_price": "75000.00",
+      "minimum_payment_required": "30000.00"
     }
   },
   {
     "model": "orders.orderitem",
     "pk": 5,
     "fields": {
-      "order_product": 1,
-      "part_name": "Chain",
-      "option_name": "Single-Speed Chain",
-      "final_price": "40.00",
-      "minimum_payment_required": "0.00"
-    }
-  },
-  {
-    "model": "orders.orderitem",
-    "pk": 6,
-    "fields": {
       "order_product": 2,
-      "part_name": "Frame",
-      "option_name": "Full-Suspension Frame",
-      "final_price": "130.00",
-      "minimum_payment_required": "0.00"
-    }
-  },
-  {
-    "model": "orders.orderitem",
-    "pk": 7,
-    "fields": {
-      "order_product": 2,
-      "part_name": "Finish",
-      "option_name": "Matte Finish",
-      "final_price": "50.00",
-      "minimum_payment_required": "0.00"
-    }
-  },
-  {
-    "model": "orders.orderitem",
-    "pk": 8,
-    "fields": {
-      "order_product": 2,
-      "part_name": "Wheels",
-      "option_name": "Mountain Wheels",
-      "final_price": "90.00",
-      "minimum_payment_required": "0.00"
-    }
-  },
-  {
-    "model": "orders.orderitem",
-    "pk": 9,
-    "fields": {
-      "order_product": 2,
-      "part_name": "Rims",
-      "option_name": "Red Rims",
-      "final_price": "20.00",
-      "minimum_payment_required": "0.00"
-    }
-  },
-  {
-    "model": "orders.orderitem",
-    "pk": 10,
-    "fields": {
-      "order_product": 2,
-      "part_name": "Chain",
-      "option_name": "8-Speed Chain",
-      "final_price": "45.00",
-      "minimum_payment_required": "0.00"
+      "part_name": "Personalized Item",
+      "option_name": "Premium Leather Wallet",
+      "final_price": "85000.00",
+      "minimum_payment_required": "34000.00"
     }
   },
   {
@@ -650,11 +709,11 @@
     "pk": 1,
     "fields": {
       "order": 1,
-      "amount": "335.00",
+      "amount": "185000.00",
       "payment_method": "Mobile Money",
       "paid_by": "customer",
-      "transaction_reference": "MM-2024-001",
-      "payment_date": "2025-10-02T22:00:00Z"
+      "transaction_reference": "MM-2025-001",
+      "payment_date": "2025-10-05T14:30:00Z"
     }
   },
   {
@@ -662,11 +721,503 @@
     "pk": 2,
     "fields": {
       "order": 2,
-      "amount": "245.00",
+      "amount": "80000.00",
       "payment_method": "Bank Transfer",
       "paid_by": "customer",
-      "transaction_reference": "BT-2024-001",
-      "payment_date": "2025-10-02T22:00:00Z"
+      "transaction_reference": "BT-2025-001",
+      "payment_date": "2025-10-08T10:15:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingconstants",
+    "pk": 1,
+    "fields": {
+      "boda_max_weight_kg": "15.00",
+      "boda_max_length_cm": "60.00",
+      "boda_max_width_cm": "40.00",
+      "boda_max_height_cm": "40.00",
+      "van_max_weight_kg": "500.00",
+      "van_max_length_cm": "200.00",
+      "van_max_width_cm": "150.00",
+      "van_max_height_cm": "150.00",
+      "truck_max_weight_kg": "2000.00",
+      "helper_fee_ugx": "15000.00",
+      "extra_care_fee_ugx": "5000.00"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 1,
+    "fields": {
+      "zone_code": "KLA-CENTRAL",
+      "zone_name": "Kampala Central",
+      "distance_range_min_km": "0.00",
+      "distance_range_max_km": "5.00",
+      "standard_delivery_days": 1,
+      "express_delivery_days": 0,
+      "description": "Central Kampala business district and immediate surroundings",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 2,
+    "fields": {
+      "zone_code": "KLA-INNER",
+      "zone_name": "Inner Kampala",
+      "distance_range_min_km": "5.00",
+      "distance_range_max_km": "10.00",
+      "standard_delivery_days": 1,
+      "express_delivery_days": 0,
+      "description": "Residential areas within greater Kampala",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 3,
+    "fields": {
+      "zone_code": "KLA-OUTER",
+      "zone_name": "Outer Kampala",
+      "distance_range_min_km": "10.00",
+      "distance_range_max_km": "20.00",
+      "standard_delivery_days": 2,
+      "express_delivery_days": 1,
+      "description": "Outer Kampala suburbs and surrounding areas",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingzone",
+    "pk": 4,
+    "fields": {
+      "zone_code": "WAKISO",
+      "zone_name": "Wakiso District",
+      "distance_range_min_km": "20.00",
+      "distance_range_max_km": "50.00",
+      "standard_delivery_days": 3,
+      "express_delivery_days": 1,
+      "description": "Wakiso District including Entebbe",
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 1,
+    "fields": {
+      "zone": 1,
+      "area_name": "Kampala Road",
+      "keywords": ["kampala road", "city centre", "kampala cbd"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 2,
+    "fields": {
+      "zone": 1,
+      "area_name": "Garden City",
+      "keywords": ["garden city", "garden city mall"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 3,
+    "fields": {
+      "zone": 1,
+      "area_name": "Acacia Mall",
+      "keywords": ["acacia", "acacia mall", "kisementi"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 4,
+    "fields": {
+      "zone": 2,
+      "area_name": "Kololo",
+      "keywords": ["kololo", "kolollo"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 5,
+    "fields": {
+      "zone": 2,
+      "area_name": "Nakasero",
+      "keywords": ["nakasero", "nakassero"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 6,
+    "fields": {
+      "zone": 2,
+      "area_name": "Ntinda",
+      "keywords": ["ntinda", "ntindda"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 7,
+    "fields": {
+      "zone": 2,
+      "area_name": "Bugolobi",
+      "keywords": ["bugolobi", "bugoloobi"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 8,
+    "fields": {
+      "zone": 3,
+      "area_name": "Najjera",
+      "keywords": ["najjera", "najera"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 9,
+    "fields": {
+      "zone": 3,
+      "area_name": "Kira",
+      "keywords": ["kira", "kyra"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 10,
+    "fields": {
+      "zone": 3,
+      "area_name": "Naalya",
+      "keywords": ["naalya", "nalya"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 11,
+    "fields": {
+      "zone": 4,
+      "area_name": "Entebbe",
+      "keywords": ["entebbe", "entebe"],
+      "is_landmark": true,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.zonearea",
+    "pk": 12,
+    "fields": {
+      "zone": 4,
+      "area_name": "Mukono",
+      "keywords": ["mukono", "mukono town"],
+      "is_landmark": false,
+      "created_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 1,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "boda",
+      "service_level": "standard",
+      "base_price_ugx": "5000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 2,
+      "max_delivery_hours": 6,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 2,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_price_ugx": "10000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 1,
+      "max_delivery_hours": 2,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 3,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "25000.00",
+      "per_km_price_ugx": "1000.00",
+      "min_delivery_hours": 3,
+      "max_delivery_hours": 8,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 4,
+    "fields": {
+      "zone": 1,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "40000.00",
+      "per_km_price_ugx": "1500.00",
+      "min_delivery_hours": 1,
+      "max_delivery_hours": 3,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 5,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "boda",
+      "service_level": "standard",
+      "base_price_ugx": "8000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 3,
+      "max_delivery_hours": 8,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 6,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_price_ugx": "15000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 1,
+      "max_delivery_hours": 3,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 7,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "30000.00",
+      "per_km_price_ugx": "1200.00",
+      "min_delivery_hours": 4,
+      "max_delivery_hours": 10,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 8,
+    "fields": {
+      "zone": 2,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "50000.00",
+      "per_km_price_ugx": "2000.00",
+      "min_delivery_hours": 2,
+      "max_delivery_hours": 4,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 9,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "boda",
+      "service_level": "standard",
+      "base_price_ugx": "12000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 24,
+      "max_delivery_hours": 48,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 10,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_price_ugx": "20000.00",
+      "per_km_price_ugx": "0.00",
+      "min_delivery_hours": 3,
+      "max_delivery_hours": 6,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 11,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "40000.00",
+      "per_km_price_ugx": "1500.00",
+      "min_delivery_hours": 24,
+      "max_delivery_hours": 48,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 12,
+    "fields": {
+      "zone": 3,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "65000.00",
+      "per_km_price_ugx": "2500.00",
+      "min_delivery_hours": 4,
+      "max_delivery_hours": 8,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 13,
+    "fields": {
+      "zone": 4,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_price_ugx": "60000.00",
+      "per_km_price_ugx": "2000.00",
+      "min_delivery_hours": 48,
+      "max_delivery_hours": 72,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.shippingrate",
+    "pk": 14,
+    "fields": {
+      "zone": 4,
+      "delivery_method": "van",
+      "service_level": "express",
+      "base_price_ugx": "90000.00",
+      "per_km_price_ugx": "3000.00",
+      "min_delivery_hours": 6,
+      "max_delivery_hours": 12,
+      "is_active": true,
+      "created_at": "2025-10-11T09:00:00Z",
+      "updated_at": "2025-10-11T09:00:00Z"
+    }
+  },
+  {
+    "model": "shipping.ordershippingmethod",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "zone": 1,
+      "rate": 2,
+      "delivery_method": "boda",
+      "service_level": "express",
+      "base_shipping_cost_ugx": "10000.00",
+      "helper_fee_ugx": "0.00",
+      "extra_care_fee_ugx": "5000.00",
+      "total_shipping_cost_ugx": "15000.00",
+      "total_weight_kg": "2.50",
+      "total_volume_m3": "0.0306",
+      "calculation_notes": {
+        "reason": "Single explosion box fits boda limits",
+        "items_analyzed": 1,
+        "max_dimension_cm": 35,
+        "fits_boda": true,
+        "requires_extra_care": true
+      },
+      "estimated_delivery_date": "2025-10-05",
+      "created_at": "2025-10-05T14:30:00Z",
+      "updated_at": "2025-10-05T14:30:00Z"
+    }
+  },
+  {
+    "model": "shipping.ordershippingmethod",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "zone": 2,
+      "rate": 7,
+      "delivery_method": "van",
+      "service_level": "standard",
+      "base_shipping_cost_ugx": "30000.00",
+      "helper_fee_ugx": "0.00",
+      "extra_care_fee_ugx": "5000.00",
+      "total_shipping_cost_ugx": "35000.00",
+      "total_weight_kg": "3.20",
+      "total_volume_m3": "0.0236",
+      "calculation_notes": {
+        "reason": "Personalized set with premium items requires van for safety",
+        "items_analyzed": 1,
+        "max_dimension_cm": 45,
+        "fits_boda": true,
+        "requires_extra_care": true,
+        "customer_preference": "van for security"
+      },
+      "estimated_delivery_date": "2025-10-09",
+      "created_at": "2025-10-08T10:15:00Z",
+      "updated_at": "2025-10-08T10:15:00Z"
     }
   }
 ]

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { fetchIncompatibilityRules, fetchPriceAdjustmentRules } from "@client/services/api"
+import { useConvertedPrice } from "@shared/hooks/use-converted-price"
 
 export function useProductRules(configuration: { [key: string]: string }, parts: any[]) {
   // Incompatibility rules
@@ -170,15 +171,62 @@ export function useProductRules(configuration: { [key: string]: string }, parts:
     const adjustment = adjustedPrices[optionIdNum]
     
     if (adjustment !== undefined) {
-      return basePrice + adjustment
+      return {
+        price: basePrice + adjustment,
+        hasAdjustment: true,
+        isPositiveAdjustment: adjustment > 0,
+        isNeutral: adjustment === 0
+      }
     }
-    return basePrice
+    return {
+      price: basePrice,
+      hasAdjustment: false,
+      isPositiveAdjustment: false,
+      isNeutral: true
+    }
   }
 
-  // Get formatted price display for an option
+  // Get formatted price display for an option with currency conversion
   const getFormattedPriceDisplay = (option: any) => {
-    const price = getOptionPrice(option)
-    return price > 0 ? `+$${price}` : "Included"
+    const priceInfo = getOptionPrice(option)
+    const basePrice = parseFloat(option.default_price)
+    
+    if (priceInfo.price <= 0) {
+      return { 
+        display: "Included", 
+        color: "default",
+        basePrice: null,
+        adjustedPrice: null
+      }
+    }
+    
+    // Format both base and adjusted prices
+    const { formattedPrice: formattedBasePrice } = useConvertedPrice({ amount: basePrice })
+    const { formattedPrice: formattedAdjustedPrice, isConverting } = useConvertedPrice({ amount: priceInfo.price })
+    
+    if (isConverting) {
+      return { 
+        display: "Loading...", 
+        color: "default",
+        basePrice: null,
+        adjustedPrice: null
+      }
+    }
+    
+    // Determine if we need to show adjustment
+    const showAdjustment = priceInfo.hasAdjustment && !priceInfo.isNeutral
+    
+    return { 
+      display: formattedAdjustedPrice,
+      displayBasePrice: showAdjustment ? formattedBasePrice : null,
+      color: showAdjustment 
+        ? priceInfo.isPositiveAdjustment 
+          ? 'positive' 
+          : 'negative'
+        : 'default',
+      isPositiveAdjustment: priceInfo.isPositiveAdjustment,
+      showAdjustment
+    }
   }
 
   // Get price details for the configuration summary
@@ -191,9 +239,10 @@ export function useProductRules(configuration: { [key: string]: string }, parts:
 
       const option = part.options.find((opt) => opt.id.toString() === optionId)
       if (option) {
+        const priceInfo = getOptionPrice(option)
         details[partName] = {
           name: option.name,
-          price: getOptionPrice(option),
+          price: priceInfo.price,
         }
       }
     })

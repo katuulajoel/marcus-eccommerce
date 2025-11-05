@@ -6,6 +6,52 @@ class Category(models.Model):
     image = models.ImageField(upload_to='categories/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Shipping profile fields
+    unit_weight_kg = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        help_text="Weight per single item in kilograms"
+    )
+    unit_length_cm = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        help_text="Length per single item in centimeters"
+    )
+    unit_width_cm = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        help_text="Width per single item in centimeters"
+    )
+    unit_height_cm = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        help_text="Height per single item in centimeters"
+    )
+    stackable = models.BooleanField(
+        default=False,
+        help_text="Can items be stacked efficiently for delivery?"
+    )
+    max_boda_quantity = models.IntegerField(
+        default=1,
+        help_text="Maximum quantity deliverable by boda boda (0 = never use boda)"
+    )
+    requires_helper = models.BooleanField(
+        default=False,
+        help_text="Requires delivery assistance or assembly help"
+    )
+    requires_extra_care = models.BooleanField(
+        default=False,
+        help_text="Fragile or valuable items requiring extra care"
+    )
+    shipping_notes = models.TextField(
+        blank=True,
+        help_text="Special shipping/handling instructions"
+    )
+
     class Meta:
         db_table = 'category'
 

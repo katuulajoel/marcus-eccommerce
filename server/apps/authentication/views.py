@@ -67,15 +67,24 @@ def login_view(request):
     Login user and return JWT tokens
 
     Required fields:
-    - username
+    - username (can be username or email)
     - password
     """
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
-        user = authenticate(
-            username=serializer.validated_data['username'],
-            password=serializer.validated_data['password']
-        )
+        username_or_email = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+
+        # Try to authenticate with username first
+        user = authenticate(username=username_or_email, password=password)
+
+        # If that fails, try to find user by email and authenticate
+        if user is None:
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                pass
 
         if user is not None:
             refresh = RefreshToken.for_user(user)

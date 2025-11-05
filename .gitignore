@@ -5,13 +5,13 @@ server/media/
 server/venv
 node_modules
 __pycache__/
+custom-cycles
+.env
+.env.local
+server/.env
+server/.env.local
 
-# Environment variables
-.env
-.env.*
-*.env
-**/.env
-**/.env.*
-**/*.env
-**/*.env.*
-.env
+# AI Assistant - ChromaDB Vector Store
+server/chroma_db/
+*.chroma
+.chromadb/

@@ -1,10 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import AllowAny
 from .models import Category, Part, PartOption, Stock
 from .serializers import CategorySerializer, PartSerializer, PartOptionSerializer, StockSerializer
 from .permissions import AllowGetAnonymously
+from .currency_config import CurrencyConfig
 
 class CategoryViewSet(ModelViewSet):
     """

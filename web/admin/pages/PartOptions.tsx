@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
 import { Textarea } from "@shared/components/ui/textarea"
 import { useToast } from "@shared/components/ui/use-toast"
+import { useCurrency } from "@shared/contexts/currency-context"
 import { partOptionService, type PartOption } from "../services/part-option-service"
 import { partService, type Part } from "../services/part-service"
 import { ImageUpload } from "@admin/components/ImageUpload"
@@ -33,6 +34,8 @@ export default function PartOptionsPage() {
   const [selectedOption, setSelectedOption] = useState<PartOption | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
+  const { formatAmount, convertAmount, selectedCurrency } = useCurrency()
+  const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({})
 
   // Form state for add
   const [addForm, setAddForm] = useState({
@@ -58,6 +61,21 @@ export default function PartOptionsPage() {
     loadPartOptions()
     loadParts()
   }, [])
+
+  useEffect(() => {
+    // Convert prices when currency changes
+    const convertPrices = async () => {
+      const converted: Record<number, number> = {}
+      for (const option of partOptions) {
+        const convertedPrice = await convertAmount(Number(option.default_price))
+        converted[option.id] = convertedPrice
+      }
+      setConvertedPrices(converted)
+    }
+    if (partOptions.length > 0) {
+      convertPrices()
+    }
+  }, [partOptions, selectedCurrency])
 
   const loadPartOptions = async () => {
     try {
@@ -331,12 +349,20 @@ export default function PartOptionsPage() {
                       </TableCell>
                       <TableCell className="font-medium">{option.name}</TableCell>
                       <TableCell>{option.part_name || `Part #${option.part}`}</TableCell>
-                      <TableCell>${Number(option.default_price).toFixed(2)}</TableCell>
+                      <TableCell>
+                        {convertedPrices[option.id]
+                          ? formatAmount(convertedPrices[option.id])
+                          : formatAmount(Number(option.default_price))
+                        }
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium">{((option.minimum_payment_percentage || 0) * 100).toFixed(0)}%</span>
                           <span className="text-xs text-muted-foreground">
-                            ${((option.default_price * (option.minimum_payment_percentage || 0))).toFixed(2)} min
+                            {convertedPrices[option.id]
+                              ? formatAmount(convertedPrices[option.id] * (option.minimum_payment_percentage || 0))
+                              : formatAmount(Number(option.default_price) * (option.minimum_payment_percentage || 0))
+                            } min
                           </span>
                         </div>
                       </TableCell>
