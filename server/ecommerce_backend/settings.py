@@ -35,6 +35,9 @@ INSTALLED_APPS = [
     'apps.preconfigured_products',
     'apps.authentication',
     'apps.payments',
+    'apps.shipping',
+    'apps.currency',
+    'apps.ai_assistant',
 ]
 
 # Middleware
@@ -93,13 +96,32 @@ DATABASES = {
 }
 
 # Redis configuration
-REDIS_HOST = 'redis'
-REDIS_PORT = 6379
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
+REDIS_CART_DB = 1  # Use DB 1 for shopping carts (DB 0 for Celery/cache)
+
+# Django Cache Configuration (using Redis)
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/0',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'PASSWORD': REDIS_PASSWORD,
+        }
+    }
+}
 
 # Celery configuration
-CELERY_BROKER_URL = 'amqp://guest:guest@broker:5672//'
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes max for tasks
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -186,3 +208,18 @@ EMAIL_HOST_PASSWORD = ''
 
 DEFAULT_FROM_EMAIL = 'noreply@marcuscustomcycles.com'
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
+# Exchange Rate API configuration
+EXCHANGE_RATE_API_KEY = os.environ.get('EXCHANGE_RATE_API_KEY', '9a031034afd525277581a134')
+EXCHANGE_RATE_API_BASE_URL = 'https://v6.exchangerate-api.com/v6'
+
+# Payment Configuration
+# Stripe (for card payments)
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', None)
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', None)
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', None)
+
+# Mobile Money (Uganda)
+# TODO: Add Flutterwave or Paystack credentials when ready
+MOBILE_MONEY_PROVIDER = os.environ.get('MOBILE_MONEY_PROVIDER', None)  # 'flutterwave' or 'paystack'
+MOBILE_MONEY_SECRET_KEY = os.environ.get('MOBILE_MONEY_SECRET_KEY', None)

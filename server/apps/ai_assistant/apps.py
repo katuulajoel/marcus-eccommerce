@@ -1,0 +1,11 @@
+from django.apps import AppConfig
+
+
+class AiAssistantConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.ai_assistant'
+    verbose_name = 'AI Assistant'
+
+    def ready(self):
+        """Import signals when app is ready"""
+        import apps.ai_assistant.signals  # noqa

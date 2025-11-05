@@ -10,12 +10,14 @@ services:
              python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py setup_views &&
-             python scripts/create_superuser.py &&
              python manage.py seed_db &&
+             python scripts/create_superuser.py &&
+             python manage.py seed_payment_configs &&
              python manage.py refresh_views &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
+      - chromadb_data:/app/chroma_db
     ports:
       - "8000:8000"
     environment:
@@ -31,6 +33,26 @@ services:
       - EMAIL_HOST=mailhog
       - EMAIL_PORT=1025
       - FRONTEND_URL=http://localhost:3000
+      # AI Assistant Configuration (Optional)
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+      # Payment Gateway Configuration
+      - PAYMENT_ENVIRONMENT=${PAYMENT_ENVIRONMENT:-sandbox}
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-}
+      - STRIPE_API_SECRET=${STRIPE_API_SECRET:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - MTN_API_KEY=${MTN_API_KEY:-}
+      - MTN_API_SECRET=${MTN_API_SECRET:-}
+      - MTN_WEBHOOK_SECRET=${MTN_WEBHOOK_SECRET:-}
+      - MTN_CALLBACK_URL=${MTN_CALLBACK_URL:-}
+      - MTN_SUBSCRIPTION_KEY=${MTN_SUBSCRIPTION_KEY:-}
+      - AIRTEL_API_KEY=${AIRTEL_API_KEY:-}
+      - AIRTEL_API_SECRET=${AIRTEL_API_SECRET:-}
+      - AIRTEL_WEBHOOK_SECRET=${AIRTEL_WEBHOOK_SECRET:-}
+      - AIRTEL_CALLBACK_URL=${AIRTEL_CALLBACK_URL:-}
     depends_on:
       db:
         condition: service_healthy
@@ -61,6 +83,9 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -68,6 +93,50 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  celery:
+    build: .
+    command: celery -A ecommerce_backend worker -l info
+    volumes:
+      - .:/app
+      - chromadb_data:/app/chroma_db
+    environment:
+      - DJANGO_SETTINGS_MODULE=ecommerce_backend.settings
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=ecommerce_password
+      - POSTGRES_DB=ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  celery-beat:
+    build: .
+    command: celery -A ecommerce_backend beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=ecommerce_backend.settings
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=ecommerce_password
+      - POSTGRES_DB=ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -84,6 +153,10 @@ services:
 volumes:
   postgres_data:
     name: marcus-eccommerce-postgres-data
+  chromadb_data:
+    name: marcus-eccommerce-chromadb-data
+  redis_data:
+    name: marcus-eccommerce-redis-data
 
 networks:
   app-network:

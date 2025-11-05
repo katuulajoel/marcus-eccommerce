@@ -6,7 +6,7 @@ import { Badge } from "@shared/components/ui/badge"
 import { useCart } from "@client/context/cart-context"
 import { useToast } from "@shared/components/ui/use-toast"
 import { Link } from "react-router-dom"
-import React from "react";
+import { useConvertedPrice } from "@shared/hooks/use-converted-price"
 
 interface ProductSpecification {
   name: string
@@ -42,6 +42,8 @@ interface ProductDetailsModalProps {
 export default function ProductDetailsModal({ product, isOpen, onClose, parts = [] }: ProductDetailsModalProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
+
+  const { formattedPrice } = useConvertedPrice({ amount: product.price })
 
   if (!isOpen) return null
 
@@ -99,7 +101,7 @@ export default function ProductDetailsModal({ product, isOpen, onClose, parts = 
               </Badge>
               <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
               <p className="text-lg text-gray-500 mb-4">{product.tagline}</p>
-              <p className="text-2xl font-bold mb-6">${product.price}</p>
+              <p className="text-2xl font-bold mb-6">{formattedPrice}</p>
               <p className="text-gray-600 mb-6">{product.description}</p>
 
               <div className="border-t border-gray-200 pt-6">

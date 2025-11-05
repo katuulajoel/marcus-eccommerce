@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft, CreditCard, Smartphone } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
@@ -16,6 +16,10 @@ import SiteHeader from "@client/components/site-header"
 import Footer from "@client/components/footer"
 import ProtectedRoute from "@client/components/protected-route"
 import StripePaymentForm from "@client/components/stripe-payment-form"
+import ZoneSelector from "@client/components/zone-selector"
+import ShippingOptions from "@client/components/shipping-options"
+import { useShippingCalculator } from "@client/hooks/use-shipping-calculator"
+import { ShippingZone, ShippingOption } from "@client/services/shipping-api"
 
 interface ShippingAddress {
   recipient_name: string
@@ -32,7 +36,7 @@ function CheckoutContent() {
   const navigate = useNavigate()
   const { items, totalPrice, clearCart } = useCart()
 
-  const [step, setStep] = useState<"address" | "payment" | "stripe_payment" | "processing">("address")
+  const [step, setStep] = useState<"address" | "shipping" | "payment" | "stripe_payment" | "processing">("address")
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     recipient_name: "",
     phone_number: "",
@@ -43,6 +47,8 @@ function CheckoutContent() {
     postal_code: "",
     country: "Uganda",
   })
+  const [selectedZone, setSelectedZone] = useState<ShippingZone | null>(null)
+  const [selectedZoneId, setSelectedZoneId] = useState<number | null>(null)
   const [paymentGateway, setPaymentGateway] = useState("stripe")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -51,8 +57,46 @@ function CheckoutContent() {
   const [stripePromise, setStripePromise] = useState<any>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
 
+  // Prepare cart items for shipping calculation
+  const cartItemsForShipping = useMemo(() => {
+    return items.map(item => ({
+      category_id: item.categoryId || 1, // Fallback to 1 if no category
+      quantity: item.quantity
+    }))
+  }, [items])
+
+  // Use shipping calculator hook
+  const {
+    shippingOptions,
+    selectedOption: selectedShippingOption,
+    setSelectedOption: setSelectedShippingOption,
+    loading: shippingLoading,
+    error: shippingError,
+  } = useShippingCalculator({
+    cartItems: cartItemsForShipping,
+    zoneId: selectedZoneId,
+  })
+
+  // Calculate total with shipping
+  const shippingCost = selectedShippingOption?.total_cost_ugx || 0
+  const totalWithShipping = totalPrice + shippingCost
+
+  const handleZoneSelect = (zoneId: number, zone: ShippingZone) => {
+    setSelectedZoneId(zoneId)
+    setSelectedZone(zone)
+  }
+
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setStep("shipping")
+  }
+
+  const handleShippingSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedShippingOption) {
+      setError("Please select a shipping method")
+      return
+    }
     setStep("payment")
   }
 
@@ -63,11 +107,14 @@ function CheckoutContent() {
     setStep("processing")
 
     try {
-      // Create order
+      // Create order with shipping
       const orderData = {
         shipping_address: shippingAddress,
+        shipping_zone_id: selectedZoneId,
+        shipping_rate_id: selectedShippingOption?.rate_id,
         products: items.map((item) => ({
           name: item.name,
+          category_id: item.categoryId || 1,
           price: item.price,
           quantity: item.quantity,
           configuration: item.configDetails || {},
@@ -78,12 +125,12 @@ function CheckoutContent() {
       const order = orderResponse.data
       setOrderId(order.id)
 
-      // Initiate payment
+      // Initiate payment with total including shipping
       const paymentResponse = await axiosInstance.post("/payments/initiate/", {
         order_id: order.id,
         gateway: paymentGateway,
-        amount: totalPrice,
-        currency: "USD",
+        amount: totalWithShipping,
+        currency: "UGX",
       })
 
       // Handle payment gateway response
@@ -286,8 +333,51 @@ function CheckoutContent() {
                 </div>
 
                 <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700">
-                  Continue to Payment
+                  Continue to Shipping
                 </Button>
+              </form>
+            </div>
+          )}
+
+          {/* Shipping Step */}
+          {step === "shipping" && (
+            <div className="bg-white rounded-lg border shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-6">Shipping Method</h2>
+
+              <form onSubmit={handleShippingSubmit} className="space-y-6">
+                <ZoneSelector
+                  selectedZoneId={selectedZoneId}
+                  onZoneSelect={handleZoneSelect}
+                  showAddressMatch={true}
+                />
+
+                {selectedZoneId && (
+                  <ShippingOptions
+                    options={shippingOptions}
+                    selectedOption={selectedShippingOption}
+                    onSelectOption={setSelectedShippingOption}
+                    loading={shippingLoading}
+                    error={shippingError}
+                  />
+                )}
+
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep("address")}
+                    className="flex-1"
+                  >
+                    Back to Address
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={!selectedShippingOption}
+                    className="flex-1 bg-teal-600 hover:bg-teal-700"
+                  >
+                    Continue to Payment
+                  </Button>
+                </div>
               </form>
             </div>
           )}
@@ -342,8 +432,8 @@ function CheckoutContent() {
                 </RadioGroup>
 
                 <div className="flex gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setStep("address")} className="flex-1">
-                    Back
+                  <Button type="button" variant="outline" onClick={() => setStep("shipping")} className="flex-1">
+                    Back to Shipping
                   </Button>
                   <Button type="submit" disabled={loading} className="flex-1 bg-teal-600 hover:bg-teal-700">
                     {loading ? "Processing..." : "Complete Order"}
@@ -419,20 +509,57 @@ function CheckoutContent() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal</span>
-              <span>${totalPrice.toLocaleString()}</span>
+              <span>UGX {totalPrice.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Shipping</span>
-              <span>Calculated at delivery</span>
+              {selectedShippingOption ? (
+                <span className="text-teal-600">UGX {shippingCost.toLocaleString()}</span>
+              ) : (
+                <span className="text-gray-500">Select shipping method</span>
+              )}
             </div>
+            {selectedShippingOption && (
+              <>
+                {selectedShippingOption.helper_fee_ugx > 0 && (
+                  <div className="flex justify-between text-xs text-amber-700">
+                    <span>└─ Helper fee</span>
+                    <span>UGX {selectedShippingOption.helper_fee_ugx.toLocaleString()}</span>
+                  </div>
+                )}
+                {selectedShippingOption.extra_care_fee_ugx > 0 && (
+                  <div className="flex justify-between text-xs text-amber-700">
+                    <span>└─ Extra care fee</span>
+                    <span>UGX {selectedShippingOption.extra_care_fee_ugx.toLocaleString()}</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <Separator className="my-4" />
 
           <div className="flex justify-between font-semibold text-lg">
             <span>Total</span>
-            <span className="text-teal-600">${totalPrice.toLocaleString()}</span>
+            <span className="text-teal-600">UGX {totalWithShipping.toLocaleString()}</span>
           </div>
+
+          {selectedShippingOption && selectedZone && (
+            <div className="mt-4 pt-4 border-t text-xs text-gray-600">
+              <p className="flex items-center gap-1">
+                <span>📦</span>
+                <span>{selectedShippingOption.delivery_method_display}</span>
+              </p>
+              <p className="flex items-center gap-1">
+                <span>📍</span>
+                <span>{selectedZone.zone_name}</span>
+              </p>
+              <p className="flex items-center gap-1">
+                <span>📅</span>
+                <span>{selectedShippingOption.delivery_time}</span>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

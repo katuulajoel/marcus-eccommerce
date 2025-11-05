@@ -1,6 +1,8 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useAIAssistant } from "./ai-assistant-context"
+import * as api from "@client/services/api"
 
 export type CartItem = {
   id: string
@@ -8,6 +10,7 @@ export type CartItem = {
   price: number
   image: string
   quantity: number
+  categoryId?: number
   configuration?: {
     frameType: string
     frameFinish: string
@@ -25,12 +28,14 @@ export type CartItem = {
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
-  clearCart: () => void
+  addItem: (item: CartItem) => Promise<void>
+  removeItem: (id: string) => Promise<void>
+  updateQuantity: (id: string, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
+  refreshCart: () => Promise<void>
   itemCount: number
   totalPrice: number
+  isLoading: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -39,25 +44,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [itemCount, setItemCount] = useState(0)
   const [totalPrice, setTotalPrice] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Load cart from localStorage on initial render
+  const { sessionId } = useAIAssistant()
+
+  // Fetch cart from backend when sessionId is available
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart")
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart)
-        setItems(parsedCart)
-      } catch (error) {
-        console.error("Failed to parse cart from localStorage:", error)
-      }
+    if (sessionId) {
+      fetchCart()
     }
-  }, [])
+  }, [sessionId])
 
-  // Update localStorage and counts whenever cart changes
+  // Calculate counts whenever items change
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items))
-
-    // Calculate total items and price
     const count = items.reduce((total, item) => total + item.quantity, 0)
     const price = items.reduce((total, item) => total + item.price * item.quantity, 0)
 
@@ -65,41 +64,148 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setTotalPrice(price)
   }, [items])
 
-  const addItem = (newItem: CartItem) => {
-    setItems((prevItems) => {
-      // Check if item already exists in cart
-      const existingItemIndex = prevItems.findIndex(
-        (item) =>
-          item.id === newItem.id && JSON.stringify(item.configuration) === JSON.stringify(newItem.configuration),
-      )
+  const fetchCart = async () => {
+    if (!sessionId) return
 
-      if (existingItemIndex >= 0) {
-        // Update quantity if item exists
-        const updatedItems = [...prevItems]
-        updatedItems[existingItemIndex].quantity += newItem.quantity
-        return updatedItems
-      } else {
-        // Add new item if it doesn't exist
-        return [...prevItems, newItem]
-      }
-    })
+    try {
+      setIsLoading(true)
+      const cart = await api.getCart(sessionId)
+
+      // Transform backend cart items to CartItem format
+      const transformedItems: CartItem[] = cart.items.map((item: any) => ({
+        id: item.item_id,
+        name: item.name,
+        price: item.price,
+        image: item.image_url || '/placeholder.png',
+        quantity: item.quantity,
+        categoryId: item.category_id,
+        configuration: item.configuration,
+        configDetails: item.config_details  // Map config_details to configDetails
+      }))
+
+      setItems(transformedItems)
+    } catch (error) {
+      console.error("Failed to fetch cart:", error)
+      // On error, start with empty cart
+      setItems([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const removeItem = (id: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id))
+  const refreshCart = async () => {
+    await fetchCart()
   }
 
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(id)
+  const addItem = async (newItem: CartItem) => {
+    if (!sessionId) {
+      console.error("Cannot add to cart: No session ID")
       return
     }
 
-    setItems((prevItems) => prevItems.map((item) => (item.id === id ? { ...item, quantity } : item)))
+    try {
+      setIsLoading(true)
+
+      // Extract product ID - handle both numeric IDs and timestamp-based IDs
+      let productId: number
+      if (typeof newItem.id === 'string' && newItem.id.includes('-')) {
+        // Format: "productId-timestamp" or "custom-categoryId-timestamp"
+        const parts = newItem.id.split('-')
+        if (parts[0] === 'custom') {
+          // For custom builds without a product, use categoryId * 10000 + timestamp hash
+          // This ensures unique IDs while being parseable
+          productId = (newItem.categoryId || 0) * 10000 + (Date.now() % 10000)
+        } else {
+          // Extract the numeric product ID
+          productId = parseInt(parts[0])
+        }
+      } else {
+        productId = parseInt(newItem.id)
+      }
+
+      // Call backend API to add item
+      await api.addToCart(
+        sessionId,
+        productId,
+        newItem.name,
+        newItem.price,
+        newItem.quantity,
+        newItem.configuration,
+        newItem.image,
+        newItem.categoryId,
+        newItem.configDetails
+      )
+
+      // Refresh cart from backend to get updated state
+      await fetchCart()
+    } catch (error) {
+      console.error("Failed to add item to cart:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const clearCart = () => {
-    setItems([])
+  const removeItem = async (id: string) => {
+    if (!sessionId) {
+      console.error("Cannot remove from cart: No session ID")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Call backend API to remove item
+      await api.removeFromCart(sessionId, id)
+
+      // Refresh cart from backend
+      await fetchCart()
+    } catch (error) {
+      console.error("Failed to remove item from cart:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updateQuantity = async (id: string, quantity: number) => {
+    if (!sessionId) {
+      console.error("Cannot update quantity: No session ID")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Call backend API to update quantity
+      await api.updateCartQuantity(sessionId, id, quantity)
+
+      // Refresh cart from backend
+      await fetchCart()
+    } catch (error) {
+      console.error("Failed to update quantity:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const clearCart = async () => {
+    if (!sessionId) {
+      console.error("Cannot clear cart: No session ID")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Call backend API to clear cart
+      await api.clearCart(sessionId)
+
+      // Clear local state
+      setItems([])
+    } catch (error) {
+      console.error("Failed to clear cart:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -110,8 +216,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem,
         updateQuantity,
         clearCart,
+        refreshCart,
         itemCount,
         totalPrice,
+        isLoading,
       }}
     >
       {children}
@@ -126,4 +234,3 @@ export function useCart() {
   }
   return context
 }
-

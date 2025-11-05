@@ -24,13 +24,24 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 3000,
+      fs: {
+        // Allow serving files from one level up from the package root
+        allow: ['..']
+      }
     },
     build: {
       outDir: path.resolve(__dirname, '../../dist/client'),
     },
     define: envDefine,
     optimizeDeps: {
-      include: ['react', 'react-dom', '@stripe/stripe-js', '@stripe/react-stripe-js']
-    }
+      include: [
+        'react', 
+        'react-dom', 
+        '@stripe/stripe-js', 
+        '@stripe/react-stripe-js'
+      ],
+      exclude: ['chunk-KDCVS43I', 'chunk-RLJ2RCJQ'],
+      force: true
+    },
   };
 });

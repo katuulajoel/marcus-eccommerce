@@ -19,6 +19,7 @@ import { Label } from "@shared/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
 import { useToast } from "@shared/hooks/use-toast"
+import { useCurrency } from "@shared/contexts/currency-context"
 import { priceRuleService, type PriceAdjustmentRule } from "../services/price-rule-service"
 import { partOptionService, type PartOption } from "../services/part-option-service"
 
@@ -31,6 +32,8 @@ export default function PriceRulesPage() {
   const [selectedRule, setSelectedRule] = useState<PriceAdjustmentRule | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
+  const { formatAmount, convertAmount, selectedCurrency } = useCurrency()
+  const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({})
 
   const [addForm, setAddForm] = useState({
     condition_option: "",
@@ -48,6 +51,20 @@ export default function PriceRulesPage() {
     loadPriceRules()
     loadPartOptions()
   }, [])
+
+  useEffect(() => {
+    const convertPrices = async () => {
+      const converted: Record<number, number> = {}
+      for (const rule of priceRules) {
+        const convertedPrice = await convertAmount(Number(rule.adjusted_price))
+        converted[rule.id] = convertedPrice
+      }
+      setConvertedPrices(converted)
+    }
+    if (priceRules.length > 0) {
+      convertPrices()
+    }
+  }, [priceRules, selectedCurrency])
 
   const loadPriceRules = async () => {
     try {
@@ -287,7 +304,10 @@ export default function PriceRulesPage() {
                       <TableCell>{rule.affected_option_name || `Option #${rule.affected_option}`}</TableCell>
                       <TableCell>
                         <span className={`font-medium ${Number(rule.adjusted_price) < 0 ? 'text-destructive' : 'text-green-600'}`}>
-                          ${Number(rule.adjusted_price).toFixed(2)}
+                          {convertedPrices[rule.id] !== undefined
+                            ? formatAmount(convertedPrices[rule.id])
+                            : formatAmount(Number(rule.adjusted_price))
+                          }
                         </span>
                       </TableCell>
                       <TableCell>

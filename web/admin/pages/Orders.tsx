@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs"
 import { useToast } from "@shared/components/ui/use-toast"
+import { ConvertedPrice } from "@shared/components/converted-price"
 import { orderService, type Order } from "../services/order-service"
 
 // Sample data for reference (will be removed)
@@ -401,16 +402,15 @@ export default function OrdersPage() {
                         <span className="text-sm text-muted-foreground">{order.customer_email || "N/A"}</span>
                       </div>
                     </TableCell>
-                    <TableCell>${Number(order.total_price).toFixed(2)}</TableCell>
+                    <TableCell><ConvertedPrice amount={Number(order.total_price)} /></TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span>${Number(order.amount_paid).toFixed(2)}</span>
+                        <ConvertedPrice amount={Number(order.amount_paid)} />
                         <span className="text-sm text-muted-foreground">
-                          of ${Number(order.minimum_required_amount).toFixed(2)} min
+                          of <ConvertedPrice amount={Number(order.minimum_required_amount)} /> min
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </TableCell>                    <TableCell>
                       <div className="flex flex-col gap-1">
                         <Badge variant={getPaymentStatusBadgeVariant(order.payment_status) as any}>
                           {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
@@ -475,20 +475,20 @@ export default function OrdersPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-muted-foreground">Total Price</Label>
-                          <div className="text-lg font-bold">${Number(selectedOrder.total_price).toFixed(2)}</div>
+                          <div className="text-lg font-bold"><ConvertedPrice amount={Number(selectedOrder.total_price)} /></div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Amount Paid</Label>
-                          <div className="text-lg font-bold text-green-600">${Number(selectedOrder.amount_paid).toFixed(2)}</div>
+                          <div className="text-lg font-bold text-green-600"><ConvertedPrice amount={Number(selectedOrder.amount_paid)} /></div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Minimum Required</Label>
-                          <div className="text-lg font-semibold">${Number(selectedOrder.minimum_required_amount).toFixed(2)}</div>
+                          <div className="text-lg font-semibold"><ConvertedPrice amount={Number(selectedOrder.minimum_required_amount)} /></div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Balance Due</Label>
                           <div className="text-lg font-semibold text-orange-600">
-                            ${Number(selectedOrder.balance_due).toFixed(2)}
+                            <ConvertedPrice amount={Number(selectedOrder.balance_due)} />
                           </div>
                         </div>
                         <div className="col-span-2">

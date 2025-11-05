@@ -88,15 +88,17 @@ export default function BikeCustomizer({ productId, category }: BikeCustomizerPr
 
   // Add the product to cart
   const addToCart = () => {
-    const uniqueId = `${productId}-${Date.now()}`
+    // Use productId if available, otherwise use categoryId as fallback
+    const itemId = productId || `custom-${categoryId}-${Date.now()}`
     const configDetails = getConfigDetails()
 
     addItem({
-      id: uniqueId,
+      id: itemId,
       name: preConfiguredProduct?.name || 'Custom Product',
       price: totalPrice,
-      image: preConfiguredProduct?.image_url,
+      image: preConfiguredProduct?.image_url || '/placeholder.png',
       quantity: 1,
+      categoryId: categoryId || undefined,
       configuration: { ...configuration },
       configDetails,
     })

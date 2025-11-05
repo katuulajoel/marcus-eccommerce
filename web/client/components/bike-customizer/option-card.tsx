@@ -1,4 +1,4 @@
-import { Check, AlertCircle } from "lucide-react"
+import { Check, AlertCircle, ArrowUp, ArrowDown } from "lucide-react"
 import { Card, CardContent } from "@shared/components/ui/card"
 import { RadioGroupItem } from "@shared/components/ui/radio-group"
 import { cn } from "@shared/lib/utils"
@@ -12,7 +12,12 @@ interface OptionCardProps {
   isLowStock: boolean
   incompatibilityMessage?: string
   stockQuantity: number
-  formattedPrice: string
+  formattedPrice: { 
+    display: string
+    color: string
+    displayBasePrice: string | null
+    isPositiveAdjustment?: boolean
+  }
   disabled: boolean
 }
 
@@ -92,9 +97,39 @@ export function OptionCard({
         <CardContent className="p-4 flex-grow flex flex-col">
           <div className="flex items-start justify-between mb-2">
             <h4 className="font-medium text-lg">{option.name}</h4>
-            <span className="text-teal-600 font-semibold">
-              {formattedPrice}
-            </span>
+            <div className="text-right">
+              {formattedPrice.displayBasePrice ? (
+                <div className="flex flex-col items-end">
+                  <span className="text-gray-400 line-through text-sm">
+                    {formattedPrice.displayBasePrice}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {formattedPrice.isPositiveAdjustment ? (
+                      <ArrowUp className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-red-600" />
+                    )}
+                    <span 
+                      className={cn(
+                        "font-semibold",
+                        formattedPrice.isPositiveAdjustment ? 'text-green-600' : 'text-red-600'
+                      )}
+                    >
+                      {formattedPrice.display}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <span className={cn(
+                  "font-semibold",
+                  formattedPrice.color === 'positive' ? 'text-green-600' :
+                  formattedPrice.color === 'negative' ? 'text-red-600' :
+                  'text-teal-600'
+                )}>
+                  {formattedPrice.display}
+                </span>
+              )}
+            </div>
           </div>
 
           <p className="text-sm text-gray-500 mb-3 flex-grow">

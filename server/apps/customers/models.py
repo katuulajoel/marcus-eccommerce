@@ -11,6 +11,11 @@ class Customer(models.Model):
     email_verification_token = models.CharField(max_length=100, null=True, blank=True)
     password_reset_token = models.CharField(max_length=100, null=True, blank=True)
     password_reset_token_expires = models.DateTimeField(null=True, blank=True)
+    preferred_currency = models.CharField(
+        max_length=3,
+        default='UGX',
+        help_text="Customer's preferred currency for viewing prices (ISO 4217 code)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

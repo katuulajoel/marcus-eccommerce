@@ -1,6 +1,7 @@
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Loader2 } from "lucide-react"
 import { Badge } from "@shared/components/ui/badge"
 import { Button } from "@shared/components/ui/button"
+import { useConvertedPrice } from "@shared/hooks/use-converted-price"
 
 interface ConfigSummaryProps {
   configuration: { [key: string]: string }
@@ -60,7 +61,11 @@ export function ConfigSummary({
             <div className="flex items-center">
               <span className="font-medium mr-4">{details.name}</span>
               <span className="text-teal-600 font-semibold">
-                {details.price > 0 ? `$${details.price}` : "Included"}
+                {details.price > 0 ? (
+                  <PriceDisplay amount={details.price} />
+                ) : (
+                  "Included"
+                )}
               </span>
             </div>
           </li>
@@ -78,7 +83,9 @@ export function ConfigSummary({
       <div className="pt-4 border-t border-gray-200">
         <div className="flex justify-between items-center">
           <span className="text-lg font-semibold">Total Price:</span>
-          <span className="text-2xl font-bold text-teal-600">${totalPrice.toLocaleString()}</span>
+          <div className="text-2xl font-bold text-teal-600">
+            <PriceDisplay amount={totalPrice} isLarge />
+          </div>
         </div>
 
         <Button
@@ -92,4 +99,19 @@ export function ConfigSummary({
       </div>
     </div>
   )
+}
+
+// Component to display price with currency conversion
+function PriceDisplay({ amount, isLarge = false }: { amount: number; isLarge?: boolean }) {
+  const { formattedPrice, isConverting } = useConvertedPrice({ amount })
+  
+  if (isConverting) {
+    return (
+      <span className="inline-flex items-center">
+        <Loader2 className={`h-4 w-4 mr-1 animate-spin ${isLarge ? 'h-5 w-5' : 'h-4 w-4'}`} />
+      </span>
+    )
+  }
+  
+  return <span>{formattedPrice}</span>
 }

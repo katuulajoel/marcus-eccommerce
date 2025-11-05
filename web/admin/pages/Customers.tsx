@@ -19,6 +19,7 @@ import { Input } from "@shared/components/ui/input"
 import { Label } from "@shared/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/components/ui/tabs"
+import { ConvertedPrice } from "@shared/components/converted-price"
 import { customerService, type Customer, type CustomerOrder } from "@admin/services/customer-service"
 import { orderService, type Order } from "@admin/services/order-service"
 
@@ -251,7 +252,9 @@ export default function CustomersPage() {
                     </div>
                     <div className="grid gap-2">
                       <Label>Total Spent</Label>
-                      <div className="rounded-md border p-2 font-bold">${Number(selectedCustomer.totalSpent).toFixed(2)}</div>
+                      <div className="rounded-md border p-2 font-bold">
+                        <ConvertedPrice amount={Number(selectedCustomer.totalSpent)} />
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -280,8 +283,12 @@ export default function CustomersPage() {
                               Order ORD-{order.id.toString().padStart(3, "0")}
                             </TableCell>
                             <TableCell>{format(new Date(order.created_at), "MMM d, yyyy")}</TableCell>
-                            <TableCell className="font-medium">${Number(order.total_price).toFixed(2)}</TableCell>
-                            <TableCell className="text-green-600">${Number(order.amount_paid).toFixed(2)}</TableCell>
+                            <TableCell className="font-medium">
+                              <ConvertedPrice amount={Number(order.total_price)} />
+                            </TableCell>
+                            <TableCell className="text-green-600">
+                              <ConvertedPrice amount={Number(order.amount_paid)} />
+                            </TableCell>
                             <TableCell>
                               <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                                 order.fulfillment_status === 'in_production' ? 'bg-yellow-100 text-yellow-700' :
