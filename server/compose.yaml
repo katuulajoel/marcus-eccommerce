@@ -13,9 +13,11 @@ services:
              python scripts/create_superuser.py &&
              python manage.py seed_db &&
              python manage.py refresh_views &&
+             python manage.py build_ai_index &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
+      - chromadb_data:/app/chroma_db
     ports:
       - "8000:8000"
     environment:
@@ -31,6 +33,11 @@ services:
       - EMAIL_HOST=mailhog
       - EMAIL_PORT=1025
       - FRONTEND_URL=http://localhost:3000
+      # AI Assistant Configuration (Optional)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
     depends_on:
       db:
         condition: service_healthy
@@ -61,6 +68,9 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -68,6 +78,49 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  celery:
+    build: .
+    command: celery -A ecommerce_backend worker -l info
+    volumes:
+      - .:/app
+      - chromadb_data:/app/chroma_db
+    environment:
+      - DJANGO_SETTINGS_MODULE=ecommerce_backend.settings
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=ecommerce_password
+      - POSTGRES_DB=ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  celery-beat:
+    build: .
+    command: celery -A ecommerce_backend beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=ecommerce_backend.settings
+      - POSTGRES_USER=ecommerce_user
+      - POSTGRES_PASSWORD=ecommerce_password
+      - POSTGRES_DB=ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -84,6 +137,10 @@ services:
 volumes:
   postgres_data:
     name: marcus-eccommerce-postgres-data
+  chromadb_data:
+    name: marcus-eccommerce-chromadb-data
+  redis_data:
+    name: marcus-eccommerce-redis-data
 
 networks:
   app-network:

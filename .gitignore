@@ -5,3 +5,13 @@ server/media/
 server/venv
 node_modules
 __pycache__/
+
+# Environment variables
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/*.env
+**/*.env.*
+.env
