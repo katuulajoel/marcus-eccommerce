@@ -18,6 +18,9 @@ from .services.cart_service import get_cart_service
 from .services.checkout_service import get_checkout_service
 from .services.shipping_service import get_shipping_service
 from .services.payment_service import get_payment_service
+from .orchestration.langgraph_workflow import get_multi_agent_workflow
+from .orchestration.state_manager import get_state_manager
+from .adapters.channel_adapter import get_channel_adapter
 
 
 @api_view(['POST'])
@@ -82,7 +85,8 @@ def chat(request):
         print(f"⚠️ RAG unavailable (likely OpenAI quota): {str(e)[:100]}")
 
     # Get conversation history for context (last 10 messages)
-    all_messages = session.messages.order_by('created_at').values('role', 'content')
+    # Now include metadata for better context preservation
+    all_messages = session.messages.order_by('created_at').values('role', 'content', 'metadata')
     message_count = all_messages.count()
 
     if message_count > 10:
@@ -90,17 +94,24 @@ def chat(request):
     else:
         conversation_history = list(all_messages)
 
-    # Generate AI response using LangChain Agent service
-    agent_service = get_agent_service()
-    ai_response = agent_service.generate_response(
+    # Get channel from context (default to web)
+    channel = context.get('channel', 'web')
+
+    # Generate AI response using MULTI-AGENT WORKFLOW (NEW!)
+    workflow = get_multi_agent_workflow()
+    ai_response = workflow.run(
+        session_id=session_id,
         user_message=user_message,
-        context={
+        conversation_history=conversation_history,
+        user_context={
             **enriched_context,
             **rag_context,
-            'session_id': session_id  # Add session_id for cart operations
-        },
-        conversation_history=conversation_history
+        }
     )
+
+    # Format response for channel
+    channel_adapter = get_channel_adapter(channel)
+    ai_response = channel_adapter.format_response(ai_response)
 
     # Enhance metadata with product recommendations ONLY if intent indicates they're relevant
     enhanced_metadata = ai_response['metadata'].copy()
@@ -113,11 +124,21 @@ def chat(request):
 
     # Check if AI used cart tools and add action metadata
     tools_used = enhanced_metadata.get('tools_used', [])
+    workflow_info = enhanced_metadata.get('workflow', {})
+
+    # Add workflow information to metadata
+    if workflow_info:
+        enhanced_metadata['agent_used'] = workflow_info.get('final_agent')
+        enhanced_metadata['agent_iterations'] = workflow_info.get('iterations')
 
     if 'add_to_cart' in tools_used or 'view_cart' in tools_used:
         # Fetch current cart state
         cart_service = get_cart_service()
         cart = cart_service.get_cart(session_id)
+
+        # Update state manager with cart count
+        state_manager = get_state_manager(session_id)
+        state_manager.set_cart_items_count(cart.get('item_count', 0))
 
         action_type = 'item_added' if 'add_to_cart' in tools_used else 'cart_updated'
 
